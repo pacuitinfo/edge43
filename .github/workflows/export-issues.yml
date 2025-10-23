@@ -75,6 +75,9 @@ jobs:
           REPO: ${{ github.event.inputs.source_repo || github.repository }}
           STATE: ${{  'open' }}
           LABELS_IN: ${{ github.event.inputs.labels || '' }}
+          DATE_START: ${{ github.event.inputs.dateStart }}
+          DATE_END: ${{ github.event.inputs.dateEnd }}
+          REGION: ${{ github.event.inputs.region }}
         run: |
           set -euo pipefail
           mkdir -p cache
@@ -90,7 +93,7 @@ jobs:
           # Normalize labels for filename: letters/digits/._- only
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
-          issuesJson="cache/report_${github.event.inputs.dateStart}_${github.event.inputs.dateEnd}_{github.event.inputs.region}.json"
+          issuesJson="cache/report_${DATE_START}_${DATE_END}_${REGION}.json"
           echo "SAFE=${SAFE}"
           echo "issuesJson=${issuesJson}"
 
@@ -115,10 +118,13 @@ jobs:
         shell: bash
         env:
           LABELS_IN: ${{ github.event.inputs.labels || '' }}
+          DATE_START: ${{ github.event.inputs.dateStart }}
+          DATE_END: ${{ github.event.inputs.dateEnd }}
+          REGION: ${{ github.event.inputs.region }}
         run: |
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
-          issuesJson="cache/report_${github.event.inputs.dateStart}_${github.event.inputs.dateEnd}_{github.event.inputs.region}.json"
+          issuesJson="cache/report_${DATE_START}_${DATE_END}_${REGION}.json"
           echo "SAFE=${SAFE}"
           jq '.[0:3]' "${issuesJson}" || true
 
@@ -135,11 +141,14 @@ jobs:
         shell: bash
         env:
           LABELS_IN: ${{ github.event.inputs.labels || '' }}
+          DATE_START: ${{ github.event.inputs.dateStart }}
+          DATE_END: ${{ github.event.inputs.dateEnd }}
+          REGION: ${{ github.event.inputs.region }}
         run: |
           set -euo pipefail
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
-          issuesJson="cache/report_${github.event.inputs.dateStart}_${github.event.inputs.dateEnd}_{github.event.inputs.region}.json"
+          issuesJson="cache/report_${DATE_START}_${DATE_END}_${REGION}.json"
           destFile="dest/report_${SAFE}.json"
           echo "Copying ${issuesJson} → ${destFile}"
           [ -f "${issuesJson}" ] || { echo "❌ Missing ${issuesJson}"; exit 1; }
@@ -203,11 +212,14 @@ jobs:
         env:
           DEST_PATH: ${{ github.event.inputs.dest_path || 'data/monthly-status.json' }}
           LABELS_IN: ${{ github.event.inputs.labels || '' }}
+          DATE_START: ${{ github.event.inputs.dateStart }}
+          DATE_END: ${{ github.event.inputs.dateEnd }}
+          REGION: ${{ github.event.inputs.region }}
         run: |
           set -euo pipefail
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
-          issuesJson="cache/report_${github.event.inputs.dateStart}_${github.event.inputs.dateEnd}_{github.event.inputs.region}.json"
+          issuesJson="cache/report_${DATE_START}_${DATE_END}_${REGION}.json"
 
           # 1) Place monthly-status.json exactly at DEST_PATH
           DEST1="dest/${DEST_PATH}"
