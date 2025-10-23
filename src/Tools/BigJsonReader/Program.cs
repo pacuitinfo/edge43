@@ -25,6 +25,7 @@ string path      = Arg("path");            // e.g., cache/report:::VII
 string @ref      = Arg("ref", "main");
 string dateStart = Arg("dateStart", "");
 string dateEnd   = Arg("dateEnd", "");
+string regionKey   = Arg("regionKey", "");
 string outPath   = Arg("out", "");
 string region    = Arg("region", "");      // OPTIONAL: filter by GitHub label and annotate chart labels
 string? token    = Environment.GetEnvironmentVariable("GH_PAT")
@@ -99,8 +100,9 @@ http.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
 Console.Error.WriteLine(owner);
 Console.Error.WriteLine(repo);
 Console.Error.WriteLine(path);
+Console.Error.WriteLine(regionKey);
 // 1) metadata → download_url
-var metaUrl = $"https://api.github.com/repos/{owner}/{repo}/contents/{EscapeSegments(path)}?ref={Uri.EscapeDataString(@ref)}";
+var metaUrl = $"https://api.github.com/repos/{owner}/{repo}/contents/{EscapeSegments(regionKey)}?ref={Uri.EscapeDataString(@ref)}";
 
 using var metaResp = await http.GetAsync(metaUrl);
 metaResp.EnsureSuccessStatusCode();
