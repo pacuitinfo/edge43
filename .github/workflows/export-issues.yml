@@ -85,7 +85,7 @@ jobs:
           # Build args
           ARGS=( "repos/${REPO}/issues" -X GET --paginate -H "Accept: application/vnd.github+json" -f per_page=100 -f state="open" )
           if [ -n "${LABELS_IN}" ]; then
-            ARGS+=( -f labels="${LABELS_IN})
+            ARGS+=( -f q="${LABELS_IN})
           fi
           
           raw=$(gh api "${ARGS[@]}" )
