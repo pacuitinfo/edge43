@@ -1,0 +1,91 @@
+name: all-regions
+concurrency:
+    group: export-${{ github.event.inputs.dest_repo }}-${{ github.event.inputs.dest_path || 'data/issues.json' }}
+    cancel-in-progress: true
+on:
+  workflow_dispatch:
+    inputs:
+      state:
+        description: "open | closed | all"
+        required: false
+        default: "open"
+      labels:
+        description: "Comma-separated labels (optional)"
+        required: false
+        default: ""
+      source_repo:
+        description: "Destination repo (owner/name)"
+        required: true
+        default: "https-multiculturaltoolbox-com/edge7"
+      dest_branch:
+        description: "Destination branch"
+        required: false
+        default: "main"
+      dest_path:
+        description: "Path in destination repo (e.g., data/issues.json)"
+        required: false
+        default: "data/issues.json"
+
+      owner:
+        description: "Source owner (where big JSON lives)"
+        required: true
+        default: "pacuitinfo"
+      repo:
+        description: "Source repo"
+        required: true
+        default: "edge43"
+      path:
+        description: "Path to big JSON in source repo"
+        required: true
+        default: "cache/report:::VII"
+      ref:
+        description: "Ref in source repo"
+        required: true
+        default: "main"
+      dest_repo:
+        description: "Destination repo owner/name"
+        required: true
+        default: "pacuitinfo/edge7-report"
+  schedule:
+    - cron: '3 */6 * * 1-5'
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch export-issues per region
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}   # PAT w/ repo + workflow scopes recommended
+          WORKFLOW_REPO: ${{ github.repository }}                   # repo that hosts export-issues.yml
+          WORKFLOW_FILE: export-issues.yml
+          BRANCH: ${{ github.event.inputs.dest_branch || 'main' }}
+          STATE:  ${{ github.event.inputs.state || 'open' }}
+          SOURCE_REPO: ${{ github.event.inputs.source_repo }}
+          DEST_REPO:   ${{ github.event.inputs.dest_repo }}
+          DEST_BRANCH: ${{ github.event.inputs.dest_branch || 'main' }}
+          DEST_PATH:   ${{ github.event.inputs.dest_path }}
+          LABELS:      ${{ github.event.inputs.labels || '' }}
+        run: |
+          set -euo pipefail
+      
+          if [ -z "${LABELS}" ]; then
+            REGIONS=( "I" "II" "III" "IV-A" "IV-B" "V" "VI" "VII" "VIII" "IX" "X" "XII" "XIII" "XIV" )
+          else
+            IFS=',' read -r -a REGIONS <<< "${LABELS}"
+          fi
+          
+          for region in "${REGIONS[@]}"; do
+            gh workflow run "${WORKFLOW_FILE}" \
+              -R "${WORKFLOW_REPO}" \
+              -r "${BRANCH}" \
+              -f state="${STATE}" \
+              -f source_repo="${SOURCE_REPO}" \
+              -f dest_repo="${DEST_REPO}" \
+              -f dest_branch="${DEST_BRANCH}" \
+              -f dest_path="report:::${region}" \
+              -f path="cache/report:::${region}" \
+              -f labels="${region}"
+            echo "Dispatched for region: ${region}"
+          done
+      
