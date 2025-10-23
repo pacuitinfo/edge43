@@ -79,7 +79,7 @@ jobs:
           LABELS: ${{ github.event.inputs.labels || '' }}
         run: |
           set -euo pipefail
-
+          mkdir -p cache
           # Build args: force GET so adding -f fields becomes query params (not POST body)
           ARGS=( "repos/${REPO}/issues" -X GET --paginate -H "Accept: application/vnd.github+json" -f per_page=100 -f state="${STATE}" )
           if [ -n "${LABELS}" ]; then
