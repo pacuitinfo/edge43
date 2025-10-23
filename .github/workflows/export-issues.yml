@@ -37,6 +37,10 @@ on:
         description: "Source repo"
         required: false
         default: ""
+      region:
+        description: "Path to big JSON in source repo"
+        required: false
+        default: "VII"
       path:
         description: "Path to big JSON in source repo"
         required: true
