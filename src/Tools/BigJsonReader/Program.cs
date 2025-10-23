@@ -3003,7 +3003,7 @@ public static class GitHubHelper
         if (string.IsNullOrWhiteSpace(repoName)
            )
         {
-           repoName = "edge-refresh-token"
+           repoName = "edge-refresh-token";
         }
 
         try
