@@ -1,6 +1,5 @@
 name: Export Issues to Own Repo
 
-
 on:
   workflow_dispatch:
     inputs:
@@ -9,7 +8,7 @@ on:
         required: false
         default: "open"
       labels:
-        description: "Comma-separated labels (optional). If empty, file will be named issues-ALL.json"
+        description: "Comma-separated labels (optional). If empty, file will be named report_ALL.json"
         required: false
         default: ""
       source_repo:
@@ -29,7 +28,7 @@ on:
         required: false
         default: "data/monthly-status.json"
 
-      # Inputs for BigJsonReader
+      # Inputs for BigJsonReader (kept; adjust if needed)
       owner:
         description: "Source owner (where big JSON lives)"
         required: true
@@ -41,13 +40,11 @@ on:
       path:
         description: "Path to big JSON in source repo"
         required: true
-        default: "cache/report:::VII"
+        default: "cache/report_ALL.json"
       ref:
         description: "Ref in source repo"
         required: true
         default: "main"
-
-
 
 jobs:
   export:
@@ -76,23 +73,25 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
           REPO: ${{ github.event.inputs.source_repo || github.repository }}
           STATE: ${{ github.event.inputs.state || 'open' }}
-          LABELS: ${{ github.event.inputs.labels || '' }}
+          LABELS_IN: ${{ github.event.inputs.labels || '' }}
         run: |
           set -euo pipefail
           mkdir -p cache
-          # Build args: force GET so adding -f fields becomes query params (not POST body)
+
+          # Build args
           ARGS=( "repos/${REPO}/issues" -X GET --paginate -H "Accept: application/vnd.github+json" -f per_page=100 -f state="${STATE}" )
-          if [ -n "${LABELS}" ]; then
-            ARGS+=( -f labels="${LABELS}" )
+          if [ -n "${LABELS_IN}" ]; then
+            ARGS+=( -f labels="${LABELS_IN}" )
           fi
 
           raw=$(gh api "${ARGS[@]}")
-          LABELS=$(echo "${LABELS}" | tr ' ,' ':')
-          # Safe filename from labels (or ALL if empty)
-          safe_region=${LABELS:-ALL}
-          safe_region=$(printf '%s' "$safe_region" | tr -cs 'A-Za-z0-9._-' ':')
-          issuesJson="cache/report:${LABELS}"
-          echo "${safe_region}"
+
+          # Normalize labels for filename: letters/digits/._- only
+          SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
+          SAFE=${SAFE:-ALL}
+          issuesJson="cache/report_${SAFE}.json"
+          echo "SAFE=${SAFE}"
+          echo "issuesJson=${issuesJson}"
 
           printf '%s' "$raw" | jq -cs '
             flatten
@@ -109,245 +108,140 @@ jobs:
 
           echo "Preview:"
           jq '.[0:3]' "$issuesJson" || true
-
+          [ -s "$issuesJson" ] || { echo "❌ No issues produced"; exit 1; }
 
       - name: Show preview
         shell: bash
         env:
-          GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
-          REPO: ${{ github.event.inputs.source_repo || github.repository }}
-          STATE: ${{ github.event.inputs.state || 'open' }}
-          LABELS: ${{ github.event.inputs.labels || '' }}
-          RepoOwner: ${{ secrets.RepoOwner }}
-          RepoNameRefresh: ${{ secrets.RepoNameRefresh }}
+          LABELS_IN: ${{ github.event.inputs.labels || '' }}
         run: |
-          LABELS=$(echo "${LABELS}" | tr ' ,' ':')
-          safe_region=$(printf '%s' "$LABELS" | tr -cs 'A-Za-z0-9._-' ':')
-          issuesJson="cache/report:${LABELS}"
-          echo "${safe_region}"
+          SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
+          SAFE=${SAFE:-ALL}
+          issuesJson="cache/report_${SAFE}.json"
+          echo "SAFE=${SAFE}"
           jq '.[0:3]' "${issuesJson}" || true
 
-      - name: Checkout destination repo
+      - name: Checkout destination repo (for early copy, if you want the raw issues file there too)
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.repository }}
+          repository: ${{ github.event.inputs.dest_repo }}
           ref: ${{ github.event.inputs.dest_branch || 'main' }}
           path: dest
-          token: ${{ secrets.GH_PAT }} # PAT with write access to dest repo
+          token: ${{ secrets.GH_PAT }}
+          fetch-depth: 0
 
-      - name: Copy file into destination path
+      - name: Copy file into destination path (raw issues JSON)
         shell: bash
         env:
-          LABELS: ${{ github.event.inputs.labels || '' }}
+          LABELS_IN: ${{ github.event.inputs.labels || '' }}
         run: |
           set -euo pipefail
-      
-          mkdir -p cache dest
-      
-          # Sanitize label string for filename
-          safe_region=${LABELS:-ALL}
-          safe_region=$(printf '%s' "$safe_region" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
-      
-          # Match naming from previous step
-          issuesJson="cache/report_${safe_region}.json"
-          destFile="dest/report_${safe_region}.json"
-      
+          SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
+          SAFE=${SAFE:-ALL}
+          issuesJson="cache/report_${SAFE}.json"
+          destFile="dest/report_${SAFE}.json"
           echo "Copying ${issuesJson} → ${destFile}"
+          [ -f "${issuesJson}" ] || { echo "❌ Missing ${issuesJson}"; exit 1; }
+          mkdir -p "$(dirname "$destFile")"
           cp "${issuesJson}" "${destFile}"
 
-      - name: Commit & push
+      - name: Commit & push (raw issues JSON)
         working-directory: dest
         env:
-          GIT_AUTHOR_NAME: github-actions
-          GIT_AUTHOR_EMAIL: actions@users.noreply.github.com
-          GIT_COMMITTER_NAME: github-actions
-          GIT_COMMITTER_EMAIL: actions@users.noreply.github.com
           DEST_BRANCH: ${{ github.event.inputs.dest_branch || 'main' }}
         run: |
           set -euo pipefail
-      
-          git config user.name  "$GIT_AUTHOR_NAME"
-          git config user.email "$GIT_AUTHOR_EMAIL"
-      
-          # 1) Move any pre-generated files out of the way (if they exist)
-          TMP_OUT="$(mktemp -d)"
-          if [ -d cache ]; then
-            rsync -a cache/ "$TMP_OUT/cache/" || true
-            rm -rf cache || true
-          fi
-      
-          # 2) Get latest and switch branch cleanly
+          git config user.name  "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+
           git fetch origin "$DEST_BRANCH" || true
           git checkout -B "$DEST_BRANCH" "origin/$DEST_BRANCH"
-      
-          # 3) Bring artifacts back into the repo
-          if [ -d "$TMP_OUT/cache" ]; then
-            mkdir -p cache
-            rsync -a "$TMP_OUT/cache/" cache/
-          fi
-      
-          # 4) Commit
+
           git add -A
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
           fi
-          git commit -m "chore: export issues [skip ci]"
-      
-          # 5) Rebase on latest and push with explicit lease + retries
-          attempts=0
-          max_attempts=5
-          while :; do
-            attempts=$((attempts+1))
-      
-            git fetch origin "$DEST_BRANCH" || true
-            lease_sha="$(git rev-parse "origin/$DEST_BRANCH" || echo)"
-      
-            # Rebase our commit(s) atop latest remote
-            if ! git rebase --autostash "origin/$DEST_BRANCH"; then
-              echo "Rebase failed; aborting and retrying..."
-              git rebase --abort || true
-              [ "$attempts" -ge "$max_attempts" ] && exit 1
-              sleep 2
-              continue
-            fi
-      
-            # Push only if remote is still at lease_sha
-            if git push --force-with-lease=refs/heads/$DEST_BRANCH:"$lease_sha" origin HEAD:"$DEST_BRANCH"; then
-              echo "Push succeeded on attempt #$attempts"
-              break
-            fi
-      
-            echo "Push rejected (remote moved). Retrying... ($attempts/$max_attempts)"
-            [ "$attempts" -ge "$max_attempts" ] && exit 1
-            sleep 2
-          done
+          git commit -m "chore: export issues (raw) [skip ci]"
+
+          lease_sha="$(git rev-parse "origin/$DEST_BRANCH" || echo)"
+          # correct --force-with-lease syntax
+          git push --force-with-lease=refs/heads/$DEST_BRANCH:$lease_sha origin HEAD:$DEST_BRANCH
 
       - name: Run BigJsonReader
         env:
-          LABELS: ${{ github.event.inputs.labels || '' }}
           GH_PAT: ${{ secrets.GH_PAT }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RepoOwner: ${{ secrets.RepoOwner }}
-          RepoNameRefresh: ${{ secrets.RepoNameRefresh }}
-          RepoName: ${{ secrets.RepoName }}
         run: |
           set -euo pipefail
-          mkdir -p artifacts
-      
-          LABELS="${LABELS}"
-          LABELS="$(echo "${LABELS}" | tr ' ,|' ':' | tr -s ':')"
-          safe_region="$(printf '%s' "${LABELS}" | tr -cs 'A-Za-z0-9._-' '_')"
-      
-          issuesJson="cache/report:${LABELS}"
-      
-          echo "LABELS=${LABELS}"
-          echo "safe_region=${safe_region}"
-          echo "issuesJson=${issuesJson}"
-      
+          # If BigJsonReader expects to read from a GitHub repo (NOT local file),
+          # it will use the workflow_dispatch inputs below.
           dotnet run --project src/Tools/BigJsonReader/BigJsonReader.csproj -- \
-            --owner "${{ github.event.inputs.owner   || 'https-multiculturaltoolbox-com' }}" \
-            --repo  "${{ github.event.inputs.repo    || 'edge7-report' }}" \
-            --path  "${issuesJson}" \
-            --ref   "${{ github.event.inputs.ref     || 'main' }}" \
+            --owner "${{ github.event.inputs.owner }}" \
+            --repo  "${{ github.event.inputs.repo  }}" \
+            --path  "${{ github.event.inputs.path  }}" \
+            --ref   "${{ github.event.inputs.ref   }}" \
             --out "artifacts/monthly-status.json"
 
-      - name: Checkout destination repo
+      - name: Checkout destination repo (final write)
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.event.inputs.dest_repo || 'https-multiculturaltoolbox-com/edge7-report' }}
+          repository: ${{ github.event.inputs.dest_repo }}
           ref: ${{ github.event.inputs.dest_branch || 'main' }}
           path: dest
-          token: ${{ secrets.GH_PAT }}   # PAT with contents:write on dest repo
+          token: ${{ secrets.GH_PAT }}
           fetch-depth: 0
 
-      - name: Copy files into destination path
+      - name: Copy files into destination path (status + issues)
         shell: bash
         env:
           DEST_PATH: ${{ github.event.inputs.dest_path || 'data/monthly-status.json' }}
-          LABELS: ${{ github.event.inputs.labels || '' }}
+          LABELS_IN: ${{ github.event.inputs.labels || '' }}
         run: |
           set -euo pipefail
-          LABELS=$(echo "${LABELS}" | tr ' ,' ':')
-          # matches the issues filename we created earlier
-          safe_region=${LABELS:-ALL}
-          safe_region=$(printf '%s' "$safe_region" | tr -cs 'A-Za-z0-9._-' ':')
-          issuesJson="cache/report:${LABELS}"
-          echo "${safe_region}"
+          SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
+          SAFE=${SAFE:-ALL}
+          issuesJson="cache/report_${SAFE}.json"
+
           # 1) Place monthly-status.json exactly at DEST_PATH
           DEST1="dest/${DEST_PATH}"
           mkdir -p "$(dirname "$DEST1")"
+          [ -f artifacts/monthly-status.json ] || { echo "❌ monthly-status.json missing"; exit 1; }
           cp artifacts/monthly-status.json "$DEST1"
 
-          # 2) Place issues JSON alongside DEST_PATH (same directory) OR inside it if DEST_PATH ends with '/'
+          # 2) Place issues JSON alongside DEST_PATH
           if [[ "$DEST_PATH" == */ ]]; then
             issues_dest_dir="$DEST_PATH"
           else
             issues_dest_dir="$(dirname "$DEST_PATH")"
           fi
-          DEST2="dest/${issues_dest_dir}/${issuesJson}"
+          DEST2="dest/${issues_dest_dir}/report_${SAFE}.json"
           mkdir -p "$(dirname "$DEST2")"
+          [ -f "$issuesJson" ] || { echo "❌ issues JSON missing: $issuesJson"; exit 1; }
           cp "$issuesJson" "$DEST2"
 
           echo "Wrote:"
           echo "  $DEST1"
           echo "  $DEST2"
 
-      - name: Commit & push
+      - name: Commit & push (final)
         working-directory: dest
         env:
-          GIT_AUTHOR_NAME: github-actions
-          GIT_AUTHOR_EMAIL: actions@users.noreply.github.com
-          GIT_COMMITTER_NAME: github-actions
-          GIT_COMMITTER_EMAIL: actions@users.noreply.github.com
           DEST_BRANCH: ${{ github.event.inputs.dest_branch || 'main' }}
         run: |
           set -euo pipefail
-      
-          git config user.name  "$GIT_AUTHOR_NAME"
-          git config user.email "$GIT_AUTHOR_EMAIL"
-      
-          # 🧹 0) Clean up cache files that cause checkout conflicts
-          echo "Cleaning working tree..."
-          rm -rf cache || true
-          git reset --hard || true
-          git clean -fdx || true
-      
-          # 1) Make sure we’re up-to-date
+          git config user.name  "github-actions"
+          git config user.email "actions@users.noreply.github.com"
+
           git fetch origin "$DEST_BRANCH" || true
           git checkout -B "$DEST_BRANCH" "origin/$DEST_BRANCH"
-      
-          # 2) Add new changes
+
           git add -A
           if git diff --cached --quiet; then
             echo "No changes to commit."
             exit 0
           fi
-      
           git commit -m "chore: export issues & monthly status [skip ci]"
-      
-          # 3) Safe rebase & push (with retries)
-          attempts=0
-          max_attempts=5
-          while :; do
-            attempts=$((attempts+1))
-            git fetch origin "$DEST_BRANCH" || true
-            lease_sha="$(git rev-parse "origin/$DEST_BRANCH" || echo '')"
-      
-            if ! git rebase --autostash "origin/$DEST_BRANCH"; then
-              echo "Rebase failed; retrying..."
-              git rebase --abort || true
-              [ "$attempts" -ge "$max_attempts" ] && exit 1
-              sleep 2
-              continue
-            fi
-      
-            if git push --force-with-lease=refs/heads/$DEST_BRANCH:"$lease_sha" origin HEAD:"$DEST_BRANCH"; then
-              echo "Push succeeded on attempt #$attempts"
-              break
-            fi
-      
-            echo "Push rejected (remote moved). Retrying... ($attempts/$max_attempts)"
-            [ "$attempts" -ge "$max_attempts" ] && exit 1
-            sleep 2
-          done
+
+          lease_sha="$(git rev-parse "origin/$DEST_BRANCH" || echo)"
+          git push --force-with-lease=refs/heads/$DEST_BRANCH:$lease_sha origin HEAD:$DEST_BRANCH
