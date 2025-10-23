@@ -430,6 +430,7 @@ foreach (var kv in monthlyStatusCounts
 string issueKey = path;
 
 var issueBody = JsonConvert.SerializeObject(servicesReports);
+Console.Error.WriteLine(issueKey);
 await GitHubHelper.CreateOrUpdateIssue(issueKey, issueBody);
 
 // ===================== types (must come AFTER all top-level statements) =====================
