@@ -146,7 +146,7 @@ jobs:
           # Normalize labels for filename: letters/digits/._- only
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
-          issuesJson="cache/report_${DATE_START}_${DATE_END}_${REGION}.json"
+          issuesJson="report:${DATE_START}:${DATE_END}:${REGION}"
           echo "SAFE=${SAFE}"
           echo "issuesJson=${issuesJson}"
 
@@ -179,7 +179,7 @@ jobs:
         run: |
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
-          issuesJson="cache/report_${DATE_START}_${DATE_END}_${REGION}.json"
+          issuesJson="report:${DATE_START}:${DATE_END}:${REGION}"
           echo "SAFE=${SAFE}"
           jq '.[0:3]' "${issuesJson}" || true
 
@@ -203,8 +203,8 @@ jobs:
           set -euo pipefail
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
-          issuesJson="cache/report_${DATE_START}_${DATE_END}_${REGION}.json"
-          destFile="dest/report_${DATE_START}_${DATE_END}_${REGION}.json"
+          issuesJson="report:${DATE_START}:${DATE_END}:${REGION}"
+          destFile="dest/report:${DATE_START}:${DATE_END}:${REGION}"
           echo "Copying ${issuesJson} → ${destFile}"
           [ -f "${issuesJson}" ] || { echo "❌ Missing ${issuesJson}"; exit 1; }
           mkdir -p "$(dirname "$destFile")"
@@ -274,7 +274,7 @@ jobs:
           set -euo pipefail
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
-          issuesJson="cache/report_${DATE_START}_${DATE_END}_${REGION}.json"
+          issuesJson="report:${DATE_START}:${DATE_END}:${REGION}"
 
           # 1) Place monthly-status.json exactly at DEST_PATH
           DEST1="dest/${DEST_PATH}"
