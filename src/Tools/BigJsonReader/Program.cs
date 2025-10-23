@@ -10,7 +10,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
+using System.Text.RegularExpressions;
 // ---------- CLI args ----------
 string Arg(string name, string def = "")
 {
@@ -430,10 +430,10 @@ foreach (var kv in monthlyStatusCounts
 
 // --- Create/Update a GitHub issue with the summary payload (no '+') ---
 string issueKey = "cache/" + $"{regionKey}";
-
+string newPath = Regex.Replace(issueKey, @"T[\d:.]+Z", string.Empty);
 var issueBody = JsonConvert.SerializeObject(servicesReports);
 Console.Error.WriteLine(issueKey);
-var result = await GitHubHelper.CreateOrUpdateIssue(issueKey, issueBody);
+var result = await GitHubHelper.CreateOrUpdateIssue(newPath, issueBody);
 Console.WriteLine(JsonConvert.SerializeObject(result));
 // ===================== types (must come AFTER all top-level statements) =====================
 public sealed class RepoInfo
