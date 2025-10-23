@@ -89,7 +89,7 @@ jobs:
           # Normalize labels for filename: letters/digits/._- only
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
-          issuesJson="cache/report:${github.event.inputs.dateStart}-${github.event.inputs.dateEnd}.json"
+          issuesJson="cache/report_${SAFE}.json"
           echo "SAFE=${SAFE}"
           echo "issuesJson=${issuesJson}"
 
@@ -117,7 +117,7 @@ jobs:
         run: |
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
-          issuesJson="cache/report:${github.event.inputs.dateStart}-${github.event.inputs.dateEnd}.json"
+          issuesJson="cache/report_${SAFE}.json"
           echo "SAFE=${SAFE}"
           jq '.[0:3]' "${issuesJson}" || true
 
@@ -138,7 +138,7 @@ jobs:
           set -euo pipefail
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
-          issuesJson="cache/report:${github.event.inputs.dateStart}-${github.event.inputs.dateEnd}.json"
+          issuesJson="cache/report_${SAFE}.json"
           destFile="dest/report_${SAFE}.json"
           echo "Copying ${issuesJson} → ${destFile}"
           [ -f "${issuesJson}" ] || { echo "❌ Missing ${issuesJson}"; exit 1; }
@@ -181,8 +181,8 @@ jobs:
           # If BigJsonReader expects to read from a GitHub repo (NOT local file),
           # it will use the workflow_dispatch inputs below.
           dotnet run --project src/Tools/BigJsonReader/BigJsonReader.csproj -- \
-            --owner "${{ 'owner' }}" \
-            --repo  "${{ 'repo'  }}" \
+            --owner "${{ repository_owner }}" \
+            --repo  "${{ github.repository  }}" \
             --path  "${{ github.event.inputs.path  }}" \
             --regionKey   "${{ github.event.inputs.source_path   }}" \
             --ref   "${{ github.event.inputs.ref   }}" \
