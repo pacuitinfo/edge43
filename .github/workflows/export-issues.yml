@@ -11,6 +11,10 @@ on:
         description: "Comma-separated labels (optional). If empty, file will be named report_ALL.json"
         required: false
         default: ""
+      source_path:
+        description: "Source repo (owner/name) to read issues from"
+        required: true
+        default: ""
       source_repo:
         description: "Source repo (owner/name) to read issues from"
         required: true
