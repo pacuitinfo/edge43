@@ -89,12 +89,6 @@ jobs:
           QUERY="repo:${REPO} state:open"
 
           if [ -n "${LABELS_IN}" ]; then
-            QUERY="${QUERY} label:"
-            for lbl in $(echo "${LABELS_IN}" | tr ',' ' '); do
-              QUERY="${QUERY} ${lbl}"
-            done
-          fi
-          if [ -n "${LABELS_IN}" ]; then
             QUERY="${QUERY} label:${LABELS_IN}"
           fi
           if [ -n "${REGION}" ]; then
