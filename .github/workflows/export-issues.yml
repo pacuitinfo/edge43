@@ -82,7 +82,7 @@ jobs:
           set -euo pipefail
           mkdir -p cache
 
-          QUERY="repo:${REPO} is:pr is:open"
+          QUERY="repo:${REPO} is:open"
 
           if [ -n "${LABELS_IN}" ]; then
             LABELS_QUERY=$(echo "${LABELS_IN}" | tr ',' '\n' | sed 's/^/label:/g' | tr '\n' ' ')
