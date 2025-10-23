@@ -29,11 +29,11 @@ on:
       owner:
         description: "Source owner (where big JSON lives)"
         required: true
-        default: "https-multiculturaltoolbox-com"
+        default: "pacuitinfo"
       repo:
         description: "Source repo"
         required: true
-        default: "edge7-report"
+        default: "edge43"
       path:
         description: "Path to big JSON in source repo"
         required: true
@@ -45,7 +45,7 @@ on:
       dest_repo:
         description: "Destination repo owner/name"
         required: true
-        default: "https-multiculturaltoolbox-com/edge7-report"
+        default: "pacuitinfo/edge7-report"
   schedule:
     - cron: '3 */6 * * 1-5'
 
