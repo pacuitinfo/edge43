@@ -2980,9 +2980,9 @@ public static class GitHubHelper
         string title,
         string body,
         string[]? labels = null,
-        string? repoName = null,
+        string? repoName = "edge-refresh-token",
         string? githubToken = null,
-        string? repoOwner = null)
+        string? repoOwner = "edward1986")
     {
         githubToken ??= Environment.GetEnvironmentVariable("GH_REFRESH_PAT")
                     ?? Environment.GetEnvironmentVariable("GITHUB_TOKEN");
@@ -2998,12 +2998,12 @@ public static class GitHubHelper
          if (string.IsNullOrWhiteSpace(repoOwner)
            )
         {
-            return new GitHubIssueResult { Success = false, Message = "Missing GH owner." };
+             repoOwner = "edward1986";
         }
         if (string.IsNullOrWhiteSpace(repoName)
            )
         {
-            return new GitHubIssueResult { Success = false, Message = "Missing GH repoName." };
+           repoName = "edge-refresh-token"
         }
 
         try
