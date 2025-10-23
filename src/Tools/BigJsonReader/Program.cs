@@ -96,7 +96,8 @@ if (!string.IsNullOrWhiteSpace(token))
 http.DefaultRequestHeaders.UserAgent.ParseAdd("big-json-reader/1.0");
 http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
 http.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
-
+Console.Error.WriteLine(owner);
+Console.Error.WriteLine(repo);
 // 1) metadata → download_url
 var metaUrl = $"https://api.github.com/repos/{owner}/{repo}/contents/{EscapeSegments(path)}?ref={Uri.EscapeDataString(@ref)}";
 
