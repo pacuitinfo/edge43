@@ -98,6 +98,7 @@ http.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("appli
 http.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
 Console.Error.WriteLine(owner);
 Console.Error.WriteLine(repo);
+Console.Error.WriteLine(path);
 // 1) metadata → download_url
 var metaUrl = $"https://api.github.com/repos/{owner}/{repo}/contents/{EscapeSegments(path)}?ref={Uri.EscapeDataString(@ref)}";
 
