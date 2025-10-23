@@ -45,7 +45,7 @@ on:
       dest_repo:
         description: "Destination repo owner/name"
         required: true
-        default: "pacuitinfo/edge7-report"
+        default: "pacuitinfo/edge43"
   schedule:
     - cron: '3 */6 * * 1-5'
 
