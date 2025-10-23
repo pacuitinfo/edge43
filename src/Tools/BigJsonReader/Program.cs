@@ -429,7 +429,7 @@ foreach (var kv in monthlyStatusCounts
 
 
 // --- Create/Update a GitHub issue with the summary payload (no '+') ---
-string issueKey = path;
+string issueKey = "cache/" + $"{regionKey}";
 
 var issueBody = JsonConvert.SerializeObject(servicesReports);
 Console.Error.WriteLine(issueKey);
