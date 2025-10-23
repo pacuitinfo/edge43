@@ -2994,6 +2994,9 @@ public static class GitHubHelper
             string.IsNullOrWhiteSpace(repoOwner) ||
             string.IsNullOrWhiteSpace(repoName))
         {
+            Console.WriteLine(repoName);
+             Console.WriteLine(repoOwner);
+              Console.WriteLine(githubToken);
             return new GitHubIssueResult { Success = false, Message = "Missing GH token/owner/repo." };
         }
 
