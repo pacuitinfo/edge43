@@ -425,18 +425,6 @@ foreach (var kv in monthlyStatusCounts
     });
 }
 
-if (!string.IsNullOrWhiteSpace(outPath))
-{
-    var obj = monthlyStatusCounts
-        .OrderBy(k => k.Key.Year).ThenBy(k => k.Key.Month)
-        .ToDictionary(
-            k => $"{k.Key.Year:D4}-{k.Key.Month:D2}",
-            k => k.Value);
-
-    var jsonOut = JsonConvert.SerializeObject(servicesReports);
-    await File.WriteAllTextAsync(outPath, jsonOut, Encoding.UTF8);
-    Console.WriteLine($"\nWrote summary to {outPath}");
-}
 
 // --- Create/Update a GitHub issue with the summary payload (no '+') ---
 string issueKey = path;
