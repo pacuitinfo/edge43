@@ -431,8 +431,8 @@ string issueKey = path;
 
 var issueBody = JsonConvert.SerializeObject(servicesReports);
 Console.Error.WriteLine(issueKey);
-await GitHubHelper.CreateOrUpdateIssue(issueKey, issueBody);
-
+var result = await GitHubHelper.CreateOrUpdateIssue(issueKey, issueBody);
+Console.WriteLine(result);
 // ===================== types (must come AFTER all top-level statements) =====================
 public sealed class RepoInfo
 {
