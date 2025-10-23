@@ -3020,9 +3020,7 @@ public static class GitHubHelper
             
             var searchResp = await client.GetAsync(searchUrl);
              Console.WriteLine(JsonConvert.SerializeObject(searchResp));
-            if (!searchResp.IsSuccessStatusCode)
-                return new GitHubIssueResult { Success = false, Message = $"Search failed: {(int)searchResp.StatusCode} {searchResp.StatusCode}" };
-
+            
             using var searchJson = JsonDocument.Parse(await searchResp.Content.ReadAsStringAsync());
             int? existingNumber = null;
             if (searchJson.RootElement.TryGetProperty("items", out var items))
