@@ -85,11 +85,11 @@ jobs:
           # Build args
           ARGS=( "repos/${REPO}/issues" -X GET --paginate -H "Accept: application/vnd.github+json" -f per_page=100 -f state="open" )
           if [ -n "${LABELS_IN}" ]; then
-            IFS=',' read -r -a LABELS <<< "${LABELS_IN}"
-            joined=$(IFS=','; echo "${LABELS[*]}")
-            ARGS+=( -f labels="${joined}" )
+            ARGS+=( -f labels="${LABELS_IN}" )
           fi
-
+          if [ -n "${REGION}" ]; then
+            ARGS+=( -f labels="${REGION}" )
+          fi
           raw=$(gh api "${ARGS[@]}")
           echo "LABELS_IN='${LABELS_IN}'"
           # Normalize labels for filename: letters/digits/._- only
