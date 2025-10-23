@@ -3015,8 +3015,11 @@ public static class GitHubHelper
 
             // 1) Search for an existing issue by exact title
             var searchQuery = Uri.EscapeDataString($"in:title {title} repo:{repoOwner}/{repoName}");
+           
             var searchUrl = $"https://api.github.com/search/issues?q={searchQuery}";
+            
             var searchResp = await client.GetAsync(searchUrl);
+             Console.WriteLine(searchUrl);
             if (!searchResp.IsSuccessStatusCode)
                 return new GitHubIssueResult { Success = false, Message = $"Search failed: {(int)searchResp.StatusCode} {searchResp.StatusCode}" };
 
