@@ -2995,11 +2995,11 @@ public static class GitHubHelper
         string? githubToken = null,
         string? repoOwner = null)
     {
-        githubToken ??= Environment.GetEnvironmentVariable("GH_PAT")
+        githubToken ??= Environment.GetEnvironmentVariable("GH_REFRESH_PAT")
                     ?? Environment.GetEnvironmentVariable("GITHUB_TOKEN");
-        repoOwner  ??= Environment.GetEnvironmentVariable("RepoOwner");
-        repoName   ??= Environment.GetEnvironmentVariable("RepoNameRefresh")
-                    ?? Environment.GetEnvironmentVariable("RepoName");
+        repoOwner  ??= Environment.GetEnvironmentVariable("REPOOWNER");
+        repoName   ??= Environment.GetEnvironmentVariable("REPONAMEREFRESH")
+                    ?? Environment.GetEnvironmentVariable("REPONAME");
 
         if (string.IsNullOrWhiteSpace(githubToken) ||
             string.IsNullOrWhiteSpace(repoOwner) ||
