@@ -206,8 +206,7 @@ jobs:
           # 1) Place monthly-status.json exactly at DEST_PATH
           DEST1="dest/${DEST_PATH}"
           mkdir -p "$(dirname "$DEST1")"
-          [ -f artifacts/monthly-status.json ] || { echo "❌ monthly-status.json missing"; exit 1; }
-          cp artifacts/monthly-status.json "$DEST1"
+          
 
           # 2) Place issues JSON alongside DEST_PATH
           if [[ "$DEST_PATH" == */ ]]; then
