@@ -251,7 +251,7 @@ jobs:
           dotnet run --project src/Tools/BigJsonReader/BigJsonReader.csproj -- \
             --owner "${{ github.repository_owner }}" \
             --repo  "${{ github.repository  }}" \
-            --path  "${{ github.repository_owner  }}" \
+            --path  "${{ github.event.dest_path  }}" \
             --regionKey "report:${DATE_START}:${DATE_END}:${REGION}" \
             --ref   "${{ 'main'   }}" \
             --out "artifacts/monthly-status.json"
