@@ -85,7 +85,16 @@ jobs:
           # Build args
           ARGS=( "repos/${REPO}/issues" -X GET --paginate -H "Accept: application/vnd.github+json" -f per_page=100 -f state="open" )
           if [ -n "${LABELS_IN}" ]; then
-            ARGS+=( -f labels="${LABELS_IN}" )
+            # Split the comma-separated labels into an array
+            IFS=',' read -r -a LABELS <<< "${LABELS_IN}"
+
+            # Loop through each label in the array
+            for label in "${LABELS[@]}"; do
+              echo "Processing label: ${label}"
+
+              # Example: Add each label argument to ARGS
+              ARGS+=( -f labels="${label}" )
+            done
           fi
 
           raw=$(gh api "${ARGS[@]}")
