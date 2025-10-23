@@ -82,15 +82,18 @@ jobs:
           set -euo pipefail
           mkdir -p cache
 
-          # Build args
-          ARGS=( "repos/${REPO}/issues" -X GET --paginate -H "Accept: application/vnd.github+json" -f per_page=100 -f state="open" )
+          QUERY="repo:${REPO} is:pr is:open"
+
           if [ -n "${LABELS_IN}" ]; then
-            ARGS+=( -f labels="${LABELS_IN}" )
+            LABELS_QUERY=$(echo "${LABELS_IN}" | tr ',' '\n' | sed 's/^/label:/g' | tr '\n' ' ')
+            QUERY="${QUERY} ${LABELS_QUERY}"
           fi
+
           if [ -n "${REGION}" ]; then
-            ARGS+=( -f q="labels:${REGION}" )
+            QUERY="${QUERY} label:${REGION}"
           fi
-          raw=$(gh api "${ARGS[@]}")
+
+          raw=$(gh api search/issues -f q="${QUERY}" -f per_page=100 --paginate)
           echo "LABELS_IN='${LABELS_IN}'"
           # Normalize labels for filename: letters/digits/._- only
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
