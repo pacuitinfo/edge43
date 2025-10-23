@@ -141,15 +141,19 @@ jobs:
           LABELS: ${{ github.event.inputs.labels || '' }}
         run: |
           set -euo pipefail
-          LABELS=$(echo "${LABELS}" | tr ' ,' ':')
-          # Recompute the filename exactly as in the previous step
-          safe_region=${LABELS:-ALL}
-          safe_region=$(printf '%s' "$safe_region" | tr -cs 'A-Za-z0-9._-' ':')
-          issuesJson="cache/report:${LABELS}"
       
-          # Copy into the checked-out dest/ repo root
-          mkdir -p "dest"
-          cp "${issuesJson}" "dest/${issuesJson}"
+          mkdir -p cache dest
+      
+          # Sanitize label string for filename
+          safe_region=${LABELS:-ALL}
+          safe_region=$(printf '%s' "$safe_region" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
+      
+          # Match naming from previous step
+          issuesJson="cache/report_${safe_region}.json"
+          destFile="dest/report_${safe_region}.json"
+      
+          echo "Copying ${issuesJson} → ${destFile}"
+          cp "${issuesJson}" "${destFile}"
 
       - name: Commit & push
         working-directory: dest
