@@ -83,6 +83,7 @@ jobs:
           mkdir -p cache
 
           # Build args
+          ARGS=( "repos/${REPO}/issues" -X GET --paginate -H "Accept: application/vnd.github+json" -f per_page=100 -f state="open" )
           if [ -n "${LABELS_IN}" ]; then
             IFS=',' read -r -a LABELS <<< "${LABELS_IN}"
             joined=$(IFS=','; echo "${LABELS[*]}")
