@@ -171,6 +171,10 @@ jobs:
       - name: Run BigJsonReader
         env:
           GH_PAT: ${{ secrets.GH_PAT }}
+          REPONAMEREFRESH: ${{secrets.REPONAMEREFRESH}}
+          REPOOWNER: ${{secrets.REPOOWNER}}
+          GH_REFRESH_PAT: ${{secrets.GH_REFRESH_PAT}}
+          REPONAME: ${{secrets.REPONAME}}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
