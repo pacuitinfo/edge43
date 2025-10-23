@@ -98,7 +98,8 @@ jobs:
           if [ -n "${REGION}" ]; then
             QUERY="${QUERY} label:${REGION}"
           fi
-          gh repo view https-multiculturaltoolbox-com/edge7
+          gh api repos/{github.repository_owner}/{github.repository}/releases
+
           echo "Search query: ${QUERY}"
 
           raw=$(gh api search/issues -f q="${QUERY}" -f per_page=100 --paginate)
