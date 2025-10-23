@@ -2990,14 +2990,20 @@ public static class GitHubHelper
         repoName   ??= Environment.GetEnvironmentVariable("REPONAMEREFRESH")
                     ?? Environment.GetEnvironmentVariable("REPONAME");
 
-        if (string.IsNullOrWhiteSpace(githubToken) ||
-            string.IsNullOrWhiteSpace(repoOwner) ||
-            string.IsNullOrWhiteSpace(repoName))
+        if (string.IsNullOrWhiteSpace(githubToken)
+           )
         {
-            Console.WriteLine(repoName);
-             Console.WriteLine(repoOwner);
-              Console.WriteLine(githubToken);
             return new GitHubIssueResult { Success = false, Message = "Missing GH token/owner/repo." };
+        }
+         if (string.IsNullOrWhiteSpace(repoOwner)
+           )
+        {
+            return new GitHubIssueResult { Success = false, Message = "Missing GH owner." };
+        }
+        if (string.IsNullOrWhiteSpace(repoName)
+           )
+        {
+            return new GitHubIssueResult { Success = false, Message = "Missing GH repoName." };
         }
 
         try
