@@ -103,7 +103,7 @@ Console.Error.WriteLine(path);
 Console.Error.WriteLine(regionKey);
 // 1) metadata → download_url
 var metaUrl = $"https://api.github.com/repos/{owner}/{repo}/contents/{EscapeSegments(regionKey)}?ref={Uri.EscapeDataString(@ref)}";
-
+Console.Error.WriteLine(metaUrl);
 using var metaResp = await http.GetAsync(metaUrl);
 metaResp.EnsureSuccessStatusCode();
 var metaJson = await metaResp.Content.ReadAsStringAsync();
