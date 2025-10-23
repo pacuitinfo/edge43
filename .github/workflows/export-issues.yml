@@ -87,11 +87,9 @@ jobs:
           if [ -n "${LABELS_IN}" ]; then
             ARGS+=( -f labels="${LABELS_IN}" )
           fi
-          if [ -n "${REGION}" ]; then
-            ARGS+=( -f q="labels:${REGION}" )
-          fi
-          raw=$(gh api search/issues -f q="repo:${REPO} state:${STATE} label:${LABELS_IN} label:${REGION}" -f per_page=100 --paginate)
-          echo "LABELS_IN='${LABELS_IN}'"
+
+          raw=$(gh api "${ARGS[@]}")
+          echo LABELS_IN
           # Normalize labels for filename: letters/digits/._- only
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
