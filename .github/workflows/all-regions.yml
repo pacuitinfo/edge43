@@ -34,10 +34,10 @@ on:
         description: "Path to big JSON in source repo"
         required: true
         default: "cache/report:::VII"
-      ref:
+      region:
         description: "Ref in source repo"
-        required: true
-        default: "main"
+        required: false
+        default: "VII"
       dest_repo:
         description: "Destination repo owner/name"
         required: true
@@ -76,6 +76,7 @@ jobs:
               -R "${WORKFLOW_REPO}" \
               -r "${BRANCH}" \
               -f source_repo="${SOURCE_REPO}" \
+              -f region="${github.event.inputs.region}" \
               -f source_path="report_${region}.json" \
               -f dateStart="${github.event.inputs.dateStart}" \
               -f dateEnd=" ${github.event.inputs.dateEnd}" \
