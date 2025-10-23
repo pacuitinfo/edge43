@@ -5,10 +5,6 @@ concurrency:
 on:
   workflow_dispatch:
     inputs:
-      state:
-        description: "open | closed | all"
-        required: false
-        default: "open"
       labels:
         description: "Comma-separated labels (optional)"
         required: false
@@ -26,11 +22,11 @@ on:
         required: false
         default: "data/issues.json"
 
-      owner:
+      dateEnd:
         description: "Source owner (where big JSON lives)"
         required: true
         default: "pacuitinfo"
-      repo:
+      dateStart:
         description: "Source repo"
         required: true
         default: "edge43"
@@ -60,7 +56,7 @@ jobs:
           WORKFLOW_REPO: ${{ github.repository }}                   # repo that hosts export-issues.yml
           WORKFLOW_FILE: export-issues.yml
           BRANCH: ${{ github.event.inputs.dest_branch || 'main' }}
-          STATE:  ${{ github.event.inputs.state || 'open' }}
+          STATE:  ${{ 'open' }}
           SOURCE_REPO: ${{ github.event.inputs.source_repo }}
           DEST_REPO:   ${{ github.event.inputs.dest_repo }}
           DEST_BRANCH: ${{ github.event.inputs.dest_branch || 'main' }}

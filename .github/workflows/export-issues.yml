@@ -29,14 +29,14 @@ on:
         default: "data/monthly-status.json"
 
       # Inputs for BigJsonReader (kept; adjust if needed)
-      owner:
+      dateStart:
         description: "Source owner (where big JSON lives)"
-        required: true
-        default: "pacuitinfo"
-      repo:
+        required: false
+        default: ""
+      dateEnd:
         description: "Source repo"
-        required: true
-        default: "edge43"
+        required: false
+        default: ""
       path:
         description: "Path to big JSON in source repo"
         required: true
@@ -181,8 +181,6 @@ jobs:
           # If BigJsonReader expects to read from a GitHub repo (NOT local file),
           # it will use the workflow_dispatch inputs below.
           dotnet run --project src/Tools/BigJsonReader/BigJsonReader.csproj -- \
-            --owner "${{ github.event.inputs.owner }}" \
-            --repo  "${{ github.event.inputs.repo  }}" \
             --path  "${{ github.event.inputs.path  }}" \
             --regionKey   "${{ github.event.inputs.source_path   }}" \
             --ref   "${{ github.event.inputs.ref   }}" \

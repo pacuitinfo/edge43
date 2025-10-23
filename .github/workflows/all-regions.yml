@@ -5,10 +5,6 @@ concurrency:
 on:
   workflow_dispatch:
     inputs:
-      state:
-        description: "open | closed | all"
-        required: false
-        default: "open"
       labels:
         description: "Comma-separated labels (optional)"
         required: false
@@ -26,14 +22,14 @@ on:
         required: false
         default: "data/issues.json"
 
-      owner:
+      dateEnd:
         description: "Source owner (where big JSON lives)"
-        required: true
-        default: "pacuitinfo"
-      repo:
+        required: false
+        default: ""
+      dateStart:
         description: "Source repo"
-        required: true
-        default: "edge43"
+        required: false
+        default: ""
       path:
         description: "Path to big JSON in source repo"
         required: true
@@ -81,6 +77,8 @@ jobs:
               -r "${BRANCH}" \
               -f source_repo="${SOURCE_REPO}" \
               -f source_path="report_${region}.json" \
+              -f dateStart="${github.event.inputs.dateStart}" \
+              -f dateEnd=" ${github.event.inputs.dateEnd}" \
               -f dest_repo="${DEST_REPO}" \
               -f dest_branch="${DEST_BRANCH}" \
               -f dest_path="report_${region}.json" \
