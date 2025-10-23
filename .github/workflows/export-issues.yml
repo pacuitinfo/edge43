@@ -184,7 +184,7 @@ jobs:
             --owner "${{ github.event.inputs.owner }}" \
             --repo  "${{ github.event.inputs.repo  }}" \
             --path  "${{ github.event.inputs.path  }}" \
-            --source_path   "${{ github.event.inputs.source_path   }}" \
+            --regionKey   "${{ github.event.inputs.source_path   }}" \
             --ref   "${{ github.event.inputs.ref   }}" \
             --out "artifacts/monthly-status.json"
 
