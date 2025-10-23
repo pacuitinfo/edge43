@@ -88,7 +88,7 @@ jobs:
             ARGS+=( -f labels="${LABELS_IN}" )
           fi
           if [ -n "${REGION}" ]; then
-            ARGS+=( -f labels="${REGION}" )
+            ARGS+=( -f search="labels:${REGION}" )
           fi
           raw=$(gh api "${ARGS[@]}")
           echo "LABELS_IN='${LABELS_IN}'"
