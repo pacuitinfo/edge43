@@ -3,10 +3,6 @@ name: Export Issues to Own Repo
 on:
   workflow_dispatch:
     inputs:
-      state:
-        description: "open | closed | all"
-        required: false
-        default: "open"
       labels:
         description: "Comma-separated labels (optional). If empty, file will be named report_ALL.json"
         required: false
@@ -76,14 +72,14 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
           REPO: ${{ github.event.inputs.source_repo || github.repository }}
-          STATE: ${{ github.event.inputs.state || 'open' }}
+          STATE: ${{  'open' }}
           LABELS_IN: ${{ github.event.inputs.labels || '' }}
         run: |
           set -euo pipefail
           mkdir -p cache
 
           # Build args
-          ARGS=( "repos/${REPO}/issues" -X GET --paginate -H "Accept: application/vnd.github+json" -f per_page=100 -f state="${STATE}" )
+          ARGS=( "repos/${REPO}/issues" -X GET --paginate -H "Accept: application/vnd.github+json" -f per_page=100 -f state="open" )
           if [ -n "${LABELS_IN}" ]; then
             ARGS+=( -f labels="${LABELS_IN}" )
           fi
