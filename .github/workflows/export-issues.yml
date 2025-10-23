@@ -98,7 +98,7 @@ jobs:
           if [ -n "${REGION}" ]; then
             QUERY="${QUERY} label:${REGION}"
           fi
-          gh api repos/{github.repository_owner}/{github.repository}/releases
+          gh api repos/{REPO}/releases
 
           echo "Search query: ${QUERY}"
 
