@@ -181,7 +181,7 @@ jobs:
           # If BigJsonReader expects to read from a GitHub repo (NOT local file),
           # it will use the workflow_dispatch inputs below.
           dotnet run --project src/Tools/BigJsonReader/BigJsonReader.csproj -- \
-            --owner "${{ repository_owner }}" \
+            --owner "${{ github.repository_owner }}" \
             --repo  "${{ github.repository  }}" \
             --path  "${{ github.event.inputs.path  }}" \
             --regionKey   "${{ github.event.inputs.source_path   }}" \
