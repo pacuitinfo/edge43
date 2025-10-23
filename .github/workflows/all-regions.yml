@@ -60,7 +60,7 @@ jobs:
           WORKFLOW_REPO: ${{ github.repository }}                   # repo that hosts export-issues.yml
           WORKFLOW_FILE: export-issues.yml
           BRANCH: ${{ github.event.inputs.dest_branch || 'main' }}
-          STATE:  ${{ github.event.inputs.state || 'open' }}
+          REGIONKEY:  ${{ github.event.inputs.regionKey }}
           SOURCE_REPO: ${{ github.event.inputs.source_repo }}
           DEST_REPO:   ${{ github.event.inputs.dest_repo }}
           DEST_BRANCH: ${{ github.event.inputs.dest_branch || 'main' }}
@@ -79,12 +79,12 @@ jobs:
             gh workflow run "${WORKFLOW_FILE}" \
               -R "${WORKFLOW_REPO}" \
               -r "${BRANCH}" \
-              -f state="${STATE}" \
               -f source_repo="${SOURCE_REPO}" \
+              -f source_path="report_${region}.json" \
               -f dest_repo="${DEST_REPO}" \
               -f dest_branch="${DEST_BRANCH}" \
               -f dest_path="report_${region}.json" \
-              -f path="report_${region}.json" \
+              -f path="cache/report:${region}.json" \
               -f labels="${region}"
             echo "Dispatched for region: ${region}"
           done
