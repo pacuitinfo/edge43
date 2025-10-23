@@ -88,7 +88,7 @@ jobs:
             ARGS+=( -f q="label:${LABELS_IN} label:${REGION}" )
           fi
 
-          raw=$(gh api "${ARGS[@]}")
+          raw=$(gh api search/issues "${ARGS[@]}")
           echo LABELS_IN
           # Normalize labels for filename: letters/digits/._- only
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
