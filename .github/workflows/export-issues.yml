@@ -85,10 +85,10 @@ jobs:
           # Build args
           ARGS=( "repos/${REPO}/issues" -X GET --paginate -H "Accept: application/vnd.github+json" -f per_page=100 -f state="open" )
           if [ -n "${LABELS_IN}" ]; then
-            ARGS+=( -f q="${LABELS_IN})
+            ARGS+=( -f labels="${LABELS_IN}" )
           fi
-          
-          raw=$(gh api "${ARGS[@]}" )
+
+          raw=$(gh api "${ARGS[@]}")
           echo LABELS_IN
           # Normalize labels for filename: letters/digits/._- only
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
