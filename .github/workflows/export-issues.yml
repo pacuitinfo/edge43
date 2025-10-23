@@ -89,8 +89,7 @@ jobs:
           # Normalize labels for filename: letters/digits/._- only
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
-          hash=$(echo -n "$SAFE" | sha1sum | cut -c1-10)
-          issuesJson="cache/report_${hash}.json"
+          issuesJson="cache/report_${SAFE}.json"
           echo "SAFE=${SAFE}"
           echo "issuesJson=${issuesJson}"
 
@@ -118,8 +117,7 @@ jobs:
         run: |
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
-          hash=$(echo -n "$SAFE" | sha1sum | cut -c1-10)
-          issuesJson="cache/report_${hash}.json"
+          issuesJson="cache/report_${SAFE}.json"
           echo "SAFE=${SAFE}"
           jq '.[0:3]' "${issuesJson}" || true
 
@@ -140,9 +138,8 @@ jobs:
           set -euo pipefail
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
-          hash=$(echo -n "$SAFE" | sha1sum | cut -c1-10)
-          issuesJson="cache/report_${hash}.json"
-          destFile="dest/report_${hash}.json"
+          issuesJson="cache/report_${SAFE}.json"
+          destFile="dest/report_${SAFE}.json"
           echo "Copying ${issuesJson} → ${destFile}"
           [ -f "${issuesJson}" ] || { echo "❌ Missing ${issuesJson}"; exit 1; }
           mkdir -p "$(dirname "$destFile")"
@@ -209,8 +206,7 @@ jobs:
           set -euo pipefail
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
-          hash=$(echo -n "$SAFE" | sha1sum | cut -c1-10)
-          issuesJson="cache/report_${hash}.json"
+          issuesJson="cache/report_${SAFE}.json"
 
           # 1) Place monthly-status.json exactly at DEST_PATH
           DEST1="dest/${DEST_PATH}"
@@ -223,7 +219,7 @@ jobs:
           else
             issues_dest_dir="$(dirname "$DEST_PATH")"
           fi
-          DEST2="dest/${issues_dest_dir}/report_${hash}.json"
+          DEST2="dest/${issues_dest_dir}/report_${SAFE}.json"
           mkdir -p "$(dirname "$DEST2")"
           [ -f "$issuesJson" ] || { echo "❌ issues JSON missing: $issuesJson"; exit 1; }
           cp "$issuesJson" "$DEST2"
