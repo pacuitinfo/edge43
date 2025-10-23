@@ -149,7 +149,7 @@ jobs:
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
           issuesJson="cache/report_${DATE_START}_${DATE_END}_${REGION}.json"
-          destFile="dest/report_${SAFE}.json"
+          destFile="dest/report_${DATE_START}_${DATE_END}_${REGION}.json"
           echo "Copying ${issuesJson} → ${destFile}"
           [ -f "${issuesJson}" ] || { echo "❌ Missing ${issuesJson}"; exit 1; }
           mkdir -p "$(dirname "$destFile")"
@@ -232,7 +232,7 @@ jobs:
           else
             issues_dest_dir="$(dirname "$DEST_PATH")"
           fi
-          DEST2="dest/${issues_dest_dir}/report_${SAFE}.json"
+          DEST2="dest/${issues_dest_dir}/report_${DATE_START}_${DATE_END}_${REGION}.json"
           mkdir -p "$(dirname "$DEST2")"
           [ -f "$issuesJson" ] || { echo "❌ issues JSON missing: $issuesJson"; exit 1; }
           cp "$issuesJson" "$DEST2"
