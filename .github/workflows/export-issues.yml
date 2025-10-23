@@ -241,15 +241,19 @@ jobs:
           GH_REFRESH_PAT: ${{secrets.GH_REFRESH_PAT}}
           REPONAME: ${{secrets.REPONAME}}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DATE_START: ${{ github.event.inputs.dateStart }}
+          DATE_END: ${{ github.event.inputs.dateEnd }}
+          REGION: ${{ github.event.inputs.region }}
         run: |
           set -euo pipefail
+          issuesJson="report:${DATE_START}:${DATE_END}:${REGION}"
           # If BigJsonReader expects to read from a GitHub repo (NOT local file),
           # it will use the workflow_dispatch inputs below.
           dotnet run --project src/Tools/BigJsonReader/BigJsonReader.csproj -- \
             --owner "${{ github.repository_owner }}" \
             --repo  "${{ github.repository  }}" \
-            --path  "${{ github.event.inputs.path  }}" \
-            --regionKey   "${{ github.event.inputs.source_path   }}" \
+            --path  "${{ github.repository_owner  }}" \
+            --regionKey   "${{ issuesJson   }}" \
             --ref   "${{ 'main'   }}" \
             --out "artifacts/monthly-status.json"
 
