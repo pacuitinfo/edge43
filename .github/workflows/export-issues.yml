@@ -267,7 +267,7 @@ jobs:
           else
             issues_dest_dir="$(dirname "$DEST_PATH")"
           fi
-          DEST2="dest/${issues_dest_dir}/report_${DATE_START}_${DATE_END}_${REGION}.json"
+          DEST2="dest/${issues_dest_dir}/report:${DATE_START}:${DATE_END}:${REGION}"
           mkdir -p "$(dirname "$DEST2")"
           [ -f "$issuesJson" ] || { echo "❌ issues JSON missing: $issuesJson"; exit 1; }
           cp "$issuesJson" "$DEST2"
