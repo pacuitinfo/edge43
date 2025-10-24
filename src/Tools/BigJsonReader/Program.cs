@@ -955,7 +955,7 @@ public class UserModel
         public virtual ImagesModel ProfilePicture { set; get; }
         [JsonProperty("employeeDetails")]
         public virtual EmployeeModel EmployeeDetails { set; get; }
-        [DefaultValue(false)]
+       
         [JsonProperty("isOnline")]
         public bool IsOnline { set; get; }
         [JsonProperty("lastOnline")]
