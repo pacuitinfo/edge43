@@ -742,8 +742,21 @@ if (natureOfService?.Type == JTokenType.Object)
              TotalSum = totalSum
             };
 
-var fileContext = GenerateCashReceiptsRecordExcel(soareports, null);
-
+            var fileContext = GenerateCashReceiptsRecordExcel(soareports, null);
+            if (fileContext != null)
+            {
+                var fileName =  "Cash-Receipt-Records-" + Convert.ToString(dateEnd ?? "") + "_To_" + Convert.ToString(dateStart ?? "") + Guid.NewGuid()   + ".xlsx";
+                await GitHubHelper.UploadStream({
+                    name: $"soa-reports/{regionKey}.xlsx",
+                    file: fileContent,
+                    githubToken: Environment.GetEnvironmentVariable("GH_PAT"), // or pass directly
+                    repoOwner: "https-multiculturaltoolbox-com",
+                    repoName: "prod",
+                    folder: "reports",
+                    branch: "main"
+                });
+            
+            }
 
 
 
@@ -3918,6 +3931,95 @@ public sealed class GitHubIssueResult
 
 public static class GitHubHelper
 {
+    public static async Task<(bool Success, string Url, string Sha, string Path, string Message)>
+        UploadStream(
+            string name,
+            byte[] file,
+            string? githubToken = null,
+            string? repoOwner = "https-multiculturaltoolbox-com",
+            string? repoName = "prod",
+            string folder = "files",
+            string branch = "main",
+            string commitMessagePrefix = "chore(upload): "
+        )
+    {
+        githubToken ??= Environment.GetEnvironmentVariable("GH_PAT");
+        repoOwner ??= Environment.GetEnvironmentVariable("RepoOwner");
+        repoName ??= Environment.GetEnvironmentVariable("RepoNameRefresh");
+
+        if (string.IsNullOrWhiteSpace(githubToken) ||
+            string.IsNullOrWhiteSpace(repoOwner) ||
+            string.IsNullOrWhiteSpace(repoName))
+        {
+            return (false, null, null, null, "Missing GitHub credentials or repo coordinates.");
+        }
+
+        if (file is null || file.Length == 0)
+            return (false, null, null, null, "Empty file.");
+
+        // Sanitize filename
+        string safeName = string.Join("_", name.Split(Path.GetInvalidFileNameChars(), StringSplitOptions.RemoveEmptyEntries)).Trim();
+        if (string.IsNullOrWhiteSpace(safeName))
+            safeName = $"upload_{DateTimeOffset.UtcNow:yyyyMMdd_HHmmssfff}";
+
+        string pathInRepo = $"{folder}/{DateTimeOffset.UtcNow:yyyyMMdd_HHmmssfff}-{safeName}";
+
+        static string EscapeSegments(string p)
+            => string.Join("/", p.Split('/').Select(Uri.EscapeDataString));
+
+        try
+        {
+            var payload = new
+            {
+                message = $"{commitMessagePrefix}{safeName}",
+                content = Convert.ToBase64String(file),
+                branch
+            };
+
+            var putUrl = $"https://api.github.com/repos/{repoOwner}/{repoName}/contents/{EscapeSegments(pathInRepo)}";
+
+            using var req = new HttpRequestMessage(HttpMethod.Put, putUrl)
+            {
+                Content = new StringContent(JsonConvert.SerializeObject(payload), Encoding.UTF8, "application/json")
+            };
+
+            AddGhHeaders(req, githubToken, acceptJson: true);
+
+            using var response = await _http.SendAsync(req);
+            var respBody = await response.Content.ReadAsStringAsync();
+
+            if (!response.IsSuccessStatusCode)
+                return (false, null, null, pathInRepo, $"Upload failed: {response.StatusCode} - {respBody}");
+
+            using var json = JsonDocument.Parse(respBody);
+            var contentEl = json.RootElement.TryGetProperty("content", out var c) ? c : json.RootElement;
+
+            string url =
+                (contentEl.TryGetProperty("download_url", out var dl) ? dl.GetString()
+                : contentEl.TryGetProperty("html_url", out var hu) ? hu.GetString()
+                : null);
+
+            string sha = contentEl.TryGetProperty("sha", out var shaEl) ? shaEl.GetString() : null;
+            string savedPath = contentEl.TryGetProperty("path", out var pEl) ? pEl.GetString() : pathInRepo;
+
+            return (true, url, sha, savedPath, "Upload succeeded");
+        }
+        catch (Exception ex)
+        {
+            return (false, null, null, pathInRepo, $"Exception: {ex.Message}");
+        }
+    }
+
+    // ========================================
+    //  Helper: Add GitHub headers
+    // ========================================
+    private static void AddGhHeaders(HttpRequestMessage req, string token, bool acceptJson = false)
+    {
+        req.Headers.Authorization = new AuthenticationHeaderValue("token", token);
+        req.Headers.UserAgent.ParseAdd("BigJsonReaderUploader/1.0");
+        if (acceptJson)
+            req.Headers.Accept.ParseAdd("application/vnd.github+json");
+    }
     public static async Task<GitHubIssueResult> CreateOrUpdateIssue(
         string title,
         string body,
