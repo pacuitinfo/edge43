@@ -362,7 +362,7 @@ while (await reader.ReadAsync())
 
     processed++;
 }
-var applicationsServices = applications.Where(c =>  c.OfficialReceipt.ORNumber != null).Select(c => new ApplicationServicesModel()
+var applicationsServices = applications.Where(c =>  c.OfficialReceipt.ORNumber != null).Select(c => new 
                      {
                          _id = c._id,
                          Type = c.Type,
