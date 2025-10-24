@@ -644,11 +644,11 @@ var result = await GitHubHelper.CreateOrUpdateIssue(newPath, issueBody);
 Console.WriteLine(JsonConvert.SerializeObject(result));
 
 
-string issueKey = "cache/soa" + $"{regionKey}";
-string newPath = Regex.Replace(issueKey, @"T[\d:.]+Z", string.Empty);
-var issueBody = JsonConvert.SerializeObject(soareports);
+ issueKey = "cache/soa" + $"{regionKey}";
+ newPath = Regex.Replace(issueKey, @"T[\d:.]+Z", string.Empty);
+issueBody = JsonConvert.SerializeObject(soareports);
 Console.Error.WriteLine(issueKey);
-var result = await GitHubHelper.CreateOrUpdateIssue(newPath, issueBody);
+ result = await GitHubHelper.CreateOrUpdateIssue(newPath, issueBody);
 Console.WriteLine(JsonConvert.SerializeObject(result));
 // ===================== types (must come AFTER all top-level statements) =====================
 
