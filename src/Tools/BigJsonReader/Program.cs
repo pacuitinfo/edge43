@@ -693,9 +693,11 @@ public class ApplicantDTO
         public string Nationality { get; set; }= string.Empty;
         public string Sex { get; set; }= string.Empty;
         public string Signature { get; set; }= string.Empty;
-        public float Height { get; set; }
-        public float Weight { get; set; }
-        public  AddressModel Address { get; set; }= string.Empty;
+
+        public float Height { get; set; }= 0;
+        public float Weight { get; set; }= 0;
+
+       public  AddressModel Address { get; set; }= string.Empty;
         public  ContactModel Contact { get; set; }= string.Empty;
         public string? DateOfBirth { get; set; }= string.Empty;
         public string Email { get; set; }= string.Empty;
