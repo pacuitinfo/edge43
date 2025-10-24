@@ -58,10 +58,11 @@ static byte[] GenerateCashReceiptsRecordExcel(Reports report, UserModel? user)
             List<RecordModel> records = new();
             foreach (var applicationService in report.Docs)
             {
-               var basicFirstName = applicationService?.Service?.basic?.firstName?.ToString() ?? "" ;
-                var basicLastName = applicationService?.Service?.basic?.lastName?.ToString() ?? "";
-                var basicCompanyName = applicationService?.Service?.basic?.companyName?.ToString()?? "" ;
-                var basicClubName = applicationService?.Service?.basic?.clubName?.ToString()?? "" ;
+               var basicFirstName = applicationService?.Service?["basic"]?["firstName"]?.ToString() ?? "";
+                var basicLastName = applicationService?.Service?["basic"]?["lastName"]?.ToString() ?? "";
+                var basicCompanyName = applicationService?.Service?["basic"]?["companyName"]?.ToString() ?? "";
+                var basicClubName = applicationService?.Service?["basic"]?["clubName"]?.ToString() ?? "";
+
                 var companyName = applicationService?.Applicant?.CompanyName?.ToString() ?? "";
                 var clubName = applicationService?.Service?.applicationDetails?.clubName?.ToString()?? "" ;
                 var firstName = applicationService?.Applicant?.FirstName?.ToString()?? "" ;
