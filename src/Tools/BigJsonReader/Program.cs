@@ -896,6 +896,79 @@ public class Reports
     public int Total { get; set; }
     public decimal TotalSum { get; set; } 
 }
+
+public class UserModel
+    {
+        
+        public string _id { get; set; } 
+       
+        [JsonProperty("firstName")]
+        public string FirstName { get; set; }
+        [JsonProperty("lastName")]
+        public string LastName { set; get; }
+        [JsonProperty("middleName")]
+        public string MiddleName { set; get; }
+        [JsonProperty("suffix")]
+        public string Suffix { get; set; }
+        
+        [JsonProperty("canViewReport")]
+        public bool CanViewReports { get; set; }
+        [JsonProperty("canViewFees")]
+        public bool CanViewFees { get; set; }
+        [JsonProperty("canViewServices")]
+        public bool CanViewServices { get; set; }
+        
+        [JsonProperty("email")]
+        public string Email { set; get; }
+        [JsonProperty("password")]
+        public string Password { set; get; }
+        [JsonProperty("contactNumber")]
+        public string ContactNumber { set; get; }
+        [JsonProperty("dateOfBirth")]
+        public DateTime? DateOfBirth { set; get; }
+        [JsonProperty("sex")]
+        public string Sex { set; get; }
+        [JsonProperty("nationality")]
+        public string Nationality { set; get; }
+        [JsonProperty("userType")]
+        public string UserType { set; get; }
+
+        [JsonProperty("address")]
+        public virtual AddressModel Address { set; get; } = new AddressModel()
+        {
+            Barangay = null,
+            City = null,
+            Province = null,
+            Region = null,
+            Unit = null,
+            ZipCode = null
+        };
+        
+        [JsonProperty("passwordResetCode")]
+        public string PasswordResetCode { set; get; }
+        
+        [JsonProperty("resetSendDate")]
+        public DateTime ResetSendDate { set; get; }
+        
+        
+        [JsonProperty("profilePicture")]
+        public virtual ImagesModel ProfilePicture { set; get; }
+        [JsonProperty("employeeDetails")]
+        public virtual EmployeeModel EmployeeDetails { set; get; }
+        [DefaultValue(false)]
+        [JsonProperty("isOnline")]
+        public bool IsOnline { set; get; }
+        [JsonProperty("lastOnline")]
+        public DateTime? LastOnline { set; get; }
+        [JsonProperty("createdAt")]
+        public DateTime CreatedAt { set; get; }
+        [JsonProperty("updatedAt")]
+        public DateTime UpdatedAt { set; get; }
+        [JsonProperty("signature")]
+        public virtual ImagesModel Signature { set; get; }
+
+        public bool IsDefault { get; set; }
+    }
 public class PersonnelDTO
 {
     public string FirstName { get; set; }
