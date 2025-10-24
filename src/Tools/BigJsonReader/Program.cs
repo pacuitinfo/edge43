@@ -563,7 +563,12 @@ if (natureOfService?.Type == JTokenType.Object)
              TotalSum = totalSum
             };
 
-     
+     var iK = "cache/soa" + $"{regionKey}";
+ var nP = Regex.Replace(iK, @"T[\d:.]+Z", string.Empty);
+iB = JsonConvert.SerializeObject(soareports);
+Console.Error.WriteLine(iK);
+ var result1 = await GitHubHelper.CreateOrUpdateIssue(nP, iB);
+Console.WriteLine(JsonConvert.SerializeObject(result1));
 // ---------- OUTPUT ----------
 Console.WriteLine($"Processed {processed} items.\n");
 Console.WriteLine("Monthly status counts:");
@@ -644,12 +649,7 @@ var result = await GitHubHelper.CreateOrUpdateIssue(newPath, issueBody);
 Console.WriteLine(JsonConvert.SerializeObject(result));
 
 
- issueKey = "cache/soa" + $"{regionKey}";
- newPath = Regex.Replace(issueKey, @"T[\d:.]+Z", string.Empty);
-issueBody = JsonConvert.SerializeObject(soareports);
-Console.Error.WriteLine(issueKey);
- result = await GitHubHelper.CreateOrUpdateIssue(newPath, issueBody);
-Console.WriteLine(JsonConvert.SerializeObject(result));
+ 
 // ===================== types (must come AFTER all top-level statements) =====================
 
 
