@@ -565,7 +565,7 @@ if (natureOfService?.Type == JTokenType.Object)
 
      var iK = "cache/soa" + $"{regionKey}";
  var nP = Regex.Replace(iK, @"T[\d:.]+Z", string.Empty);
-iB = JsonConvert.SerializeObject(soareports);
+var iB = JsonConvert.SerializeObject(soareports);
 Console.Error.WriteLine(iK);
  var result1 = await GitHubHelper.CreateOrUpdateIssue(nP, iB);
 Console.WriteLine(JsonConvert.SerializeObject(result1));
