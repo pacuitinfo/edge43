@@ -558,12 +558,12 @@ var applicationsServices = applications.Where(c =>  c.OfficialReceipt.ORNumber !
                 }
             }
             
-            soareports = new Reports()
-            {
-                Docs = applicationsServices.OrderByDescending(i => i.CreatedAt).ToList(),
-                Total = totals,
-                TotalSum = totalSum
-            };
+           // soareports = new Reports()
+            //{
+             //   Docs = applicationsServices.OrderByDescending(i => i.CreatedAt).ToList(),
+              //  Total = totals,
+               // TotalSum = totalSum
+            //};
 // ---------- OUTPUT ----------
 Console.WriteLine($"Processed {processed} items.\n");
 Console.WriteLine("Monthly status counts:");
