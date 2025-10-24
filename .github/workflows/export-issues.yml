@@ -68,12 +68,12 @@ jobs:
             sudo apt-get update && sudo apt-get install -y gh
           fi
 
-      - name: Fetch issues from source repo
+      - name: Fetch issues from source repo (no 1000 limit)
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
           REPO: ${{ github.event.inputs.source_repo || github.repository }}
-          STATE: ${{  'open' }}
+          STATE: ${{ 'open' }}
           LABELS_IN: ${{ github.event.inputs.labels || '' }}
           DATE_START: ${{ github.event.inputs.dateStart }}
           DATE_END: ${{ github.event.inputs.dateEnd }}
@@ -86,71 +86,49 @@ jobs:
           echo "LABELS_IN=${LABELS_IN}"
           echo "REGION=${REGION}"
 
-          QUERY="repo:${REPO} state:open"
+          OWNER=$(echo "${REPO}" | cut -d'/' -f1)
+          NAME=$(echo "${REPO}" | cut -d'/' -f2)
+          API_URL="https://api.github.com/repos/${OWNER}/${NAME}/issues"
 
-          if [ -n "${LABELS_IN}" ]; then
-            QUERY="${QUERY} label:${LABELS_IN}"
-          fi
-          if [ -n "${REGION}" ]; then
-            QUERY="${QUERY} label:${REGION}"
-          fi
-
-          echo "Search query: ${QUERY}"
-
-          # GitHub API endpoint for search issues
-          API_URL="https://api.github.com/search/issues"
-
-          # Your GitHub token must be in GH_TOKEN environment variable
-          if [ -z "${GH_TOKEN:-}" ]; then
-            echo "❌ GH_TOKEN environment variable is not set"
-            exit 1
-          fi
-
-          # Pagination loop variables
           per_page=100
           page=1
           all_items=()
 
+          labels_combined=""
+          if [ -n "${LABELS_IN}" ]; then
+            labels_combined="${LABELS_IN}"
+          fi
+          if [ -n "${REGION}" ]; then
+            if [ -n "${labels_combined}" ]; then
+              labels_combined="${labels_combined},${REGION}"
+            else
+              labels_combined="${REGION}"
+            fi
+          fi
+
+          echo "Fetching issues with labels: ${labels_combined:-none}"
+
           while :; do
             echo "Fetching page $page..."
+            response=$(curl -sSL \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
+              -H "Accept: application/vnd.github+json" \
+              "${API_URL}?state=open&labels=${labels_combined}&per_page=${per_page}&page=${page}")
 
-            response=$(curl -sSL -H "Authorization: Bearer ${GH_TOKEN}" \
-                            -H "Accept: application/vnd.github+json" \
-                            "${API_URL}?q=$(jq -rn --arg q "$QUERY" '$q|@uri')&per_page=${per_page}&page=${page}")
+            count=$(echo "$response" | jq 'length')
+            [ "$count" -eq 0 ] && break
 
-            # Check for error message
-            if echo "$response" | jq -e '.message' >/dev/null; then
-              echo "GitHub API error:"
-              echo "$response" | jq '.message'
-              exit 1
-            fi
-
-            # Extract items from response
-            items=$(echo "$response" | jq '.items')
-
-            # Append items to all_items array
-            all_items+=("$items")
-
-            # Check if we got fewer results than per_page (last page)
-            count=$(echo "$items" | jq 'length')
-            if [ "$count" -lt "$per_page" ]; then
-              break
-            fi
-
+            all_items+=("$response")
             ((page++))
           done
 
-          # Flatten and combine all items into a single array
-          raw=$(printf '%s\n' "${all_items[@]}" | jq -s 'add')
+          raw=$(printf '%s\n' "${all_items[@]}" | jq -s 'flatten')
 
-          # Normalize labels for filename: letters/digits/._- only
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
-          issuesJson="report:${DATE_START}:${DATE_END}:${REGION}"
-          echo "SAFE=${SAFE}"
-          echo "issuesJson=${issuesJson}"
+          issuesJson="cache/report_${DATE_START}_${DATE_END}_${REGION}.json"
+          echo "Writing ${issuesJson}"
 
-          # Process and filter issues (exclude PRs)
           printf '%s' "$raw" | jq -cs '
             flatten
             | map(select(.pull_request | not))
@@ -166,7 +144,6 @@ jobs:
 
           echo "Preview:"
           jq '.[0:3]' "$issuesJson" || true
-
           [ -s "$issuesJson" ] || { echo "❌ No issues produced"; exit 1; }
 
       - name: Show preview
