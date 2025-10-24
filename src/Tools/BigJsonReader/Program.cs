@@ -844,6 +844,26 @@ public class PaymentHistoryModel
         public string Large { get; set; }
         public string Xlarge { get; set; }
     }
+    public class PersonnelModel
+    {
+        public string _id { get; set; }
+
+        public string FirstName { get; set; }
+
+        public string LastName { set; get; }
+
+        public string MiddleName { set; get; }
+
+         public string Suffix { set; get; }
+
+        public string Email { set; get; }
+
+        public string Role { set; get; }
+
+        public string Signature { set; get; }
+
+        public virtual EmployeeModel EmployeeDetails { set; get; }
+    }
 public class ApplicationServicesModel 
 {
     public ServicesReports ServicesReports  { get; set; }
@@ -952,13 +972,6 @@ public class ApplicationRenewModel {
         public string Large { get; set; }
         public string Xlarge { get; set; }
     }
-public class ChartData
-{
-    public int Docs { get; set; }
-    public string FrontColor { get; set; } = "";
-    public string GradientColor { get; set; } = "";
-    public string Label { get; set; } = "";
-}
 
 public class ChartData
 {
