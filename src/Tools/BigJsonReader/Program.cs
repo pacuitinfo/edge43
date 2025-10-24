@@ -202,7 +202,7 @@ static byte[] GenerateCashReceiptsRecordExcel(Reports report, UserModel? user)
                 record.Payor = resultString;
                 records.Add(record);
             }
-            var path = @"ExcelTemplate/";
+            var path = Path.Combine(AppContext.BaseDirectory, "ExcelTemplate");
             var applicationsReport = new ApplicationReportsExcel()
             {
                 Year = DateTime.Now.ToString("yyyy"),
