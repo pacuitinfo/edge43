@@ -131,6 +131,7 @@ if (!await reader.ReadAsync() || reader.TokenType != JsonToken.StartArray)
     Environment.Exit(1);
 }
 var applications = new List<ApplicationModel>();
+ float totalSum = 0;
 while (await reader.ReadAsync())
 {
     if (reader.TokenType == JsonToken.EndArray) break;
@@ -782,8 +783,9 @@ public class PaymentHistoryModel
     public class SoaModel
         {
             public string Id { set; get; } 
-            public string Item { set; get; }
-            public float Amount { set; get; }
+             [JsonProperty("Item")]   public string? Item { get; set; }
+    [JsonProperty("Amount")] public float?  Amount { get; set; }
+        
             public string Type { set; get; }
             public string Description { set; get; }
 
@@ -873,7 +875,7 @@ public class ApplicationServicesModel
         public string Type { set; get; }
         public virtual ApplicantDTO Applicant { set; get; }
         public dynamic Service { set; get; }
-        public virtual RegionDTO Region { set; get; }
+        public  RegionDTO Region { set; get; }
         public string Status { set; get; }
         public string PaymentStatus { set; get; }
         public string PaymentMethod { set; get; }
@@ -881,22 +883,22 @@ public class ApplicationServicesModel
         public float TotalFee { set; get; }
         
         public string AmnestyTotalFee { set; get; }
-        public virtual PersonnelModel AssignedPersonnel { set; get; }
+        public  PersonnelModel AssignedPersonnel { set; get; }
         public bool IsPinned { set; get; }
         public List<ApprovalHistoryModel> ApprovalHistory { set; get; }
         public List<PaymentHistoryModel> PaymentHistory { set; get; }
         public List<SoaModel> Soa { set; get; }
         public List<SoaHistoryModel> SoaHistory { set; get; }
-        public virtual ExamModel Exam { set; get; }
+        public  ExamModel Exam { set; get; }
         public ORModel OfficialReceipt { set; get; }
         public OrderOfPaymentModel? OrderOfPayment { set; get; }
         public RadioTypeModel Make { set; get; }
-        public virtual ScheduleDTO Schedule { set; get; }
+        public  ScheduleDTO Schedule { set; get; }
         public List<PaymentImagesModel> ProofOfPayment { set; get; }
-        public virtual PersonnelModel Evaluator { set; get; }
-        public virtual PersonnelModel Cashier { set; get; }
-        public virtual PersonnelDTO Director { set; get; }
-        public virtual PersonnelDTO Commissioner { set; get; }
+        public  PersonnelModel Evaluator { set; get; }
+        public  PersonnelModel Cashier { set; get; }
+        public  PersonnelDTO Director { set; get; }
+        public  PersonnelDTO Commissioner { set; get; }
         public string Document { set; get; }
         public string TempDocument { set; get; }
         public string DocumentNumber { set; get; }
@@ -3240,19 +3242,7 @@ public class Element
 }
 
 
-public sealed class SoaLine
-{
-    [JsonProperty("Item")]   public string? Item { get; set; }
-    [JsonProperty("Amount")] public float?  Amount { get; set; }
-}
 
-public sealed class Person
-{
-    [JsonProperty("firstName")]  public string? FirstName  { get; set; }
-    [JsonProperty("middleName")] public string? MiddleName { get; set; }
-    [JsonProperty("lastName")]   public string? LastName   { get; set; }
-    [JsonProperty("suffix")]     public string? Suffix     { get; set; }
-}
 
 public sealed class ApplicationModel
 {
@@ -3264,8 +3254,8 @@ public sealed class ApplicationModel
     [JsonProperty("totalFee")]     public decimal     TotalFee { get; set; }
 
     // NEW:
-    [JsonProperty("soa")]          public List<SoaLine>? Soa { get; set; }
-    [JsonProperty("evaluator")]    public Person? Evaluator { get; set; }
+    [JsonProperty("soa")]          public List<SoaModel>? Soa { get; set; }
+    [JsonProperty("evaluator")]    public PersonnelModel? Evaluator { get; set; }
 
 
 
@@ -3297,8 +3287,6 @@ public string SOANumber;
 
        public List<PaymentHistoryModel>? PaymentHistory { set; get; }
 
-        public List<SoaModel> Soa_ { set; get; }
-
        public List<SoaHistoryModel> SoaHistory { set; get; }
 
          public  ExamModel Exam { set; get; }
@@ -3313,7 +3301,7 @@ public string SOANumber;
 
          public List<PaymentImagesModel> ProofOfPayment { set; get; }
 
-         public  PersonnelModel Evaluator_ { set; get; }
+         public  PersonnelModel Evaluator { set; get; }
 
          public  PersonnelModel Eod { set; get; }
 
