@@ -563,7 +563,8 @@ if (natureOfService?.Type == JTokenType.Object)
              TotalSum = totalSum
             };
 
-     Console.WriteLine($"soareports {JsonConvert.SerializeObject(soareports)} items.\n");       
+   Console.WriteLine($"soareports {soareports?.Docs?.Length ?? 0} items.\n");
+     
 // ---------- OUTPUT ----------
 Console.WriteLine($"Processed {processed} items.\n");
 Console.WriteLine("Monthly status counts:");
