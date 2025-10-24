@@ -741,7 +741,7 @@ if (natureOfService?.Type == JTokenType.Object)
              TotalSum = totalSum
             };
 
-var fileContext = _reportRepository.GenerateCashReceiptsRecordExcel(soareports, null);
+var fileContext = GenerateCashReceiptsRecordExcel(soareports, null);
 
 
 
