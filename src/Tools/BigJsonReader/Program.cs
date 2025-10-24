@@ -362,7 +362,7 @@ while (await reader.ReadAsync())
 
     processed++;
 }
- totalSum = 0f;
+ totalSum = 0;
 
 
 try{
