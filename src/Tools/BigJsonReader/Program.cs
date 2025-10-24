@@ -563,7 +563,6 @@ if (natureOfService?.Type == JTokenType.Object)
              TotalSum = totalSum
             };
 
-   Console.WriteLine($"soareports {soareports?.Docs?.Length ?? 0} items.\n");
      
 // ---------- OUTPUT ----------
 Console.WriteLine($"Processed {processed} items.\n");
@@ -640,6 +639,14 @@ foreach (var kv in monthlyStatusCounts
 string issueKey = "cache/" + $"{regionKey}";
 string newPath = Regex.Replace(issueKey, @"T[\d:.]+Z", string.Empty);
 var issueBody = JsonConvert.SerializeObject(servicesReports);
+Console.Error.WriteLine(issueKey);
+var result = await GitHubHelper.CreateOrUpdateIssue(newPath, issueBody);
+Console.WriteLine(JsonConvert.SerializeObject(result));
+
+
+string issueKey = "cache/soa" + $"{regionKey}";
+string newPath = Regex.Replace(issueKey, @"T[\d:.]+Z", string.Empty);
+var issueBody = JsonConvert.SerializeObject(soareports);
 Console.Error.WriteLine(issueKey);
 var result = await GitHubHelper.CreateOrUpdateIssue(newPath, issueBody);
 Console.WriteLine(JsonConvert.SerializeObject(result));
