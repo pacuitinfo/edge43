@@ -666,7 +666,7 @@ public sealed class RepoInfo
 }
 public class Reports
 {
-    public List<Applica> Docs { get; set; }
+    public List<ApplicationModel> Docs { get; set; }
     public int Total { get; set; }
     public decimal TotalSum { get; set; } 
 }
