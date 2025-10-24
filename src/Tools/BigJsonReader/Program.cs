@@ -3255,7 +3255,6 @@ public sealed class ApplicationModel
 
     // NEW:
     [JsonProperty("soa")]          public List<SoaModel>? Soa { get; set; }
-    [JsonProperty("evaluator")]    public PersonnelModel? Evaluator { get; set; }
 
 
 
