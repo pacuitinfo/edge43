@@ -47,7 +47,7 @@ static DateTime? TryParseDate(string? s)
 static string EscapeSegments(string p) =>
     string.Join("/", p.Split('/', StringSplitOptions.RemoveEmptyEntries).Select(Uri.EscapeDataString));
 static string Lower(string? s) => string.IsNullOrWhiteSpace(s) ? "" : s.ToLowerInvariant();
-public byte[] GenerateCashReceiptsRecordExcel(Reports report, UserModel? user)
+static byte[] GenerateCashReceiptsRecordExcel(Reports report, UserModel? user)
     {
         var fileContent = new byte[] { };
 
