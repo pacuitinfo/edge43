@@ -85,7 +85,7 @@ var monthlyStatusCounts = new Dictionary<(int Month, int Year), Dictionary<strin
 
 // NEW: per-day status counts for last 30 days
 var dailyStatusCounts = new Dictionary<DateTime, Dictionary<string, int>>();
-
+Reports soareports = null;
 // a tiny in-memory report accumulator (auto-adds service rows)
 var servicesReports = new ServicesReports { Region = region };
 
@@ -153,6 +153,216 @@ while (await reader.ReadAsync())
     // Parse Body (JSON string) into ApplicationModel
     var (app, innerJo) = ParseApplicationFromBody(issue.Body);
     if (app is null) continue;
+
+
+    
+        
+
+            var applicationsServices = app.Where(c =>  c.OfficialReceipt.ORNumber != null).Select(c => new ApplicationServicesModel()
+                     {
+                         _id = c._id,
+                         Type = c.Type,
+                         Applicant = c.Applicant,
+                         Service = c.Service,
+                         Region = c.Region,
+                         Status = c.Status,
+                         PaymentStatus = c.PaymentStatus,
+                         PaymentMethod = c.PaymentMethod,
+                         Amnesty = c.Amnesty,
+                         TotalFee = c.TotalFee,
+                         AmnestyTotalFee = c.AmnestyTotalFee,
+                         AssignedPersonnel = c.AssignedPersonnel,
+                         IsPinned = c.IsPinned,
+                         ApprovalHistory = c.ApprovalHistory,
+                         PaymentHistory = c.PaymentHistory,
+                         Soa = c.Soa,
+                         SoaHistory = c.SoaHistory,
+                         Exam = c.Exam,
+                         OfficialReceipt = c.OfficialReceipt,
+                         OrderOfPayment = c.OrderOfPayment,
+                         Make = c.Make,
+                         Schedule = c.Schedule,
+                         ProofOfPayment = c.ProofOfPayment,
+                         Evaluator = c.Evaluator,
+                         Cashier = c.Cashier,
+                         Director = c.Director,
+                         Commissioner = c.Commissioner,
+                         Document = c.Document,
+                         TempDocument = c.TempDocument,
+                         DocumentNumber = c.DocumentNumber,
+                         QRCode = c.QRCode,
+                         Note = c.Note,
+                         DateOfExpiry = c.DateOfExpiry,
+                         ValidUntil = c.ValidUntil,
+                         CreatedAt = c.CreatedAt,
+                         UpdatedAt = c.UpdatedAt,
+                         DateOfBirth = c.DateOfBirth,
+                         Validity = c.Validity,
+                         Renew = c.Renew,
+                         IsModified = c.IsModified,
+                         ReferenceNumber = c.ReferenceNumber,
+                         PermitNumber = c.PermitNumber,
+                        
+                     }).ToList();
+            var totals =  applicationsServices.Count();
+
+            foreach (var application in applicationsServices)
+            {
+                string applicationReceive = application.Service?["applicationType"]?["label"]?.ToString()?.ToLower();
+                var natureOfServiceType = "";
+
+                if (application.Service?.natureOfService?.GetType() == typeof(JObject))
+                {
+                    if(application.Service?.natureOfService?.type?.GetType() == typeof(JValue))
+                    {
+                        natureOfServiceType = application.Service?.natureOfService?.type.ToString();
+                    }
+               
+                }
+                var findIndex = application.ServicesReports.Services.FindIndex(c =>
+                    c.Service.ToLower() == applicationReceive);
+                if (applicationReceive != null && 
+                    (applicationReceive.Contains("renewal") || applicationReceive.Contains("modification"))){
+                    application.ServicesReports.Services[findIndex].ApplicationReceive = "renewal";
+                }else if (applicationReceive != null && applicationReceive.Contains("new"))
+                {
+                    application.ServicesReports.Services[findIndex].ApplicationReceive = "new";
+                }
+                
+                 if (findIndex > -1)
+            {
+                var noOfYear = 1;
+                var equipments =0 ;
+                var n = false;
+                if (application.Service?["applicationDetails"]?.GetType() == typeof(JObject))
+                {
+                    if (application.Service?["applicationDetails"]?["noOfYears"]?.GetType() == typeof(JValue))
+                    {
+                       int.TryParse(application.Service?["applicationDetails"]?["noOfYears"].ToString(), out noOfYear);
+                       
+                    }
+                }
+                else
+                {
+                    if (!n)
+                    {
+                        noOfYear = 1 ;
+                    }
+                }
+                if (application.Service?["particulars"]?.GetType() == typeof(JArray))
+                {
+                    foreach (var particular in application.Service?["particulars"])
+                    {
+                        if (particular?["equipments"]?.GetType() == typeof(JArray))
+                        {
+                          
+                            int equip;
+                            int.TryParse( particular?["equipments"].Count.ToString(), out equip);
+
+                            equipments += equip;
+                        }
+                        
+                    }
+                    if (equipments == 0)
+                    {
+                        equipments = 1;
+                    }
+                }
+                else
+                {
+                    
+                        equipments = 1;
+                }
+
+                try
+                {
+                    application.ServicesReports.Services[findIndex].Value =  (application.ServicesReports.Services[findIndex].Value + 1) * equipments * noOfYear;
+
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                   
+                }
+               
+                if (string.IsNullOrEmpty(application.ServicesReports.Services[findIndex]?.Type))
+                {
+                    application.ServicesReports.Services[findIndex].Type = application.Type;
+                }
+              
+               
+              
+                if (application.Soa != null)
+                {
+                    var surcharge = application.Soa.Find(c => c.Item == "Surcharge");
+                    var surLicenseFee = application.Soa.Find(c => c.Item == "SUR - License Fee");
+                    var surSpectrumUserFee = application.Soa.Find(c => c.Item == "SUR - Spectrum User Fee");
+                    try
+                    {
+                        if (surcharge?.Amount != null)
+                        {
+                            application.ServicesReports.Services[findIndex].Surcharge += surcharge.Amount;
+                        }
+                        if (surLicenseFee?.Amount != null)
+                        {
+                            application.ServicesReports.Services[findIndex].Surcharge += surLicenseFee.Amount;
+                        }
+                        if (surSpectrumUserFee?.Amount != null)
+                        {
+                            application.ServicesReports.Services[findIndex].Surcharge += surSpectrumUserFee.Amount; 
+                        }
+                        
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+                }
+
+                application.ServicesReports.Services[findIndex].TotalFee += application.TotalFee;
+                if (application.ServicesReports.Services[findIndex].Elements != null)
+                {
+                    var index = application.ServicesReports.Services[findIndex].Elements.FindIndex(c =>
+                        c.Name.ToLower() == application.Service?["applicationType"]?["element"]?.ToString().ToLower());
+                    if (index > -1)
+                    {
+                        application.ServicesReports.Services[findIndex].Elements[index].Value++;
+                    }
+                }
+
+                if (application.Soa != null)
+                {
+                    for (var i = 0; i < application.Soa?.Count; i++)
+                    {
+                        var findSoaIndex = application.ServicesReports.Fees.FindIndex(c =>
+                            c.Name.ToLower() == application?.Soa?[i]?.Item?.ToLower());
+                        if (findSoaIndex > -1)
+                        {
+                            application.ServicesReports.Fees[findSoaIndex].Value += application?.Soa?[i]?.Amount;
+                        }
+                        else
+                        {
+                            var _findOtherSoaIndex = application.ServicesReports.Fees.FindIndex(c =>
+                                c.Name.ToLower() == "other");
+                            application.ServicesReports.Fees[_findOtherSoaIndex].Value += application?.Soa?[i]?.Amount;
+                        }
+                    }
+                }
+            }
+                if (application.TotalFee != null && application.TotalFee > 0)
+                {
+                    totalSum += application.TotalFee;
+                }
+            }
+            
+            soareports = new Reports()
+            {
+                Docs = applicationsServices.OrderByDescending(i => i.CreatedAt).ToList(),
+                Total = totals,
+                TotalSum = totalSum
+            };
+
+
 
     // -------- monthly + daily status tally --------
     var updatedAt = app.UpdatedAt;
@@ -452,8 +662,303 @@ public sealed class RepoInfo
     [JsonProperty("Url")]    public string? Url { get; set; }
     [JsonProperty("Labels")] public List<string>? Labels { get; set; }
 }
+public class Reports
+{
+    public List<ApplicationServicesModel> Docs { get; set; }
+    public int Total { get; set; }
+    public float TotalSum { get; set; } 
+}
+public class PersonnelDTO
+{
+    public string FirstName { get; set; }
+    public string LastName { set; get; }
+    public string MiddleName { set; get; }
+    public string Suffix { set; get; }
+    public string Email { set; get; }
+    public string Role { set; get; }
+    public string Signature { set; get; }
+}
+public class ApplicantDTO
+    {
+        public string _id { get; set; }
+        public virtual string Type { set; get; }
+        public string UserId { get; set; }
+        public string UserType { get; set; }
+        public string CompanyName { get; set; }
+        public string ApplicantName { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string MiddleName { get; set; }
+        public string Suffix { get; set; }
+        public string Nationality { get; set; }
+        public string Sex { get; set; }
+        public string Signature { get; set; }
+        public float? Height { get; set; }
+        public float? Weight { get; set; }
+        public virtual AddressModel Address { get; set; }
+        public virtual ContactModel Contact { get; set; }
+        public string? DateOfBirth { get; set; }
+        public string Email { get; set; }
+        public virtual EducationModel Education { get; set; }
+        public virtual ImagesModel ProfilePicture { set; get; }
+       
+    }
+public class AddressModel
+    {
+        public string Street { get; set; } 
+        public string Unit { get; set; }
+        public string Barangay { get; set; }
+        public string City { get; set; }
+        public string Province { get; set; }
+        public string Region { get; set; }
+        public string ZipCode { get; set; }
+    }
+
+public class ImagesModel
+    {
+        public string Original { get; set; }
+        public string Thumb { get; set; }
+        public string Small { get; set; }
+        public string Medium { get; set; }
+        public string Large { get; set; }
+        public string Xlarge { get; set; }
+    }
 
 
+public class EducationModel
+    {
+        public string SchoolAttended { get; set; }
+        public string CourseTaken { get; set; }
+        public string YearGraduated { get; set; }
+    }
+
+     public class ContactModel
+    {
+        
+        public string ContactNumber { get; set; }
+        public string Email { get; set; }
+    }
+public class RegionDTO
+{
+    public string Id { get; set; }
+    public string Address { get; set; }
+    public string SupportEmail { get; set; }
+    public string Label { get; set; }
+    public string Value { get; set; }
+    public string Code { get; set; }
+    public ConfigurationDTO Configuration { get; set; }
+}
+public class ConfigurationDTO
+    {
+       
+        public PersonnelDTO Commissioner { get; set; }
+        public PersonnelDTO Director { get; set; }
+        
+      
+    }
+
+public class PaymentHistoryModel
+    {
+        public DateTime Time { set; get; }
+        public string Action { set; get; }
+        public string UserId { set; get; }
+        public PersonnelModel Personnel { set; get; }
+        public string Status { set; get; }
+        public string Remarks { get; set; }
+    }
+    public class ApprovalHistoryModel
+    {
+        public DateTime Time { set; get; }
+       public string Action { set; get; }
+        public string UserId { set; get; }
+        public PersonnelModel EndorsedTo { set; get; }
+        public PersonnelModel Personnel { set; get; }
+       public string Status { set; get; }
+        public string Remarks { set; get; }
+    }
+
+    public class SoaModel
+        {
+            public string Id { set; get; } 
+            public string Item { set; get; }
+            public float Amount { set; get; }
+            public string Type { set; get; }
+            public string Description { set; get; }
+
+            public string Section { get; set; }
+        }
+        public class SoaHistoryModel
+    {
+        public List<SoaModel> Soa { get; set; }
+        public float TotalFee { set; get; }
+        public string UserId { set; get; }
+        public DateTime CreatedAt { set; get; }
+    }
+
+      public class ExamModel
+    {
+        public string Venue { set; get; }
+        public DateTime Time { set; get; }
+    }
+    public class ORModel
+    {
+        public string ORNumber { get; set; }
+        public string Pdf { set; get; }
+        public string BankName { set; get; }
+        public string CheckNumber { set; get; }
+        public PersonnelModel ORBy { get; set; }
+        public DateTime CreatedAt { set; get; }
+    }
+    public class OrderOfPaymentModel
+    {
+        public string? Pdf { set; get; }
+        public PersonnelModel? OrderOfPaymentBy { get; set; }
+        public DateTime? CreatedAt { set; get; }
+
+        public string Number { get; set; }
+    }
+    public class RadioTypeModel
+    {
+       public string Make { get; set; }
+        public string Type { get; set; }
+        public string Model { get; set; }
+    }
+    public class ScheduleDTO
+    {
+        public string Id { set; get; }
+        public string Venue { set; get; }
+        public string Region { set; get; }
+        public int Slots { set; get; }
+        public string SeatNumber { set; get; }
+        public DateTime? DateStart { set; get; }
+        public DateTime? DateEnd { set; get; }
+        public DateTime? ApplicationStartDate { set; get; }
+        public DateTime? ApplicationEndDate { set; get; }
+    }
+    public class PaymentImagesModel
+    {
+        public string Original { get; set; }
+        public string Thumb { get; set; }
+        public string Small { get; set; }
+        public string Medium { get; set; }
+        public string Large { get; set; }
+        public string Xlarge { get; set; }
+    }
+public class ApplicationServicesModel 
+{
+    public ServicesReports ServicesReports  { get; set; }
+        public string _id { get; set; }
+        public string Type { set; get; }
+        public virtual ApplicantDTO Applicant { set; get; }
+        public dynamic Service { set; get; }
+        public virtual RegionDTO Region { set; get; }
+        public string Status { set; get; }
+        public string PaymentStatus { set; get; }
+        public string PaymentMethod { set; get; }
+        public string Amnesty { set; get; }
+        public float TotalFee { set; get; }
+        
+        public string AmnestyTotalFee { set; get; }
+        public virtual PersonnelModel AssignedPersonnel { set; get; }
+        public bool IsPinned { set; get; }
+        public List<ApprovalHistoryModel> ApprovalHistory { set; get; }
+        public List<PaymentHistoryModel> PaymentHistory { set; get; }
+        public List<SoaModel> Soa { set; get; }
+        public List<SoaHistoryModel> SoaHistory { set; get; }
+        public virtual ExamModel Exam { set; get; }
+        public ORModel OfficialReceipt { set; get; }
+        public OrderOfPaymentModel? OrderOfPayment { set; get; }
+        public RadioTypeModel Make { set; get; }
+        public virtual ScheduleDTO Schedule { set; get; }
+        public List<PaymentImagesModel> ProofOfPayment { set; get; }
+        public virtual PersonnelModel Evaluator { set; get; }
+        public virtual PersonnelModel Cashier { set; get; }
+        public virtual PersonnelDTO Director { set; get; }
+        public virtual PersonnelDTO Commissioner { set; get; }
+        public string Document { set; get; }
+        public string TempDocument { set; get; }
+        public string DocumentNumber { set; get; }
+        public string QRCode { set; get; }
+        public string Note { set; get; }
+        public DateTime? DateOfExpiry { set; get; }
+        public DateTime? ValidUntil { set; get; }
+        public DateTime CreatedAt { set; get; }
+        public DateTime UpdatedAt { set; get; }
+        public string DateOfBirth { set; get; }
+        public DateTime Validity { get; set; }
+        public ApplicationRenewModel Renew { get; set; }
+        public bool IsModified { get; set; }
+        public string ReferenceNumber { get; set; }
+        public string PermitNumber { get; set; }
+   
+}
+
+
+public class ApplicationRenewModel {
+    public bool ForRenewal { get; set; }
+
+    public bool Renewed { get; set; }
+
+    public string RenewedFrom { get; set; }
+
+    public virtual ApplicationTypeModel ApplicationType { set; get; }
+  }
+
+
+  public class ApplicationTypeModel
+    {
+        public string ServiceCode { get; set; }
+
+       public string Label { get; set; }
+
+        public string Element { get; set; }
+
+        public List<string> Elements { get; set; }
+
+        public string FormCode { get; set; }
+
+        public List<RequirementModel> Requirements { get; set; }
+
+        public string SequenceCode { get; set; }
+
+        public List<ModificationDueToModel> ModificationDueTos { get; set; }
+    }
+    public class ModificationDueToModel
+    {
+        public string Label { get; set; }
+
+        public string Value { get; set; }
+
+        public List<RequirementModel> Requirements { get; set; }
+    }
+    public class RequirementModel
+    {
+        public string Key { get; set; }
+
+        public string Title { get; set; }
+
+        public List<RequirementImageModel> Links { get; set; }
+
+        public string Description { get; set; }
+
+        public bool Required { get; set; }
+    }
+    public class RequirementImageModel
+    {
+        public string Original { get; set; }
+        public string Thumb { get; set; }
+        public string Small { get; set; }
+        public string Medium { get; set; }
+        public string Large { get; set; }
+        public string Xlarge { get; set; }
+    }
+public class ChartData
+{
+    public int Docs { get; set; }
+    public string FrontColor { get; set; } = "";
+    public string GradientColor { get; set; } = "";
+    public string Label { get; set; } = "";
+}
 
 public class ChartData
 {
