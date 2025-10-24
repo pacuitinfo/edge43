@@ -47,7 +47,184 @@ static DateTime? TryParseDate(string? s)
 static string EscapeSegments(string p) =>
     string.Join("/", p.Split('/', StringSplitOptions.RemoveEmptyEntries).Select(Uri.EscapeDataString));
 static string Lower(string? s) => string.IsNullOrWhiteSpace(s) ? "" : s.ToLowerInvariant();
+public byte[] GenerateCashReceiptsRecordExcel(Reports report, UserModel? user)
+    {
+        var fileContent = new byte[] { };
 
+
+
+        try
+        {
+            List<RecordModel> records = new();
+            foreach (var applicationService in report.Docs)
+            {
+               var basicFirstName = applicationService?.Service?.basic?.firstName?.ToString() ?? "" ;
+                var basicLastName = applicationService?.Service?.basic?.lastName?.ToString() ?? "";
+                var basicCompanyName = applicationService?.Service?.basic?.companyName?.ToString()?? "" ;
+                var basicClubName = applicationService?.Service?.basic?.clubName?.ToString()?? "" ;
+                var companyName = applicationService?.Applicant?.CompanyName?.ToString() ?? "";
+                var clubName = applicationService?.Service?.applicationDetails?.clubName?.ToString()?? "" ;
+                var firstName = applicationService?.Applicant?.FirstName?.ToString()?? "" ;
+                var lastName = applicationService?.Applicant?.LastName?.ToString()?? "" ;
+                var applicantName = applicationService?.Applicant?.ApplicantName?.ToString()?? "" ;
+                var result = !string.IsNullOrEmpty(firstName) ? firstName
+                    : !string.IsNullOrEmpty(lastName) ? lastName
+                    : applicantName;
+                RecordModel record = new();
+                record.Date = applicationService.CreatedAt.ToString();
+                record.OrNo = applicationService.OfficialReceipt.ORNumber;
+                record.PermitToPurchase = applicationService.ServicesReports.Fees
+                    .Find(c => c.Name == "Purchase Permit Fee").Value.ToString() ?? "0";
+                record.FilingFeeLicense = applicationService.ServicesReports.Fees
+                    .Find(c => c.Name ==  "Filling Fee").Value.ToString() ?? "0";
+                record.PermitToPossessStorage = applicationService.ServicesReports.Fees
+                    .Find(c => c.Name ==  "Possess Permit Fee").Value.ToString() ?? "0"; 
+                record.RadioStationLicense = "0";
+                record.SeminarFee = "0";
+                record.RadioStationModificationFee = applicationService.ServicesReports.Fees
+                    .Find(c => c.Name ==  "Modification Fee").Value.ToString() ?? "0"; 
+                record.RadioOperatiorCertif = applicationService.ServicesReports.Fees
+                    .Find(c => c.Name ==  "Certificate Fee").Value.ToString() ?? "0";  
+                record.RadioStationLicenseArocRoc = "0" ;   
+                record.PermitFee = "0" ;
+                record.Mpo = "0";
+                record.ConstructionPermitFee =  applicationService.ServicesReports.Fees
+                    .Find(c => c.Name == "Construction Permit Fee").Value.ToString() ?? "0";
+                record.RepeaterStationInspectionFee =  applicationService.ServicesReports.Fees
+                    .Find(c => c.Name == "Repeater Station Inspection Fee").Value.ToString() ?? "0";
+                record.RegistrationFees = applicationService.ServicesReports.Fees
+                    .Find(c => c.Name == "Registration Fee").Value.ToString() ?? "0"; 
+                record.ExaminationFees =   applicationService.ServicesReports.Fees
+                    .Find(c => c.Name == "Examination Fee").Value.ToString() ?? "0";
+                record.InspectionFeesLicense =    applicationService.ServicesReports.Fees
+                    .Find(c => c.Name == "Inspection Fee").Value.ToString() ?? "0";
+                record.InspectionFeesPermit =    applicationService.ServicesReports.Fees
+                    .Find(c => c.Name == "Inspection Fee (Per Year)").Value.ToString() ?? "0";
+                record.FilingFeePermit = applicationService.ServicesReports.Fees
+                    .Find(c => c.Name == "Filing Fee").Value.ToString() ?? "0";  
+                record.ApplicationFeesFilingFee = applicationService.ServicesReports.Fees
+                    .Find(c => c.Name == "Seminar Fee / Application Fee").Value.ToString() ?? "0"; 
+                
+                record.SurchargesLicense = applicationService.ServicesReports.Fees
+                    .Find(c => c.Name == "Surcharge").Value.ToString() ?? "0";  
+                record.Other =  applicationService.ServicesReports.Fees
+                    .Find(c => c.Name == "Other").Value.ToString() ?? "0"; 
+                record.DocumentaryStampTax =  applicationService.ServicesReports.Fees
+                    .Find(c => c.Name == "Documentary Stamp Tax").Value.ToString() ?? "0"; 
+                record.Sum = (applicationService.ServicesReports.Fees
+                    .Find(c => c.Name == "Purchase Permit Fee").Value +  
+                    applicationService.ServicesReports.Fees
+                         .Find(c => c.Name == "Repeater Station Inspection Fee").Value +  
+                    applicationService.ServicesReports.Fees
+                        .Find(c => c.Name == "Repeater Station License Fee").Value + 
+                     applicationService.ServicesReports.Fees
+                         .Find(c => c.Name ==  "Filling Fee").Value +  
+                     applicationService.ServicesReports.Fees
+                         .Find(c => c.Name ==  "Possess Permit Fee").Value + 
+                     applicationService.ServicesReports.Fees
+                         .Find(c => c.Name ==  "Modification Fee").Value + 
+                     applicationService.ServicesReports.Fees
+                         .Find(c => c.Name ==  "Certificate Fee").Value
+                     +  applicationService.ServicesReports.Fees
+                         .Find(c => c.Name == "Construction Permit Fee").Value +  applicationService.ServicesReports.Fees
+                         .Find(c => c.Name == "Registration Fee").Value +  applicationService.ServicesReports.Fees
+                         .Find(c => c.Name == "Other").Value +  applicationService.ServicesReports.Fees
+                         .Find(c => c.Name == "Examination Fee").Value + applicationService.ServicesReports.Fees
+                         .Find(c => c.Name == "Inspection Fee").Value + applicationService.ServicesReports.Fees
+                         .Find(c => c.Name == "Inspection Fee (Per Year)").Value + applicationService.ServicesReports.Fees
+                         .Find(c => c.Name == "Filing Fee").Value + applicationService.ServicesReports.Fees
+                         .Find(c => c.Name == "Seminar Fee / Application Fee").Value +  applicationService.ServicesReports.Fees
+                         .Find(c => c.Name == "Surcharge").Value + applicationService.ServicesReports.Fees
+                         .Find(c => c.Name == "Documentary Stamp Tax").Value).ToString() ?? "0";
+                record.SurchargesPermits =  "0";  
+                
+                record.SurchargesArocRoc =  "0";
+                record.MiscellaneousIncome =  "0";
+                    record.VerficationAuthFees ="0";
+                 
+                record.SupervisionRegulationFees ="0";
+                record.ClearanceCertificateFee = "0";
+                record.UsageFees = "0";;
+                string resultString;
+
+                if (applicationService?.Applicant?.UserId == "2b2957c9-c604-4d0e-ad31-14466f172c06" ||
+                    applicationService?.Applicant?.UserId == "41b17694-119a-4d3c-b996-7aa4ab6e9b91" ||
+                    (basicFirstName?.ToString() != null && basicFirstName?.ToString() != "")|| (basicLastName?.ToString() != null  && basicLastName?.ToString() != ""))
+                {
+                    if ((basicFirstName?.ToString() != null && basicFirstName?.ToString() != "")  || (basicLastName?.ToString() != null  && basicLastName?.ToString() != ""))
+                    {
+                        resultString = $"{basicFirstName?.ToString() ?? ""} {basicLastName?.ToString() ?? ""}";
+                    }
+                    else if (basicCompanyName?.ToString() != null && basicCompanyName?.ToString() != "")
+                    {
+                        resultString = basicCompanyName;
+                    }
+                    else
+                    {
+                        resultString = basicClubName?.ToString() ?? companyName?.ToString();
+                    }
+                }
+                else if (applicationService?.Applicant.UserType == "Individual")
+                {
+                    if (result != null)
+                    {
+                        resultString = string.IsNullOrWhiteSpace($"{firstName ?? ""} {lastName ?? ""}".Trim())
+                            ? applicantName
+                            : $"{firstName ?? ""} {lastName ?? ""}".Trim();
+                    }
+                    else
+                    {
+                        resultString = basicFirstName?.GetType() == typeof(JValue) || !string.IsNullOrEmpty(basicFirstName?.ToString())
+                            ? $"{basicFirstName?.ToString() ?? ""} {basicLastName?.ToString() ?? ""}"
+                            : basicCompanyName ?? "";
+                    }
+                }
+                else
+                {
+                    resultString = !string.IsNullOrEmpty(companyName) || !string.IsNullOrEmpty(basicCompanyName)
+                        ? companyName ?? basicCompanyName
+                        : !string.IsNullOrEmpty(clubName)
+                            ? clubName
+                            : result != null && !string.IsNullOrEmpty(result)
+                                ? string.IsNullOrWhiteSpace($"{firstName ?? ""} {lastName ?? ""}".Trim())
+                                    ? applicantName
+                                    : $"{firstName ?? ""} {lastName ?? ""}".Trim()
+                                : basicFirstName?.GetType() == typeof(JValue) || !string.IsNullOrEmpty(basicFirstName?.ToString())
+                                    ? $"{basicFirstName?.ToString() ?? ""} {basicLastName?.ToString() ?? ""}"
+                                    : basicCompanyName ?? "";
+                }
+                
+                record.Payor = resultString;
+                records.Add(record);
+            }
+            var path = @"ExcelTemplate/";
+            var applicationsReport = new ApplicationReportsExcel()
+            {
+                Year = DateTime.Now.ToString("yyyy"),
+                RegionValue = $"Region {user?.EmployeeDetails?.Region}",
+                Reports = records,
+                Name = $"{user?.FirstName} {user?.MiddleName} {user?.LastName }" ,
+                Designation = $"{user?.EmployeeDetails?.Designation}"
+            };
+            using (var streamTo = new MemoryStream())
+            {
+                var template = new XLTemplate(path + "CASH-RECEIPTS-RECORD.xlsx");
+                
+                template.AddVariable(applicationsReport);
+                template.Generate();
+
+                template.SaveAs(streamTo);
+                fileContent = streamTo.ToArray();
+            }
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine(e);
+        }
+
+
+        return fileContent;
+    }
 static (ApplicationModel? app, JObject? raw) ParseApplicationFromBody(string? body)
 {
     if (string.IsNullOrWhiteSpace(body)) return (null, null);
@@ -563,6 +740,17 @@ if (natureOfService?.Type == JTokenType.Object)
              TotalSum = totalSum
             };
 
+
+
+
+
+
+
+
+
+
+
+
      
 // ---------- OUTPUT ----------
 Console.WriteLine($"Processed {processed} items.\n");
@@ -657,7 +845,41 @@ Console.WriteLine(JsonConvert.SerializeObject(result));
     }
 
 
-
+public class RecordModel 
+{
+   public string Date { get; set; }
+   public string OrNo { get; set; }
+   public string? Payor { get; set; }
+   public string PermitToPurchase { get; set; }
+   public string? FilingFeeLicense { get; set; }
+   public string? PermitToPossessStorage { get; set; }
+   public string? RadioStationLicense { get; set; }
+   public string? RadioStationModificationFee { get; set; }
+   public string? RadioOperatiorCertif { get; set; }
+   public string? RadioStationLicenseArocRoc { get; set; }
+   public string? PermitFee { get; set; }
+   public string? ConstructionPermitFee { get; set; }
+   public string? RegistrationFees { get; set; }
+   public string? ClearanceCertificateFee { get; set; }
+   public string? ExaminationFees { get; set; }
+   public string? InspectionFeesLicense { get; set; }
+   public string? InspectionFeesPermit { get; set; }
+   public string? SupervisionRegulationFees { get; set; }
+   public string? FilingFeePermit { get; set; }
+   public string? UsageFees { get; set; }
+   public string? ApplicationFeesFilingFee { get; set; }
+   public string? SeminarFee { get; set; }
+   public string? VerficationAuthFees { get; set; }
+   public string? SurchargesLicense { get; set; }
+   public string? SurchargesPermits { get; set; }
+   public string? SurchargesArocRoc { get; set; }
+   public string? MiscellaneousIncome { get; set; }
+   public string? Other { get; set; }
+   public string? DocumentaryStampTax { get; set; }
+   public string? Sum { get; set; }
+   public string Mpo { get; set; }
+   public string RepeaterStationInspectionFee { get; set; }
+}
 public sealed class RepoInfo
 {
     [JsonProperty("Number")] public int Number { get; set; }
