@@ -362,7 +362,7 @@ while (await reader.ReadAsync())
 
     processed++;
 }
-var totalSum = 0f;
+ totalSum = 0f;
 
 foreach (var application in applications
     .Where(c => c?.OfficialReceipt != null && c.OfficialReceipt.ORNumber != null)
@@ -377,7 +377,7 @@ foreach (var application in applications
         PaymentStatus = c.PaymentStatus,
         PaymentMethod = c.PaymentMethod,
         Amnesty = c.Amnesty,
-        TotalFee = (float?)(c.TotalFee ?? 0),
+        TotalFee = (float?)(c.TotalFee),
         AmnestyTotalFee = c.AmnestyTotalFee,
         AssignedPersonnel = c.AssignedPersonnel,
         IsPinned = c.IsPinned,
@@ -409,8 +409,7 @@ foreach (var application in applications
         Renew = c.Renew,
         IsModified = c.IsModified,
         ReferenceNumber = c.ReferenceNumber,
-        PermitNumber = c.PermitNumber,
-        ServicesReports = c.ServicesReports
+        PermitNumber = c.PermitNumber
     }))
 {
     
