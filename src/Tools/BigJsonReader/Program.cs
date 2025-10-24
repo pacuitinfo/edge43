@@ -3274,7 +3274,7 @@ public string SOANumber;
 
         
        public string _id { get; set; }
-        public virtual ApplicantDTO Applicant { set; get; }
+        public   ApplicantDTO Applicant { set; get; }
 
        
        public dynamic Service { set; get; }
@@ -3282,7 +3282,7 @@ public string SOANumber;
         public string? ServiceName { set; get; } = "";
        public string? ApplicationTypeLabel { set; get; } = "";
 
-       public virtual RegionDTO Region { set; get; }
+       public  RegionDTO Region { set; get; }
 
        public string PaymentStatus { set; get; }
 
@@ -3292,10 +3292,10 @@ public string SOANumber;
 
         public string AmnestyTotalFee { set; get; }
 
-       public virtual PersonnelModel AssignedPersonnel { set; get; }
+       public  PersonnelModel AssignedPersonnel { set; get; }
         public bool IsPinned { set; get; }
 
-        public virtual List<ApprovalHistoryModel> ApprovalHistory { set; get; }
+        public  List<ApprovalHistoryModel> ApprovalHistory { set; get; }
 
        public List<PaymentHistoryModel>? PaymentHistory { set; get; }
 
@@ -3303,7 +3303,7 @@ public string SOANumber;
 
        public List<SoaHistoryModel> SoaHistory { set; get; }
 
-         public virtual ExamModel Exam { set; get; }
+         public  ExamModel Exam { set; get; }
 
          public ORModel OfficialReceipt { set; get; }
 
@@ -3311,23 +3311,23 @@ public string SOANumber;
 
          public RadioTypeModel Make { set; get; }
 
-        public virtual ScheduleDTO Schedule { set; get; }
+        public  ScheduleDTO Schedule { set; get; }
 
          public List<PaymentImagesModel> ProofOfPayment { set; get; }
 
-         public virtual PersonnelModel Evaluator_ { set; get; }
+         public  PersonnelModel Evaluator_ { set; get; }
 
-         public virtual PersonnelModel Eod { set; get; }
+         public  PersonnelModel Eod { set; get; }
 
-         public virtual PersonnelModel Cashier { set; get; }
+         public   PersonnelModel Cashier { set; get; }
 
-         public virtual List<string> PersonnelIds { set; get; }
+         public   List<string> PersonnelIds { set; get; }
 
-        public virtual List<string> PersonnelNames { set; get; }
+        public   List<string> PersonnelNames { set; get; }
 
-        public virtual PersonnelDTO Director { set; get; }
+        public   PersonnelDTO Director { set; get; }
 
-         public virtual PersonnelDTO Commissioner { set; get; }
+         public   PersonnelDTO Commissioner { set; get; }
 
         public string Document { set; get; }
 
