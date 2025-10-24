@@ -502,7 +502,7 @@ if (natureOfService?.Type == JTokenType.Object)
         }
 
         // ---- TOTAL FEES ----
-        service.TotalFee += application.TotalFee;
+        totalSum += (float)application.TotalFee;
 
         // ---- ELEMENTS ----
         if (service.Elements != null)
@@ -546,7 +546,7 @@ if (natureOfService?.Type == JTokenType.Object)
 
     if (application.TotalFee != null && application.TotalFee > 0)
     {
-        totalSum += (float)application.TotalFee;
+       totalSum += (float)application.TotalFee;
     }
 
 }
