@@ -362,7 +362,7 @@ while (await reader.ReadAsync())
 
     processed++;
 }
- totalSum = 0;
+totalSum = 0m;
 
 
 try{
@@ -546,7 +546,7 @@ if (natureOfService?.Type == JTokenType.Object)
 
     if (application.TotalFee > 0)
     {
-       totalSum +=  (decimal)application.TotalFee;
+       totalSum +=  application.TotalFee;
     }
 
 }
