@@ -76,7 +76,7 @@ jobs:
               -R "${WORKFLOW_REPO}" \
               -r "${BRANCH}" \
               -f source_repo="${SOURCE_REPO}" \
-              -f region="${github.event.inputs.region}" \
+              -f region="${region}" \
               -f source_path="report_${region}.json" \
               -f dateStart="${github.event.inputs.dateStart}" \
               -f dateEnd=" ${github.event.inputs.dateEnd}" \
