@@ -213,7 +213,7 @@ static byte[] GenerateCashReceiptsRecordExcel(Reports report, UserModel? user)
             };
             using (var streamTo = new MemoryStream())
             {
-                var template = new XLTemplate(path + "CASH-RECEIPTS-RECORD.xlsx");
+                var template = new XLTemplate(path + "/CASH-RECEIPTS-RECORD.xlsx");
                 
                 template.AddVariable(applicationsReport);
                 template.Generate();
