@@ -3276,8 +3276,6 @@ public string SOANumber;
        public string _id { get; set; }
         public   ApplicantDTO Applicant { set; get; }
 
-       
-       public dynamic Service { set; get; }
 
         public string? ServiceName { set; get; } = "";
        public string? ApplicationTypeLabel { set; get; } = "";
@@ -3348,8 +3346,6 @@ public string SOANumber;
          public DateTime CreatedAt { set; get; }
 
         public string? SoaDocument { set; get; }
-
-         public DateTime UpdatedAt { set; get; }
 
         public string DateOfBirth { set; get; }
 
