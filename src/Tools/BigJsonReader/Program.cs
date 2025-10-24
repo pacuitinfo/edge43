@@ -647,6 +647,11 @@ Console.WriteLine(JsonConvert.SerializeObject(result));
 
 
 
+    public class SerialNumberReason
+    {
+        public string? SerialNumber { get; set; }
+        public string? Reason { get; set; }
+    }
 
 
 
@@ -3261,6 +3266,116 @@ public sealed class ApplicationModel
     // NEW:
     [JsonProperty("soa")]          public List<SoaLine>? Soa { get; set; }
     [JsonProperty("evaluator")]    public Person? Evaluator { get; set; }
+
+
+
+
+public string SOANumber;
+
+        
+       public string _id { get; set; }
+        public virtual ApplicantDTO Applicant { set; get; }
+
+       
+       public dynamic Service { set; get; }
+
+        public string? ServiceName { set; get; } = "";
+       public string? ApplicationTypeLabel { set; get; } = "";
+
+       public virtual RegionDTO Region { set; get; }
+
+       public string PaymentStatus { set; get; }
+
+        public string PaymentMethod { set; get; }
+
+        public string Amnesty { set; get; }
+
+        public string AmnestyTotalFee { set; get; }
+
+       public virtual PersonnelModel AssignedPersonnel { set; get; }
+        public bool IsPinned { set; get; }
+
+        public virtual List<ApprovalHistoryModel> ApprovalHistory { set; get; }
+
+       public List<PaymentHistoryModel>? PaymentHistory { set; get; }
+
+        public List<SoaModel> Soa_ { set; get; }
+
+       public List<SoaHistoryModel> SoaHistory { set; get; }
+
+         public virtual ExamModel Exam { set; get; }
+
+         public ORModel OfficialReceipt { set; get; }
+
+        public OrderOfPaymentModel? OrderOfPayment { set; get; }
+
+         public RadioTypeModel Make { set; get; }
+
+        public virtual ScheduleDTO Schedule { set; get; }
+
+         public List<PaymentImagesModel> ProofOfPayment { set; get; }
+
+         public virtual PersonnelModel Evaluator_ { set; get; }
+
+         public virtual PersonnelModel Eod { set; get; }
+
+         public virtual PersonnelModel Cashier { set; get; }
+
+         public virtual List<string> PersonnelIds { set; get; }
+
+        public virtual List<string> PersonnelNames { set; get; }
+
+        public virtual PersonnelDTO Director { set; get; }
+
+         public virtual PersonnelDTO Commissioner { set; get; }
+
+        public string Document { set; get; }
+
+        public string TempDocument { set; get; }
+
+          public string DocumentNumber { set; get; }
+
+          public string QRCode { set; get; }
+
+         public string Note { set; get; }
+
+         public DateTime? DateOfExpiry { set; get; }
+
+         public DateTime? ValidUntil { set; get; }
+
+          public DateTime? DueDate { set; get; }
+
+         public DateTime CreatedAt { set; get; }
+
+        public string? SoaDocument { set; get; }
+
+         public DateTime UpdatedAt { set; get; }
+
+        public string DateOfBirth { set; get; }
+
+         public DateTime Validity { get; set; }
+
+          public DateTime? NotifyExpiry { get; set; }
+
+         public ApplicationRenewModel Renew { get; set; }
+
+        public bool IsModified { get; set; }
+
+         public bool? IsEndorsed { get; set; } = false;
+
+         public string ReferenceNumber { get; set; }
+
+        public string SoaReport { get; set; }
+
+        public string SoaReportPdf { get; set; }
+
+         public string FormDocument { get; set; }
+
+         public List<SerialNumberReason> Reason { get; set; } = new List<SerialNumberReason>();
+
+         public string AccountableForm { get; set; }
+
+
 }
 public static class PersonExtensions
 {
