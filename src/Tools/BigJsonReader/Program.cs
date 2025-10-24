@@ -131,7 +131,7 @@ if (!await reader.ReadAsync() || reader.TokenType != JsonToken.StartArray)
     Environment.Exit(1);
 }
 var applications = new List<ApplicationModel>();
- float totalSum = 0;
+ var totalSum = 0;
 while (await reader.ReadAsync())
 {
     if (reader.TokenType == JsonToken.EndArray) break;
@@ -502,7 +502,7 @@ if (natureOfService?.Type == JTokenType.Object)
         }
 
         // ---- TOTAL FEES ----
-        totalSum += (float)application.TotalFee;
+        service.TotalFee += application.TotalFee;
 
         // ---- ELEMENTS ----
         if (service.Elements != null)
@@ -546,7 +546,7 @@ if (natureOfService?.Type == JTokenType.Object)
 
     if (application.TotalFee != null && application.TotalFee > 0)
     {
-       totalSum += (float)application.TotalFee;
+       totalSum +=  application.TotalFee;
     }
 
 }
