@@ -544,7 +544,7 @@ if (natureOfService?.Type == JTokenType.Object)
         Console.WriteLine($"Error processing application {application._id}: {e.Message}");
     }
 
-    if (application.TotalFee != null && application.TotalFee > 0)
+    if (application.TotalFee > 0)
     {
        totalSum +=  application.TotalFee;
     }
@@ -697,12 +697,12 @@ public class ApplicantDTO
         public float Height { get; set; }= 0;
         public float Weight { get; set; }= 0;
 
-       public  AddressModel Address { get; set; }= string.Empty;
-        public  ContactModel Contact { get; set; }= string.Empty;
+       public  AddressModel Address { get; set; }
+        public  ContactModel Contact { get; set; }
         public string? DateOfBirth { get; set; }= string.Empty;
         public string Email { get; set; }= string.Empty;
-        public  EducationModel Education { get; set; }= string.Empty;
-        public  ImagesModel ProfilePicture { set; get; }= string.Empty;
+        public  EducationModel Education { get; set; }
+        public  ImagesModel ProfilePicture { set; get; }
        
     }
 public class AddressModel
@@ -783,7 +783,7 @@ public class PaymentHistoryModel
         {
             public string Id { set; get; } 
              [JsonProperty("Item")]   public string Item { get; set; } = "";
-    [JsonProperty("Amount")] public float  Amount { get; set; } = "";
+    [JsonProperty("Amount")] public float  Amount { get; set; } = 0;
         
             public string Type { set; get; }
             public string Description { set; get; }
