@@ -409,7 +409,7 @@ foreach (var application in applications
         Renew = c.Renew,
         IsModified = c.IsModified,
         ReferenceNumber = c.ReferenceNumber,
-        PermitNumber = c.PermitNumber
+        PermitNumber = c.PermitNumber,
         ServicesReports = new ServicesReports()
                          {
                              
