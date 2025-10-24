@@ -126,7 +126,7 @@ jobs:
 
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
-          issuesJson="cache/report_${DATE_START}_${DATE_END}_${REGION}.json"
+          issuesJson="cache/report:${DATE_START}:${DATE_END}:${REGION}"
           echo "Writing ${issuesJson}"
 
           printf '%s' "$raw" | jq -cs '
