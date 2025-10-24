@@ -131,7 +131,7 @@ if (!await reader.ReadAsync() || reader.TokenType != JsonToken.StartArray)
     Environment.Exit(1);
 }
 var applications = new List<ApplicationModel>();
- var totalSum = 0;
+ decimal totalSum = 0;
 while (await reader.ReadAsync())
 {
     if (reader.TokenType == JsonToken.EndArray) break;
@@ -362,7 +362,7 @@ while (await reader.ReadAsync())
 
     processed++;
 }
-totalSum = 0m;
+totalSum = 0;
 
 
 try{
@@ -546,7 +546,7 @@ if (natureOfService?.Type == JTokenType.Object)
 
     if (application.TotalFee > 0)
     {
-       totalSum +=  application.TotalFee;
+       totalSum +=  (decimal)application.TotalFee;
     }
 
 }
