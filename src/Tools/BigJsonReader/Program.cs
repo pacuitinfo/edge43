@@ -556,12 +556,14 @@ if (natureOfService?.Type == JTokenType.Object)
     }
 
             
-           // soareports = new Reports()
-            //{
-             //   Docs = applicationsServices.OrderByDescending(i => i.CreatedAt).ToList(),
-              //  Total = totals,
-               // TotalSum = totalSum
-            //};
+           soareports = new Reports()
+            {
+                Docs = applicationsServices.OrderByDescending(i => i.CreatedAt).ToList(),
+                Total = totals,
+             TotalSum = totalSum
+            };
+
+     Console.WriteLine($"soareports {soareports} items.\n");       
 // ---------- OUTPUT ----------
 Console.WriteLine($"Processed {processed} items.\n");
 Console.WriteLine("Monthly status counts:");
