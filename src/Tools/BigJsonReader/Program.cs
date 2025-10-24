@@ -563,7 +563,7 @@ if (natureOfService?.Type == JTokenType.Object)
              TotalSum = totalSum
             };
 
-     Console.WriteLine($"soareports {soareports} items.\n");       
+     Console.WriteLine($"soareports {JsonConvert.SerializeObject(soareports)} items.\n");       
 // ---------- OUTPUT ----------
 Console.WriteLine($"Processed {processed} items.\n");
 Console.WriteLine("Monthly status counts:");
@@ -666,7 +666,7 @@ public sealed class RepoInfo
 }
 public class Reports
 {
-    public List<ApplicationModel> Docs { get; set; }
+    public List<Applica> Docs { get; set; }
     public int Total { get; set; }
     public decimal TotalSum { get; set; } 
 }
