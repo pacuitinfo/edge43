@@ -412,7 +412,32 @@ foreach (var application in applications
         PermitNumber = c.PermitNumber
     }))
 {
-    
+     string applicationReceive = application.Service?["applicationType"]?["label"]?.ToString()?.ToLower();
+    var natureOfServiceType = "";
+
+    if (application.Service?.natureOfService?.GetType() == typeof(JObject))
+    {
+        if (application.Service?.natureOfService?.type?.GetType() == typeof(JValue))
+        {
+            natureOfServiceType = application.Service?.natureOfService?.type?.ToString();
+        }
+    }
+
+    var findIndex = application.ServicesReports?.Services?.FindIndex(c =>
+        c.Service.ToLower() == applicationReceive);
+
+    if (findIndex is null or < 0) continue;
+
+    if (applicationReceive != null &&
+        (applicationReceive.Contains("renewal") || applicationReceive.Contains("modification")))
+    {
+        application.ServicesReports.Services[findIndex.Value].ApplicationReceive = "renewal";
+    }
+    else if (applicationReceive != null && applicationReceive.Contains("new"))
+    {
+        application.ServicesReports.Services[findIndex.Value].ApplicationReceive = "new";
+    }
+
 }
             
            // soareports = new Reports()
