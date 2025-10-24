@@ -10,6 +10,8 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using ClosedXML.Excel;
+using ClosedXML.Report;
 // ---------- CLI args ----------
 string Arg(string name, string def = "")
 {
@@ -904,6 +906,15 @@ public class PersonnelDTO
     public string Role { set; get; }
     public string Signature { set; get; }
 }
+public class ApplicationReportsExcel
+{
+    public List<RecordModel> Reports { get; set; }
+    public string Name { get; set; }
+    public string Designation { get; set; }
+    public string Year { get; set; }
+    public string RegionValue { get; set; }
+}
+
 public class ApplicantDTO
     {
         public string _id { get; set; }= string.Empty;
