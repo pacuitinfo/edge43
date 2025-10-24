@@ -363,7 +363,7 @@ while (await reader.ReadAsync())
     processed++;
 }
 totalSum = 0;
-
+var totals =  applications.Count();
 
 try{
 foreach (var application in applications
@@ -558,7 +558,7 @@ if (natureOfService?.Type == JTokenType.Object)
             
            soareports = new Reports()
             {
-                Docs = applicationsServices.OrderByDescending(i => i.CreatedAt).ToList(),
+                Docs = applications.OrderByDescending(i => i.CreatedAt).ToList(),
                 Total = totals,
              TotalSum = totalSum
             };
@@ -668,7 +668,7 @@ public class Reports
 {
     public List<ApplicationServicesModel> Docs { get; set; }
     public int Total { get; set; }
-    public float TotalSum { get; set; } 
+    public decimal TotalSum { get; set; } 
 }
 public class PersonnelDTO
 {
