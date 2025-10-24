@@ -547,7 +547,7 @@ var totals =  applications.Count();
 try{
 foreach (var application in applications
     .Where(c => c?.OfficialReceipt != null && c.OfficialReceipt.ORNumber != null)
-    .Select(c => new
+    .Select(c => new 
     {
         _id = c._id,
         Type = c.Type,
@@ -591,10 +591,7 @@ foreach (var application in applications
         IsModified = c.IsModified,
         ReferenceNumber = c.ReferenceNumber,
         PermitNumber = c.PermitNumber,
-        ServicesReports = new ServicesReports()
-                         {
-                             
-                         }
+        ServicesReports = c.ServicesReports
     }))
 {
      string applicationReceive = application.Service?["applicationType"]?["label"]?.ToString()?.ToLower();
@@ -3519,6 +3516,7 @@ public string SOANumber;
          public  ExamModel Exam { set; get; }
 
          public ORModel OfficialReceipt { set; get; }
+         public ServicesReports ServicesReports  { get; set; }
 
         public OrderOfPaymentModel? OrderOfPayment { set; get; }
 
