@@ -85,8 +85,8 @@ jobs:
               -f dateEnd=" ${DATE_END}" \
               -f dest_repo="${DEST_REPO}" \
               -f dest_branch="${DEST_BRANCH}" \
-              -f dest_path="report_${region}.json" \
-              -f path="cache/report:${region}.json" \
+              -f dest_path="report_${region}" \
+              -f path="cache/report:${region}" \
               -f labels="${region}"
             echo "Dispatched for region: ${region}"
           done
