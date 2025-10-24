@@ -563,12 +563,7 @@ if (natureOfService?.Type == JTokenType.Object)
              TotalSum = totalSum
             };
 
-     var iK = "cache/soa" + $"{regionKey}";
- var nP = Regex.Replace(iK, @"T[\d:.]+Z", string.Empty);
-var iB = JsonConvert.SerializeObject(soareports);
-Console.Error.WriteLine(iK);
- var result1 = await GitHubHelper.CreateOrUpdateIssue(nP, iB);
-Console.WriteLine(JsonConvert.SerializeObject(result1));
+     
 // ---------- OUTPUT ----------
 Console.WriteLine($"Processed {processed} items.\n");
 Console.WriteLine("Monthly status counts:");
