@@ -746,7 +746,7 @@ if (natureOfService?.Type == JTokenType.Object)
 
             if (fileContext != null)
             {
-                await GitHubHelper.UploadStream(
+                var uploadResult = await GitHubHelper.UploadStream(
                     name: $"soa-reports/cache/{regionKey}.xlsx",
                     file: fileContext, // ✅ use fileContext here
                     githubToken: Environment.GetEnvironmentVariable("GH_PAT"),
@@ -755,6 +755,10 @@ if (natureOfService?.Type == JTokenType.Object)
                     folder: "reports",
                     branch: "main"
                 );
+                if (uploadResult.Success)
+                    Console.WriteLine($"✅ Upload succeeded: {uploadResult.Url}");
+                else
+                    Console.WriteLine($"❌ Upload failed: {uploadResult.Message}");
             }
 
 
