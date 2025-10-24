@@ -496,9 +496,9 @@ if (natureOfService?.Type == JTokenType.Object)
             var surLicenseFee = application.Soa.Find(c => c.Item == "SUR - License Fee");
             var surSpectrumUserFee = application.Soa.Find(c => c.Item == "SUR - Spectrum User Fee");
 
-            if (surcharge?.Amount != null) service.Surcharge += surcharge.Amount;
-            if (surLicenseFee?.Amount != null) service.Surcharge += surLicenseFee.Amount;
-            if (surSpectrumUserFee?.Amount != null) service.Surcharge += surSpectrumUserFee.Amount;
+            if (surcharge?.Amount != null) service.Surcharge += (decimal)surcharge.Amount;
+            if (surLicenseFee?.Amount != null) service.Surcharge += (decimal)surLicenseFee.Amount;
+            if (surSpectrumUserFee?.Amount != null) service.Surcharge += (decimal)surSpectrumUserFee.Amount;
         }
 
         // ---- TOTAL FEES ----
