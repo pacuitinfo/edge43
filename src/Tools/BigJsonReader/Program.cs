@@ -76,69 +76,70 @@ static byte[] GenerateCashReceiptsRecordExcel(Reports report, UserModel? user)
                     : applicantName;
                 RecordModel record = new();
                 record.Date = applicationService.CreatedAt.ToString();
-                record.OrNo = applicationService.OfficialReceipt.ORNumber;
-                record.PermitToPurchase = applicationService.ServicesReports.Fees
+               record.OrNo = applicationService.OfficialReceipt?.ORNumber ?? "";
+
+                record.PermitToPurchase = applicationService?.ServicesReports?.Fees
                     .Find(c => c.Name == "Purchase Permit Fee").Value.ToString() ?? "0";
-                record.FilingFeeLicense = applicationService.ServicesReports.Fees
+                record.FilingFeeLicense = applicationService?.ServicesReports?.Fees
                     .Find(c => c.Name ==  "Filling Fee").Value.ToString() ?? "0";
-                record.PermitToPossessStorage = applicationService.ServicesReports.Fees
+                record.PermitToPossessStorage = applicationService?.ServicesReports?.Fees
                     .Find(c => c.Name ==  "Possess Permit Fee").Value.ToString() ?? "0"; 
                 record.RadioStationLicense = "0";
                 record.SeminarFee = "0";
-                record.RadioStationModificationFee = applicationService.ServicesReports.Fees
+                record.RadioStationModificationFee = applicationService?.ServicesReports?.Fees
                     .Find(c => c.Name ==  "Modification Fee").Value.ToString() ?? "0"; 
-                record.RadioOperatiorCertif = applicationService.ServicesReports.Fees
+                record.RadioOperatiorCertif = applicationService?.ServicesReports?.Fees
                     .Find(c => c.Name ==  "Certificate Fee").Value.ToString() ?? "0";  
                 record.RadioStationLicenseArocRoc = "0" ;   
                 record.PermitFee = "0" ;
                 record.Mpo = "0";
-                record.ConstructionPermitFee =  applicationService.ServicesReports.Fees
+                record.ConstructionPermitFee =  applicationService?.ServicesReports?.Fees
                     .Find(c => c.Name == "Construction Permit Fee").Value.ToString() ?? "0";
-                record.RepeaterStationInspectionFee =  applicationService.ServicesReports.Fees
+                record.RepeaterStationInspectionFee =  applicationService?.ServicesReports?.Fees
                     .Find(c => c.Name == "Repeater Station Inspection Fee").Value.ToString() ?? "0";
-                record.RegistrationFees = applicationService.ServicesReports.Fees
+                record.RegistrationFees = applicationService?.ServicesReports?.Fees
                     .Find(c => c.Name == "Registration Fee").Value.ToString() ?? "0"; 
-                record.ExaminationFees =   applicationService.ServicesReports.Fees
+                record.ExaminationFees =   applicationService?.ServicesReports?.Fees
                     .Find(c => c.Name == "Examination Fee").Value.ToString() ?? "0";
-                record.InspectionFeesLicense =    applicationService.ServicesReports.Fees
+                record.InspectionFeesLicense =    applicationService?.ServicesReports?.Fees
                     .Find(c => c.Name == "Inspection Fee").Value.ToString() ?? "0";
-                record.InspectionFeesPermit =    applicationService.ServicesReports.Fees
+                record.InspectionFeesPermit =    applicationService?.ServicesReports?.Fees
                     .Find(c => c.Name == "Inspection Fee (Per Year)").Value.ToString() ?? "0";
-                record.FilingFeePermit = applicationService.ServicesReports.Fees
+                record.FilingFeePermit = applicationService?.ServicesReports?.Fees
                     .Find(c => c.Name == "Filing Fee").Value.ToString() ?? "0";  
-                record.ApplicationFeesFilingFee = applicationService.ServicesReports.Fees
+                record.ApplicationFeesFilingFee = applicationService?.ServicesReports?.Fees
                     .Find(c => c.Name == "Seminar Fee / Application Fee").Value.ToString() ?? "0"; 
                 
-                record.SurchargesLicense = applicationService.ServicesReports.Fees
+                record.SurchargesLicense = applicationService?.ServicesReports?.Fees
                     .Find(c => c.Name == "Surcharge").Value.ToString() ?? "0";  
-                record.Other =  applicationService.ServicesReports.Fees
+                record.Other =  applicationService?.ServicesReports?.Fees
                     .Find(c => c.Name == "Other").Value.ToString() ?? "0"; 
-                record.DocumentaryStampTax =  applicationService.ServicesReports.Fees
+                record.DocumentaryStampTax =  applicationService?.ServicesReports?.Fees
                     .Find(c => c.Name == "Documentary Stamp Tax").Value.ToString() ?? "0"; 
-                record.Sum = (applicationService.ServicesReports.Fees
+                record.Sum = (applicationService?.ServicesReports?.Fees
                     .Find(c => c.Name == "Purchase Permit Fee").Value +  
-                    applicationService.ServicesReports.Fees
+                    applicationService?.ServicesReports?.Fees
                          .Find(c => c.Name == "Repeater Station Inspection Fee").Value +  
-                    applicationService.ServicesReports.Fees
+                    applicationService?.ServicesReports?.Fees
                         .Find(c => c.Name == "Repeater Station License Fee").Value + 
-                     applicationService.ServicesReports.Fees
+                     applicationService?.ServicesReports?.Fees
                          .Find(c => c.Name ==  "Filling Fee").Value +  
-                     applicationService.ServicesReports.Fees
+                     applicationService?.ServicesReports?.Fees
                          .Find(c => c.Name ==  "Possess Permit Fee").Value + 
-                     applicationService.ServicesReports.Fees
+                     applicationService?.ServicesReports?.Fees
                          .Find(c => c.Name ==  "Modification Fee").Value + 
-                     applicationService.ServicesReports.Fees
+                     applicationService?.ServicesReports?.Fees
                          .Find(c => c.Name ==  "Certificate Fee").Value
-                     +  applicationService.ServicesReports.Fees
-                         .Find(c => c.Name == "Construction Permit Fee").Value +  applicationService.ServicesReports.Fees
-                         .Find(c => c.Name == "Registration Fee").Value +  applicationService.ServicesReports.Fees
-                         .Find(c => c.Name == "Other").Value +  applicationService.ServicesReports.Fees
-                         .Find(c => c.Name == "Examination Fee").Value + applicationService.ServicesReports.Fees
-                         .Find(c => c.Name == "Inspection Fee").Value + applicationService.ServicesReports.Fees
-                         .Find(c => c.Name == "Inspection Fee (Per Year)").Value + applicationService.ServicesReports.Fees
-                         .Find(c => c.Name == "Filing Fee").Value + applicationService.ServicesReports.Fees
-                         .Find(c => c.Name == "Seminar Fee / Application Fee").Value +  applicationService.ServicesReports.Fees
-                         .Find(c => c.Name == "Surcharge").Value + applicationService.ServicesReports.Fees
+                     +  applicationService?.ServicesReports?.Fees
+                         .Find(c => c.Name == "Construction Permit Fee").Value +  applicationService?.ServicesReports?.Fees
+                         .Find(c => c.Name == "Registration Fee").Value +  applicationService?.ServicesReports?.Fees
+                         .Find(c => c.Name == "Other").Value +  applicationService?.ServicesReports?.Fees
+                         .Find(c => c.Name == "Examination Fee").Value + applicationService?.ServicesReports?.Fees
+                         .Find(c => c.Name == "Inspection Fee").Value + applicationService?.ServicesReports?.Fees
+                         .Find(c => c.Name == "Inspection Fee (Per Year)").Value + applicationService?.ServicesReports?.Fees
+                         .Find(c => c.Name == "Filing Fee").Value + applicationService?.ServicesReports?.Fees
+                         .Find(c => c.Name == "Seminar Fee / Application Fee").Value +  applicationService?.ServicesReports?.Fees
+                         .Find(c => c.Name == "Surcharge").Value + applicationService?.ServicesReports?.Fees
                          .Find(c => c.Name == "Documentary Stamp Tax").Value).ToString() ?? "0";
                 record.SurchargesPermits =  "0";  
                 
