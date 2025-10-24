@@ -10,7 +10,6 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using System.Text.RegularExpressions;
 // ---------- CLI args ----------
 string Arg(string name, string def = "")
 {
@@ -972,7 +971,16 @@ public class ApplicationRenewModel {
         public string Large { get; set; }
         public string Xlarge { get; set; }
     }
-
+ public class EmployeeModel
+    {
+        public string Region { get; set; }
+       public string Level { get; set; }
+        public string Title { get; set; }
+        public string Division { get; set; }
+        public string Position { get; set; }
+        public string Designation { get; set; }
+        public string Signature { set; get; }
+    }
 public class ChartData
 {
     public int Value { get; set; }
