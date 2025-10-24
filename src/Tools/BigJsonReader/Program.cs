@@ -595,7 +595,7 @@ foreach (var application in applications
         ReferenceNumber = c.ReferenceNumber,
         PermitNumber = c.PermitNumber,
         ServicesReports = new ServicesReports(){
-            
+
         }
     }))
 {
@@ -684,7 +684,7 @@ if (natureOfService?.Type == JTokenType.Object)
 
         // ---- TOTAL FEES ----
         service.TotalFee += application.TotalFee;
-
+        Console.WriteLine( service.TotalFee);
         // ---- ELEMENTS ----
         if (service.Elements != null)
         {
