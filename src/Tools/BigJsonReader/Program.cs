@@ -546,7 +546,7 @@ if (natureOfService?.Type == JTokenType.Object)
 
     if (application.TotalFee > 0)
     {
-       totalSum +=  application.TotalFee;
+       totalSum +=  (decimal)application.TotalFee;
     }
 
 }
