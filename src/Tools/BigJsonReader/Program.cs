@@ -379,7 +379,7 @@ foreach (var application in applications
         PaymentStatus = c.PaymentStatus,
         PaymentMethod = c.PaymentMethod,
         Amnesty = c.Amnesty,
-        TotalFee = (float?)(c.TotalFee),
+        TotalFee =  (c.TotalFee),
         AmnestyTotalFee = c.AmnestyTotalFee,
         AssignedPersonnel = c.AssignedPersonnel,
         IsPinned = c.IsPinned,
