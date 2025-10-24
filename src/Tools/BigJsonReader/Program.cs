@@ -440,47 +440,7 @@ Console.WriteLine(JsonConvert.SerializeObject(result));
 
 
 
-public static List<string> ExpandDates(string start, string end)
-{
-    if (start == null || end == null)
-    {
-        return new List<string>();
-    }
-    var s = ParseToDate(start);
-    var e = ParseToDate(end);
-    if (e < s) throw new ArgumentException("end before start");
 
-    int days = (e - s).Days + 1;
-    var result = new List<string>(days);
-    for (int i = 0; i < days; i++)
-        result.Add(s.AddDays(i).ToString("yyyy-MM-dd"));
-    return result;
-}
-private static DateTime ParseToDate(string input)
-{
-    if (string.IsNullOrWhiteSpace(input))
-        throw new ArgumentNullException(nameof(input));
-
-    if (DateTimeOffset.TryParse(
-            input,
-            CultureInfo.InvariantCulture,
-            DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
-            out var dto))
-    {
-        return dto.UtcDateTime.Date;
-    }
-
-    if (DateTime.TryParseExact(
-            input, "yyyy-MM-dd",
-            CultureInfo.InvariantCulture,
-            DateTimeStyles.None,
-            out var d))
-    {
-        return d.Date;
-    }
-
-    throw new FormatException($"Invalid date: '{input}'.");
-}
 
 
 public sealed class RepoInfo
