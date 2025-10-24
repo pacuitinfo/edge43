@@ -3930,6 +3930,7 @@ public sealed class GitHubIssueResult
 
 public static class GitHubHelper
 {
+     private static readonly HttpClient _http = new HttpClient();
     public static async Task<(bool Success, string Url, string Sha, string Path, string Message)>
         UploadStream(
             string name,
