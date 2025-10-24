@@ -745,9 +745,8 @@ if (natureOfService?.Type == JTokenType.Object)
             var fileContext = GenerateCashReceiptsRecordExcel(soareports, null);
             if (fileContext != null)
             {
-                var fileName =  "Cash-Receipt-Records-" + Convert.ToString(dateEnd ?? "") + "_To_" + Convert.ToString(dateStart ?? "") + Guid.NewGuid()   + ".xlsx";
                 await GitHubHelper.UploadStream({
-                    name: $"soa-reports/{regionKey}.xlsx",
+                    name: $"soa-reports/cache/{regionKey}.xlsx",
                     file: fileContent,
                     githubToken: Environment.GetEnvironmentVariable("GH_PAT"), // or pass directly
                     repoOwner: "https-multiculturaltoolbox-com",
