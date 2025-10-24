@@ -126,7 +126,7 @@ jobs:
 
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
-          issuesJson="cache/report:${DATE_START}:${DATE_END}:${REGION}"
+          issuesJson="cache/report:${DATE_START:+${DATE_START}:}${DATE_END:+${DATE_END}:}${REGION}"
           echo "Writing ${issuesJson}"
 
           printf '%s' "$raw" | jq -cs '
@@ -156,7 +156,7 @@ jobs:
         run: |
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
-          issuesJson="cache/report:${DATE_START}:${DATE_END}:${REGION}"
+          issuesJson="cache/report:${DATE_START:+${DATE_START}:}${DATE_END:+${DATE_END}:}${REGION}"
           echo "SAFE=${SAFE}"
           jq '.[0:3]' "${issuesJson}" || true
 
@@ -180,8 +180,8 @@ jobs:
           set -euo pipefail
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
-          issuesJson="cache/report:${DATE_START}:${DATE_END}:${REGION}"
-          destFile="dest/report:${DATE_START}:${DATE_END}:${REGION}"
+          issuesJson="cache/report:${DATE_START:+${DATE_START}:}${DATE_END:+${DATE_END}:}${REGION}"
+          destFile="dest/report:${DATE_START:+${DATE_START}:}${DATE_END:+${DATE_END}:}${REGION}"
           echo "Copying ${issuesJson} → ${destFile}"
           [ -f "${issuesJson}" ] || { echo "❌ Missing ${issuesJson}"; exit 1; }
           mkdir -p "$(dirname "$destFile")"
@@ -233,7 +233,7 @@ jobs:
             --owner "${{ github.repository_owner }}" \
             --repo  "${{ github.repository  }}" \
             --path  "${{ github.repository_owner  }}" \
-            --regionKey "report:${DATE_PARTS:+${DATE_PARTS}:}${REGION}" \
+            --regionKey "report:${DATE_START:+${DATE_START}:}${DATE_END:+${DATE_END}:}${REGION}" \
             --ref   "${{ 'main'   }}" \
             --out "artifacts/monthly-status.json"
 
@@ -258,7 +258,7 @@ jobs:
           set -euo pipefail
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
-          issuesJson="cache/report:${DATE_START}:${DATE_END}:${REGION}"
+          issuesJson="cache/report:${DATE_START:+${DATE_START}:}${DATE_END:+${DATE_END}:}${REGION}"
 
           # 1) Place monthly-status.json exactly at DEST_PATH
           DEST1="dest/${DEST_PATH}"
