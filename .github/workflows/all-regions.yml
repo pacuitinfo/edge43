@@ -80,12 +80,12 @@ jobs:
               -r "${BRANCH}" \
               -f source_repo="${SOURCE_REPO}" \
               -f region="${region}" \
-              -f source_path="report_${region}.json" \
+              -f source_path="cache/report:${region}" \
               -f dateStart="${DATE_START}" \
               -f dateEnd=" ${DATE_END}" \
               -f dest_repo="${DEST_REPO}" \
               -f dest_branch="${DEST_BRANCH}" \
-              -f dest_path="report_${region}" \
+              -f dest_path="cache/report:${region}" \
               -f path="cache/report:${region}" \
               -f labels="${region}"
             echo "Dispatched for region: ${region}"
