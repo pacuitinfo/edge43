@@ -745,7 +745,7 @@ if (natureOfService?.Type == JTokenType.Object)
             var fileContext = GenerateCashReceiptsRecordExcel(soareports, null);
             if (fileContext != null)
             {
-                await GitHubHelper.UploadStream({
+                await GitHubHelper.UploadStream(
                     name: $"soa-reports/cache/{regionKey}.xlsx",
                     file: fileContent,
                     githubToken: Environment.GetEnvironmentVariable("GH_PAT"), // or pass directly
@@ -753,7 +753,7 @@ if (natureOfService?.Type == JTokenType.Object)
                     repoName: "prod",
                     folder: "reports",
                     branch: "main"
-                });
+                );
             
             }
 
