@@ -413,15 +413,17 @@ foreach (var application in applications
     }))
 {
      string applicationReceive = application.Service?["applicationType"]?["label"]?.ToString()?.ToLower();
-    var natureOfServiceType = "";
+var natureOfServiceType = "";
 
-    if (application.Service?.natureOfService?.GetType() == typeof(JObject))
+var natureOfService = application.Service?["natureOfService"];
+if (natureOfService?.Type == JTokenType.Object)
+{
+    var typeToken = natureOfService["type"];
+    if (typeToken?.Type == JTokenType.String || typeToken?.Type == JTokenType.Integer)
     {
-        if (application.Service?.natureOfService?.type?.GetType() == typeof(JValue))
-        {
-            natureOfServiceType = application.Service?.natureOfService?.type?.ToString();
-        }
+        natureOfServiceType = typeToken.ToString();
     }
+}
 
     var findIndex = application.ServicesReports?.Services?.FindIndex(c =>
         c.Service.ToLower() == applicationReceive);
