@@ -364,6 +364,8 @@ while (await reader.ReadAsync())
 }
  totalSum = 0f;
 
+
+try{
 foreach (var application in applications
     .Where(c => c?.OfficialReceipt != null && c.OfficialReceipt.ORNumber != null)
     .Select(c => new
@@ -548,6 +550,11 @@ if (natureOfService?.Type == JTokenType.Object)
     }
 
 }
+} catch (Exception e)
+    {
+        Console.Write(e);
+    }
+
             
            // soareports = new Reports()
             //{
@@ -673,27 +680,27 @@ public class PersonnelDTO
 }
 public class ApplicantDTO
     {
-        public string _id { get; set; }
-        public virtual string Type { set; get; }
-        public string UserId { get; set; }
-        public string UserType { get; set; }
-        public string CompanyName { get; set; }
-        public string ApplicantName { get; set; }
-        public string FirstName { get; set; }
-        public string LastName { get; set; }
-        public string MiddleName { get; set; }
-        public string Suffix { get; set; }
-        public string Nationality { get; set; }
-        public string Sex { get; set; }
-        public string Signature { get; set; }
-        public float? Height { get; set; }
-        public float? Weight { get; set; }
-        public virtual AddressModel Address { get; set; }
-        public virtual ContactModel Contact { get; set; }
-        public string? DateOfBirth { get; set; }
-        public string Email { get; set; }
-        public virtual EducationModel Education { get; set; }
-        public virtual ImagesModel ProfilePicture { set; get; }
+        public string _id { get; set; }= string.Empty;
+        public  string Type { set; get; }= string.Empty;
+        public string UserId { get; set; }= string.Empty;
+        public string UserType { get; set; }= string.Empty;
+        public string CompanyName { get; set; }= string.Empty;
+        public string ApplicantName { get; set; }= string.Empty;
+        public string FirstName { get; set; }= string.Empty;
+        public string LastName { get; set; }= string.Empty;
+        public string MiddleName { get; set; }= string.Empty;
+        public string Suffix { get; set; }= string.Empty;
+        public string Nationality { get; set; }= string.Empty;
+        public string Sex { get; set; }= string.Empty;
+        public string Signature { get; set; }= string.Empty;
+        public float? Height { get; set; }= string.Empty;
+        public float? Weight { get; set; }= string.Empty;
+        public  AddressModel Address { get; set; }= string.Empty;
+        public  ContactModel Contact { get; set; }= string.Empty;
+        public string? DateOfBirth { get; set; }= string.Empty;
+        public string Email { get; set; }= string.Empty;
+        public  EducationModel Education { get; set; }= string.Empty;
+        public  ImagesModel ProfilePicture { set; get; }= string.Empty;
        
     }
 public class AddressModel
