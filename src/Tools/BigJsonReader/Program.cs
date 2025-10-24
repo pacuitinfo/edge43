@@ -743,18 +743,18 @@ if (natureOfService?.Type == JTokenType.Object)
             };
 
             var fileContext = GenerateCashReceiptsRecordExcel(soareports, null);
+
             if (fileContext != null)
             {
                 await GitHubHelper.UploadStream(
                     name: $"soa-reports/cache/{regionKey}.xlsx",
-                    file: fileContent,
-                    githubToken: Environment.GetEnvironmentVariable("GH_PAT"), // or pass directly
+                    file: fileContext, // ✅ use fileContext here
+                    githubToken: Environment.GetEnvironmentVariable("GH_PAT"),
                     repoOwner: "https-multiculturaltoolbox-com",
                     repoName: "prod",
                     folder: "reports",
                     branch: "main"
                 );
-            
             }
 
 
