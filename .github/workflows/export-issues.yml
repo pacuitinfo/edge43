@@ -225,11 +225,15 @@ jobs:
           set -euo pipefail
           # If BigJsonReader expects to read from a GitHub repo (NOT local file),
           # it will use the workflow_dispatch inputs below.
+          DATE_PARTS=""
+          [ -n "${DATE_START:-}" ] && DATE_PARTS="${DATE_START}"
+          [ -n "${DATE_END:-}" ] && DATE_PARTS="${DATE_PARTS:+${DATE_PARTS}:}${DATE_END}"
+
           dotnet run --project src/Tools/BigJsonReader/BigJsonReader.csproj -- \
             --owner "${{ github.repository_owner }}" \
             --repo  "${{ github.repository  }}" \
             --path  "${{ github.repository_owner  }}" \
-            --regionKey "report:${DATE_START}:${DATE_END}:${REGION}" \
+            --regionKey "report:${DATE_PARTS:+${DATE_PARTS}:}${REGION}" \
             --ref   "${{ 'main'   }}" \
             --out "artifacts/monthly-status.json"
 
