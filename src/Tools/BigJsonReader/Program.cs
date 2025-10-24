@@ -410,6 +410,10 @@ foreach (var application in applications
         IsModified = c.IsModified,
         ReferenceNumber = c.ReferenceNumber,
         PermitNumber = c.PermitNumber
+        ServicesReports = new ServicesReports()
+                         {
+                             
+                         }
     }))
 {
      string applicationReceive = application.Service?["applicationType"]?["label"]?.ToString()?.ToLower();
@@ -425,7 +429,7 @@ if (natureOfService?.Type == JTokenType.Object)
     }
 }
 
-    var findIndex = application.ServicesReports?.Services?.FindIndex(c =>
+   var findIndex = application.ServicesReports?.Services?.FindIndex(c =>
         c.Service.ToLower() == applicationReceive);
 
     if (findIndex is null or < 0) continue;
