@@ -361,7 +361,209 @@ while (await reader.ReadAsync())
 
     processed++;
 }
+var applicationsServices = applications.Where(c =>  c.OfficialReceipt.ORNumber != null).Select(c => new ApplicationServicesModel()
+                     {
+                         _id = c._id,
+                         Type = c.Type,
+                         Applicant = c.Applicant,
+                         Service = c.Service,
+                         Region = c.Region,
+                         Status = c.Status,
+                         PaymentStatus = c.PaymentStatus,
+                         PaymentMethod = c.PaymentMethod,
+                         Amnesty = c.Amnesty,
+                         TotalFee = c.TotalFee,
+                         AmnestyTotalFee = c.AmnestyTotalFee,
+                         AssignedPersonnel = c.AssignedPersonnel,
+                         IsPinned = c.IsPinned,
+                         ApprovalHistory = c.ApprovalHistory,
+                         PaymentHistory = c.PaymentHistory,
+                         Soa = c.Soa,
+                         SoaHistory = c.SoaHistory,
+                         Exam = c.Exam,
+                         OfficialReceipt = c.OfficialReceipt,
+                         OrderOfPayment = c.OrderOfPayment,
+                         Make = c.Make,
+                         Schedule = c.Schedule,
+                         ProofOfPayment = c.ProofOfPayment,
+                         Evaluator = c.Evaluator,
+                         Cashier = c.Cashier,
+                         Director = c.Director,
+                         Commissioner = c.Commissioner,
+                         Document = c.Document,
+                         TempDocument = c.TempDocument,
+                         DocumentNumber = c.DocumentNumber,
+                         QRCode = c.QRCode,
+                         Note = c.Note,
+                         DateOfExpiry = c.DateOfExpiry,
+                         ValidUntil = c.ValidUntil,
+                         CreatedAt = c.CreatedAt,
+                         UpdatedAt = c.UpdatedAt,
+                         DateOfBirth = c.DateOfBirth,
+                         Validity = c.Validity,
+                         Renew = c.Renew,
+                         IsModified = c.IsModified,
+                         ReferenceNumber = c.ReferenceNumber,
+                         PermitNumber = c.PermitNumber,
+                        
+                     }).ToList();
+            var totals =  applicationsServices.Count();
 
+            foreach (var application in applicationsServices)
+            {
+                string applicationReceive = application.Service?["applicationType"]?["label"]?.ToString()?.ToLower();
+                var natureOfServiceType = "";
+
+                if (application.Service?.natureOfService?.GetType() == typeof(JObject))
+                {
+                    if(application.Service?.natureOfService?.type?.GetType() == typeof(JValue))
+                    {
+                        natureOfServiceType = application.Service?.natureOfService?.type.ToString();
+                    }
+               
+                }
+                var findIndex = application.ServicesReports.Services.FindIndex(c =>
+                    c.Service.ToLower() == applicationReceive);
+                if (applicationReceive != null && 
+                    (applicationReceive.Contains("renewal") || applicationReceive.Contains("modification"))){
+                    application.ServicesReports.Services[findIndex].ApplicationReceive = "renewal";
+                }else if (applicationReceive != null && applicationReceive.Contains("new"))
+                {
+                    application.ServicesReports.Services[findIndex].ApplicationReceive = "new";
+                }
+                
+                 if (findIndex > -1)
+            {
+                var noOfYear = 1;
+                var equipments =0 ;
+                var n = false;
+                if (application.Service?["applicationDetails"]?.GetType() == typeof(JObject))
+                {
+                    if (application.Service?["applicationDetails"]?["noOfYears"]?.GetType() == typeof(JValue))
+                    {
+                       int.TryParse(application.Service?["applicationDetails"]?["noOfYears"].ToString(), out noOfYear);
+                       
+                    }
+                }
+                else
+                {
+                    if (!n)
+                    {
+                        noOfYear = 1 ;
+                    }
+                }
+                if (application.Service?["particulars"]?.GetType() == typeof(JArray))
+                {
+                    foreach (var particular in application.Service?["particulars"])
+                    {
+                        if (particular?["equipments"]?.GetType() == typeof(JArray))
+                        {
+                          
+                            int equip;
+                            int.TryParse( particular?["equipments"].Count.ToString(), out equip);
+
+                            equipments += equip;
+                        }
+                        
+                    }
+                    if (equipments == 0)
+                    {
+                        equipments = 1;
+                    }
+                }
+                else
+                {
+                    
+                        equipments = 1;
+                }
+
+                try
+                {
+                    application.ServicesReports.Services[findIndex].Value =  (application.ServicesReports.Services[findIndex].Value + 1) * equipments * noOfYear;
+
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                   
+                }
+               
+                if (string.IsNullOrEmpty(application.ServicesReports.Services[findIndex]?.Type))
+                {
+                    application.ServicesReports.Services[findIndex].Type = application.Type;
+                }
+              
+               
+              
+                if (application.Soa != null)
+                {
+                    var surcharge = application.Soa.Find(c => c.Item == "Surcharge");
+                    var surLicenseFee = application.Soa.Find(c => c.Item == "SUR - License Fee");
+                    var surSpectrumUserFee = application.Soa.Find(c => c.Item == "SUR - Spectrum User Fee");
+                    try
+                    {
+                        if (surcharge?.Amount != null)
+                        {
+                            application.ServicesReports.Services[findIndex].Surcharge += surcharge.Amount;
+                        }
+                        if (surLicenseFee?.Amount != null)
+                        {
+                            application.ServicesReports.Services[findIndex].Surcharge += surLicenseFee.Amount;
+                        }
+                        if (surSpectrumUserFee?.Amount != null)
+                        {
+                            application.ServicesReports.Services[findIndex].Surcharge += surSpectrumUserFee.Amount; 
+                        }
+                        
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+                }
+
+                application.ServicesReports.Services[findIndex].TotalFee += application.TotalFee;
+                if (application.ServicesReports.Services[findIndex].Elements != null)
+                {
+                    var index = application.ServicesReports.Services[findIndex].Elements.FindIndex(c =>
+                        c.Name.ToLower() == application.Service?["applicationType"]?["element"]?.ToString().ToLower());
+                    if (index > -1)
+                    {
+                        application.ServicesReports.Services[findIndex].Elements[index].Value++;
+                    }
+                }
+
+                if (application.Soa != null)
+                {
+                    for (var i = 0; i < application.Soa?.Count; i++)
+                    {
+                        var findSoaIndex = application.ServicesReports.Fees.FindIndex(c =>
+                            c.Name.ToLower() == application?.Soa?[i]?.Item?.ToLower());
+                        if (findSoaIndex > -1)
+                        {
+                            application.ServicesReports.Fees[findSoaIndex].Value += application?.Soa?[i]?.Amount;
+                        }
+                        else
+                        {
+                            var _findOtherSoaIndex = application.ServicesReports.Fees.FindIndex(c =>
+                                c.Name.ToLower() == "other");
+                            application.ServicesReports.Fees[_findOtherSoaIndex].Value += application?.Soa?[i]?.Amount;
+                        }
+                    }
+                }
+            }
+                if (application.TotalFee != null && application.TotalFee > 0)
+                {
+                    totalSum += application.TotalFee;
+                }
+            }
+            
+            soareports = new Reports()
+            {
+                Docs = applicationsServices.OrderByDescending(i => i.CreatedAt).ToList(),
+                Total = totals,
+                TotalSum = totalSum
+            };
 // ---------- OUTPUT ----------
 Console.WriteLine($"Processed {processed} items.\n");
 Console.WriteLine("Monthly status counts:");
