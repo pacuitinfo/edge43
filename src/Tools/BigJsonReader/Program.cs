@@ -444,6 +444,109 @@ if (natureOfService?.Type == JTokenType.Object)
         application.ServicesReports.Services[findIndex.Value].ApplicationReceive = "new";
     }
 
+     var noOfYear = 1;
+    var equipments = 0;
+
+    var applicationDetails = application.Service?["applicationDetails"];
+    if (applicationDetails?.Type == JTokenType.Object)
+    {
+        var noOfYearsToken = applicationDetails["noOfYears"];
+        if (noOfYearsToken?.Type == JTokenType.Integer || noOfYearsToken?.Type == JTokenType.String)
+        {
+            int.TryParse(noOfYearsToken.ToString(), out noOfYear);
+        }
+    }
+
+    var particulars = application.Service?["particulars"];
+    if (particulars?.Type == JTokenType.Array)
+    {
+        foreach (var particular in particulars)
+        {
+            var equipmentsArray = particular?["equipments"] as JArray;
+            if (equipmentsArray != null)
+            {
+                equipments += equipmentsArray.Count;
+            }
+        }
+
+        if (equipments == 0)
+        {
+            equipments = 1;
+        }
+    }
+    else
+    {
+        equipments = 1;
+    }
+
+    try
+    {
+        var service = application.ServicesReports.Services[findIndex.Value];
+        service.Value = (service.Value + 1) * equipments * noOfYear;
+
+        if (string.IsNullOrEmpty(service.Type))
+            service.Type = application.Type;
+
+        // ---- SOA SURCHARGES ----
+        if (application.Soa != null)
+        {
+            var surcharge = application.Soa.Find(c => c.Item == "Surcharge");
+            var surLicenseFee = application.Soa.Find(c => c.Item == "SUR - License Fee");
+            var surSpectrumUserFee = application.Soa.Find(c => c.Item == "SUR - Spectrum User Fee");
+
+            if (surcharge?.Amount != null) service.Surcharge += surcharge.Amount;
+            if (surLicenseFee?.Amount != null) service.Surcharge += surLicenseFee.Amount;
+            if (surSpectrumUserFee?.Amount != null) service.Surcharge += surSpectrumUserFee.Amount;
+        }
+
+        // ---- TOTAL FEES ----
+        service.TotalFee += application.TotalFee;
+
+        // ---- ELEMENTS ----
+        if (service.Elements != null)
+        {
+            var index = service.Elements.FindIndex(c =>
+                c.Name.ToLower() ==
+                application.Service?["applicationType"]?["element"]?.ToString().ToLower());
+            if (index > -1)
+            {
+                service.Elements[index].Value++;
+            }
+        }
+
+        // ---- SOA FEES ----
+        if (application.Soa != null)
+        {
+            for (var i = 0; i < application.Soa.Count; i++)
+            {
+                var soaItem = application.Soa[i];
+                var findSoaIndex = application.ServicesReports.Fees.FindIndex(c =>
+                    c.Name.ToLower() == soaItem?.Item?.ToLower());
+
+                if (findSoaIndex > -1)
+                {
+                    application.ServicesReports.Fees[findSoaIndex].Value += soaItem.Amount;
+                }
+                else
+                {
+                    var otherIndex = application.ServicesReports.Fees.FindIndex(c =>
+                        c.Name.ToLower() == "other");
+                    if (otherIndex > -1)
+                        application.ServicesReports.Fees[otherIndex].Value += soaItem.Amount;
+                }
+            }
+        }
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine($"Error processing application {application._id}: {e.Message}");
+    }
+
+    if (application.TotalFee != null && application.TotalFee > 0)
+    {
+        totalSum += (float)application.TotalFee;
+    }
+
 }
             
            // soareports = new Reports()
