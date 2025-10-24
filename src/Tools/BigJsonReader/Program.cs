@@ -63,11 +63,12 @@ static byte[] GenerateCashReceiptsRecordExcel(Reports report, UserModel? user)
                 var basicCompanyName = applicationService?.Service?["basic"]?["companyName"]?.ToString() ?? "";
                 var basicClubName = applicationService?.Service?["basic"]?["clubName"]?.ToString() ?? "";
 
-                var companyName = applicationService?.Applicant?.CompanyName?.ToString() ?? "";
-                var clubName = applicationService?.Service?.applicationDetails?.clubName?.ToString()?? "" ;
-                var firstName = applicationService?.Applicant?.FirstName?.ToString()?? "" ;
-                var lastName = applicationService?.Applicant?.LastName?.ToString()?? "" ;
-                var applicantName = applicationService?.Applicant?.ApplicantName?.ToString()?? "" ;
+              var companyName = applicationService?.Applicant?.CompanyName?.ToString() ?? "";
+                var clubName = applicationService?.Service?["applicationDetails"]?["clubName"]?.ToString() ?? "";
+                var firstName = applicationService?.Applicant?.FirstName?.ToString() ?? "";
+                var lastName = applicationService?.Applicant?.LastName?.ToString() ?? "";
+                var applicantName = applicationService?.Applicant?.ApplicantName?.ToString() ?? "";
+
                 var result = !string.IsNullOrEmpty(firstName) ? firstName
                     : !string.IsNullOrEmpty(lastName) ? lastName
                     : applicantName;
