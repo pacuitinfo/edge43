@@ -754,7 +754,7 @@ application.ServicesReports = new ServicesReports();
                 if (uploadResult.Success){
                     var report = new SoaReportModel
                     {
-                        Name = $"SOA ${regionKey}",
+                        Name = $"SOA {regionKey}",
                         Description = "Auto-generated Excel reports",
                         Status = "completed"
                     };
