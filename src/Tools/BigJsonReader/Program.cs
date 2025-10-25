@@ -517,9 +517,9 @@ while (await reader.ReadAsync())
 
             if (idxFee >= 0)
             {
-                var add = line?.Amount ?? 0f;
+                var add = line?.Amount ?? 0m;
                 servicesReports.Fees[idxFee].Value =
-                    (servicesReports.Fees[idxFee].Value ?? 0f) + add;
+                    (servicesReports.Fees[idxFee].Value ?? 0m) + add;
             }
         }
     }
