@@ -549,173 +549,156 @@ var totals =  applications.Count();
 
 try{
 foreach (var application in applications
-    .Where(c => c?.OfficialReceipt != null && c.OfficialReceipt.ORNumber != null)
-    .Select(c => new 
+    .Where(c => c?.OfficialReceipt?.ORNumber != null)
+    .Select(c => new
     {
-        _id = c._id,
-        Type = c.Type,
-        Applicant = c.Applicant,
-        Service = c.Service,
-        Region = c.Region,
-        Status = c.Status,
-        PaymentStatus = c.PaymentStatus,
-        PaymentMethod = c.PaymentMethod,
-        Amnesty = c.Amnesty,
-        TotalFee =  (c.TotalFee),
-        AmnestyTotalFee = c.AmnestyTotalFee,
-        AssignedPersonnel = c.AssignedPersonnel,
-        IsPinned = c.IsPinned,
-        ApprovalHistory = c.ApprovalHistory,
-        PaymentHistory = c.PaymentHistory,
-        Soa = c.Soa,
-        SoaHistory = c.SoaHistory,
-        Exam = c.Exam,
-        OfficialReceipt = c.OfficialReceipt,
-        OrderOfPayment = c.OrderOfPayment,
-        Make = c.Make,
-        Schedule = c.Schedule,
-        ProofOfPayment = c.ProofOfPayment,
-        Evaluator = c.Evaluator,
-        Cashier = c.Cashier,
-        Director = c.Director,
-        Commissioner = c.Commissioner,
-        Document = c.Document,
-        TempDocument = c.TempDocument,
-        DocumentNumber = c.DocumentNumber,
-        QRCode = c.QRCode,
-        Note = c.Note,
-        DateOfExpiry = c.DateOfExpiry,
-        ValidUntil = c.ValidUntil,
-        CreatedAt = c.CreatedAt,
+        c._id,
+        c.Type,
+        c.Applicant,
+        c.Service,
+        c.Region,
+        c.Status,
+        c.PaymentStatus,
+        c.PaymentMethod,
+        c.Amnesty,
+        c.TotalFee,                         // assume decimal?
+        c.AmnestyTotalFee,
+        c.AssignedPersonnel,
+        c.IsPinned,
+        c.ApprovalHistory,
+        c.PaymentHistory,
+        c.Soa,                              // List<SoaLine> with Amount: decimal?
+        c.SoaHistory,
+        c.Exam,
+        c.OfficialReceipt,
+        c.OrderOfPayment,
+        c.Make,
+        c.Schedule,
+        c.ProofOfPayment,
+        c.Evaluator,
+        c.Cashier,
+        c.Director,
+        c.Commissioner,
+        c.Document,
+        c.TempDocument,
+        c.DocumentNumber,
+        c.QRCode,
+        c.Note,
+        c.DateOfExpiry,
+        c.ValidUntil,
+        c.CreatedAt,
         UpdatedAt = c.UpdatedAt ?? DateTime.MinValue,
-        DateOfBirth = c.DateOfBirth,
-        Validity = c.Validity,
-        Renew = c.Renew,
-        IsModified = c.IsModified,
-        ReferenceNumber = c.ReferenceNumber,
-        PermitNumber = c.PermitNumber,
-        ServicesReports = new ServicesReports(){
-
-        }
+        c.DateOfBirth,
+        c.Validity,
+        c.Renew,
+        c.IsModified,
+        c.ReferenceNumber,
+        c.PermitNumber,
+        ServicesReports = new ServicesReports()   // gets all defaults/seed data
     }))
 {
-     string applicationReceive = application.Service?["applicationType"]?["label"]?.ToString()?.ToLower();
-var natureOfServiceType = "";
+    // ---- Resolve names / tokens ------------------------------------------------
+    var applicationReceive = application.Service?["applicationType"]?["label"]
+        ?.ToString()?.ToLowerInvariant();
 
-var natureOfService = application.Service?["natureOfService"];
-if (natureOfService?.Type == JTokenType.Object)
-{
-    var typeToken = natureOfService["type"];
-    if (typeToken?.Type == JTokenType.String || typeToken?.Type == JTokenType.Integer)
+    var natureOfServiceType = "";
+    var natureOfService = application.Service?["natureOfService"];
+    if (natureOfService?.Type == JTokenType.Object)
     {
-        natureOfServiceType = typeToken.ToString();
-    }
-}
-
-   var findIndex = application.ServicesReports?.Services?.FindIndex(c =>
-        c.Service.ToLower() == applicationReceive);
-
-    if (findIndex is null or < 0) continue;
-
-    if (applicationReceive != null &&
-        (applicationReceive.Contains("renewal") || applicationReceive.Contains("modification")))
-    {
-        application.ServicesReports.Services[findIndex.Value].ApplicationReceive = "renewal";
-    }
-    else if (applicationReceive != null && applicationReceive.Contains("new"))
-    {
-        application.ServicesReports.Services[findIndex.Value].ApplicationReceive = "new";
+        var typeToken = natureOfService["type"];
+        if (typeToken?.Type is JTokenType.String or JTokenType.Integer)
+            natureOfServiceType = typeToken.ToString();
     }
 
-     var noOfYear = 1;
-    var equipments = 0;
+    // If you added EnsureRow helper on ServicesReports, prefer it:
+    // var rowIndex = application.ServicesReports.EnsureRow(applicationReceive);
+    // If not using EnsureRow, find row case-insensitively:
+    var rowIndex = application.ServicesReports.Services.FindIndex(s =>
+        s.Service.Equals(applicationReceive ?? "unknown", StringComparison.OrdinalIgnoreCase));
+
+    if (rowIndex < 0) continue; // optionally: create a new row instead of continue
+
+    // ---- Mark receive type -----------------------------------------------------
+    if (!string.IsNullOrEmpty(applicationReceive))
+    {
+        if (applicationReceive.Contains("renewal") || applicationReceive.Contains("modification"))
+            application.ServicesReports.Services[rowIndex].ApplicationReceive = "renewal";
+        else if (applicationReceive.Contains("new"))
+            application.ServicesReports.Services[rowIndex].ApplicationReceive = "new";
+    }
+
+    // ---- Years & equipments ----------------------------------------------------
+    int noOfYear = 1;
+    int equipments = 1;
 
     var applicationDetails = application.Service?["applicationDetails"];
     if (applicationDetails?.Type == JTokenType.Object)
     {
         var noOfYearsToken = applicationDetails["noOfYears"];
-        if (noOfYearsToken?.Type == JTokenType.Integer || noOfYearsToken?.Type == JTokenType.String)
-        {
+        if (noOfYearsToken?.Type is JTokenType.Integer or JTokenType.String)
             int.TryParse(noOfYearsToken.ToString(), out noOfYear);
-        }
+        if (noOfYear <= 0) noOfYear = 1;
     }
 
-    var particulars = application.Service?["particulars"];
-    if (particulars?.Type == JTokenType.Array)
+    var particulars = application.Service?["particulars"] as JArray;
+    if (particulars != null && particulars.Count > 0)
     {
-        foreach (var particular in particulars)
-        {
-            var equipmentsArray = particular?["equipments"] as JArray;
-            if (equipmentsArray != null)
-            {
-                equipments += equipmentsArray.Count;
-            }
-        }
-
-        if (equipments == 0)
-        {
-            equipments = 1;
-        }
-    }
-    else
-    {
-        equipments = 1;
+        int count = 0;
+        foreach (var p in particulars)
+            if (p?["equipments"] is JArray eq) count += eq.Count;
+        equipments = Math.Max(count, 1);
     }
 
+    // ---- Update service row ----------------------------------------------------
     try
     {
-        var service = application.ServicesReports.Services[findIndex.Value];
+        var service = application.ServicesReports.Services[rowIndex];
+
         service.Value = (service.Value + 1) * equipments * noOfYear;
 
         if (string.IsNullOrEmpty(service.Type))
             service.Type = application.Type;
 
-        // ---- SOA SURCHARGES ----
+        // SOA surcharges (all decimal-safe)
         if (application.Soa != null)
         {
-            var surcharge = application.Soa.Find(c => c.Item == "Surcharge");
-            var surLicenseFee = application.Soa.Find(c => c.Item == "SUR - License Fee");
-            var surSpectrumUserFee = application.Soa.Find(c => c.Item == "SUR - Spectrum User Fee");
+            decimal surcharge =
+                (application.Soa.Find(x => x.Item == "Surcharge")?.Amount ?? 0m) +
+                (application.Soa.Find(x => x.Item == "SUR - License Fee")?.Amount ?? 0m) +
+                (application.Soa.Find(x => x.Item == "SUR - Spectrum User Fee")?.Amount ?? 0m);
 
-            if (surcharge?.Amount != null) service.Surcharge += (decimal)surcharge.Amount;
-            if (surLicenseFee?.Amount != null) service.Surcharge += (decimal)surLicenseFee.Amount;
-            if (surSpectrumUserFee?.Amount != null) service.Surcharge += (decimal)surSpectrumUserFee.Amount;
+            service.Surcharge += surcharge;
         }
 
-        // ---- TOTAL FEES ----
-        service.TotalFee += application.TotalFee;
-   
-        // ---- ELEMENTS ----
-        if (service.Elements != null)
+        // Total fee
+        service.TotalFee += application.TotalFee ?? 0m;
+
+        // Elements increment
+        var elementName = application.Service?["applicationType"]?["element"]?.ToString();
+        if (service.Elements != null && !string.IsNullOrWhiteSpace(elementName))
         {
-            var index = service.Elements.FindIndex(c =>
-                c.Name.ToLower() ==
-                application.Service?["applicationType"]?["element"]?.ToString().ToLower());
-            if (index > -1)
-            {
-                service.Elements[index].Value++;
-            }
+            var idx = service.Elements.FindIndex(e =>
+                e.Name.Equals(elementName, StringComparison.OrdinalIgnoreCase));
+            if (idx >= 0) service.Elements[idx].Value++;
         }
 
-        // ---- SOA FEES ----
+        // SOA fees into Fees bucket (case-insensitive; fall back to "Other")
         if (application.Soa != null)
         {
-            for (var i = 0; i < application.Soa.Count; i++)
+            foreach (var line in application.Soa)
             {
-                var soaItem = application.Soa[i];
-                var findSoaIndex = application.ServicesReports.Fees.FindIndex(c =>
-                    c.Name.ToLower() == soaItem?.Item?.ToLower());
+                var feeName = line?.Item;
+                var feeIdx = application.ServicesReports.Fees.FindIndex(f =>
+                    f.Name.Equals(feeName ?? "", StringComparison.OrdinalIgnoreCase));
 
-                if (findSoaIndex > -1)
-                {
-                    application.ServicesReports.Fees[findSoaIndex].Value += soaItem.Amount;
-                }
+                if (feeIdx >= 0)
+                    application.ServicesReports.Fees[feeIdx].Value += (line?.Amount ?? 0m);
                 else
                 {
-                    var otherIndex = application.ServicesReports.Fees.FindIndex(c =>
-                        c.Name.ToLower() == "other");
-                    if (otherIndex > -1)
-                        application.ServicesReports.Fees[otherIndex].Value += soaItem.Amount;
+                    var otherIdx = application.ServicesReports.Fees.FindIndex(f =>
+                        f.Name.Equals("Other", StringComparison.OrdinalIgnoreCase));
+                    if (otherIdx >= 0)
+                        application.ServicesReports.Fees[otherIdx].Value += (line?.Amount ?? 0m);
                 }
             }
         }
@@ -725,11 +708,9 @@ if (natureOfService?.Type == JTokenType.Object)
         Console.WriteLine($"Error processing application {application._id}: {e.Message}");
     }
 
-    if (application.TotalFee > 0)
-    {
-       totalSum +=  (decimal)application.TotalFee;
-    }
-
+    // ---- Grand total -----------------------------------------------------------
+    if ((application.TotalFee ?? 0m) > 0m)
+        totalSum += (application.TotalFee ?? 0m);
 }
 } catch (Exception e)
     {
