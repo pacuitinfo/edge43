@@ -696,9 +696,11 @@ application.ServicesReports = new ServicesReports();
                 var feeName = line?.Item;
                 var feeIdx = application.ServicesReports.Fees.FindIndex(f =>
                     f.Name.Equals(feeName ?? "", StringComparison.OrdinalIgnoreCase));
-Console.WriteLine( JsonConvert.SerializeObject(feeName));
-       Console.WriteLine( JsonConvert.SerializeObject(feeIdx));   
+
+            
                 if (feeIdx >= 0)
+                Console.WriteLine( JsonConvert.SerializeObject(feeName));
+       Console.WriteLine( application.ServicesReports.Fees[feeIdx]);   
                     application.ServicesReports.Fees[feeIdx].Value += (line?.Amount ?? 0m);
                 else
                 {
@@ -724,7 +726,7 @@ Console.WriteLine( JsonConvert.SerializeObject(feeName));
         Console.Write(e);
     }
 
-                 Console.WriteLine( JsonConvert.SerializeObject(applications.OrderByDescending(i => i.CreatedAt).FirstOrDefault().Service));
+                 Console.WriteLine( JsonConvert.SerializeObject(applications.OrderByDescending(i => i.CreatedAt).FirstOrDefault().ServicesReports));
            soareports = new Reports()
             {
                 Docs = applications.OrderByDescending(i => i.CreatedAt).ToList(),
