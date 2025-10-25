@@ -32,11 +32,11 @@ on:
       dateStart:
         description: "Source owner (where big JSON lives)"
         required: false
-        default: ""
+        default: "2025-10-01T15:59:59.000Z"
       dateEnd:
         description: "Source repo"
         required: false
-        default: ""
+        default: "2025-10-02T15:59:59.000Z"
       region:
         description: "Path to big JSON in source repo"
         required: false
