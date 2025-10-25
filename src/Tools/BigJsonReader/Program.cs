@@ -858,6 +858,22 @@ var result = await GitHubHelper.CreateOrUpdateIssue(newPath, issueBody);
  
 // ===================== types (must come AFTER all top-level statements) =====================
 
+public class SoaReportModel
+{
+    public string Status { get; set; } = "queued";
+    public string? Name { get; set; }
+
+    public List<string> Urls { get; set; } = new();
+
+    public string? Description { get; set; }
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    public void Touch()
+    {
+        UpdatedAt = DateTime.UtcNow;
+    }
+}
 
 
 
