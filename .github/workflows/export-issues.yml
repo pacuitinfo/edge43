@@ -98,13 +98,7 @@ jobs:
           if [ -n "${LABELS_IN}" ]; then
             labels_combined="${LABELS_IN}"
           fi
-          if [ -n "${REGION}" ]; then
-            if [ -n "${labels_combined}" ]; then
-              labels_combined="${labels_combined},${REGION}"
-            else
-              labels_combined="${REGION}"
-            fi
-          fi
+          
 
           echo "Fetching issues with labels: ${labels_combined:-none}"
 
