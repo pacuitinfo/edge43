@@ -107,14 +107,12 @@ jobs:
 
           while :; do
             echo "Fetching page $page..."
-            response=$(curl -sSL -H "Authorization: Bearer ${GH_TOKEN}" \
+            resp=$(curl -sSL -H "Authorization: Bearer $GH_TOKEN" \
                             -H "Accept: application/vnd.github+json" \
-                            "${API_URL}?q=$(jq -rn --arg q "$QUERY" '$q|@uri')&per_page=${per_page}&page=${page}")
-
-            count=$(echo "$response" | jq 'length')
+                            "${API_URL}?q=$(jq -rn --arg q "$QUERY" '$q|@uri')&per_page=$per_page&page=$page")
+            count=$(echo "$resp" | jq '.items | length')
             [ "$count" -eq 0 ] && break
-
-            all_items+=("$response")
+            all_items+=("$resp")
             ((page++))
           done
 
