@@ -701,6 +701,7 @@ application.ServicesReports = new ServicesReports();
                 if (feeIdx >= 0){
 Console.WriteLine( JsonConvert.SerializeObject(feeName));
        Console.WriteLine( application.ServicesReports.Fees[feeIdx]);   
+          Console.WriteLine( JsonConvert.SerializeObject(line));   
                     application.ServicesReports.Fees[feeIdx].Value += (line?.Amount ?? 0m);
                 }
                 
