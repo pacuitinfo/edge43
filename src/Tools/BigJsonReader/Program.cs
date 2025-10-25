@@ -781,7 +781,7 @@ var resultSoa = await GitHubHelper.CreateOrUpdateIssue(
     JsonConvert.SerializeObject(report),
     tags.ToArray() // convert List<string> to string[]
 );
-                   
+         Console.WriteLine(  JsonConvert.SerializeObject(resultSoa))  ;        
                 }
                    
                 else
