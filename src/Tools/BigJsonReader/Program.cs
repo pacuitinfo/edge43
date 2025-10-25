@@ -762,7 +762,7 @@ application.ServicesReports = new ServicesReports();
                     report.Urls.Add(uploadResult.Url);
                     report.Touch();
                     string soaRegionKey = Regex.Replace(fileSoaName, @"T[\d:.]+Z", string.Empty);
-                    var resultSoa = await GitHubHelper.CreateOrUpdateIssue(soaRegionKey, JsonConvert.SerializeObject(report));
+                    var resultSoa = await GitHubHelper.CreateOrUpdateIssue(soaRegionKey, JsonConvert.SerializeObject(report), string[] { "soa"});
                     
                 }
                    
