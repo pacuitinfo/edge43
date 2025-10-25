@@ -111,6 +111,7 @@ jobs:
                             -H "Accept: application/vnd.github+json" \
                             "${API_URL}?q=$(jq -rn --arg q "$QUERY" '$q|@uri')&per_page=$per_page&page=$page")
             count=$(echo "$resp" | jq '.items | length')
+            echo resp
             [ "$count" -eq 0 ] && break
             all_items+=("$resp")
             ((page++))
