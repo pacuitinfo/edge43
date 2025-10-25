@@ -550,7 +550,7 @@ var totals =  applications.Count();
 try{
 foreach (var application in applications
     .Where(c => c?.OfficialReceipt?.ORNumber != null)
-    .Select(c => new
+    .Select(c => new ApplicationServicesModel
     {
         c._id,
         c.Type,
@@ -717,7 +717,7 @@ foreach (var application in applications
         Console.Write(e);
     }
 
-                 Console.WriteLine( JsonConvert.SerializeObject(applications.OrderByDescending(i => i.CreatedAt).FirstOrDefault().ServicesReports));
+                 Console.WriteLine( JsonConvert.SerializeObject(applications.OrderByDescending(i => i.CreatedAt).FirstOrDefault().Ser));
            soareports = new Reports()
             {
                 Docs = applications.OrderByDescending(i => i.CreatedAt).ToList(),
@@ -1179,7 +1179,7 @@ public class PaymentHistoryModel
     }
 public class ApplicationServicesModel 
 {
-    public ServicesReports ServicesReports  { get; set; }
+    public ServicesReports ServicesReports  { get; set; }  = new ServicesReports();
         public string _id { get; set; }
         public string Type { set; get; }
         public virtual ApplicantDTO Applicant { set; get; }
