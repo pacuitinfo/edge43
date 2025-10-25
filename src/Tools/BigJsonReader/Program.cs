@@ -760,7 +760,7 @@ application.ServicesReports = new ServicesReports();
                     };
                     report.Urls.Add(uploadResult.Url);
                     report.Touch();
-                    var result = await GitHubHelper.CreateOrUpdateIssue($"soa-reports/cache/{regionKey}", JsonConvert.SerializeObject(report));
+                    var resultSoa = await GitHubHelper.CreateOrUpdateIssue($"soa-reports/cache/{regionKey}", JsonConvert.SerializeObject(report));
                     
                 }
                    
