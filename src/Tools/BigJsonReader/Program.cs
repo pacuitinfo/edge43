@@ -765,22 +765,23 @@ application.ServicesReports = new ServicesReports();
                         Name = "SOA"
                     });
                     report.Touch();
-                  var tags = new[] { "soa" };
+                 var tags = new List<string> { "soa" };
 
-                    var dateStart = Environment.GetEnvironmentVariable("DATE_START");
-                    if (!string.IsNullOrEmpty(dateStart))
-                        tags = tags.Concat(new[] { dateStart }).ToArray();
+var dateStartEnv = Environment.GetEnvironmentVariable("DATE_START");
+if (!string.IsNullOrWhiteSpace(dateStartEnv))
+    tags.Add(dateStartEnv);
 
-                    var dateEnd = Environment.GetEnvironmentVariable("DATE_END");
-                    if (!string.IsNullOrEmpty(dateEnd))
-                        tags = tags.Concat(new[] { dateEnd }).ToArray();
-                    
+var dateEndEnv = Environment.GetEnvironmentVariable("DATE_END");
+if (!string.IsNullOrWhiteSpace(dateEndEnv))
+    tags.Add(dateEndEnv);
 
-                   var resultSoa = await GitHubHelper.CreateOrUpdateIssue(
-                        fileSoaName,
-                        JsonConvert.SerializeObject(report),
-                         tags // ✅ correct shorthand for string[]
-                    );
+// later when calling your helper:
+var resultSoa = await GitHubHelper.CreateOrUpdateIssue(
+    soaRegionKey,
+    JsonConvert.SerializeObject(report),
+    tags.ToArray() // convert List<string> to string[]
+);
+                   
                 }
                    
                 else
