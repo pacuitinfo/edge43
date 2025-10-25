@@ -684,7 +684,8 @@ if (natureOfService?.Type == JTokenType.Object)
 
         // ---- TOTAL FEES ----
         service.TotalFee += application.TotalFee;
-        Console.WriteLine( service.TotalFee);
+        Console.WriteLine( service.Elements);
+        Console.WriteLine("---- ELEMENTS ----");
         // ---- ELEMENTS ----
         if (service.Elements != null)
         {
