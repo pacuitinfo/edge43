@@ -594,6 +594,10 @@ var rows = applications
         PermitNumber = c.PermitNumber,
         ServicesReports = new ServicesReports()
     });
+
+var appRows = new List<AppRow>();
+
+
 try{
 foreach (var application in rows)
 {
@@ -699,9 +703,6 @@ application.ServicesReports = new ServicesReports();
 
             
                 if (feeIdx >= 0){
-Console.WriteLine( JsonConvert.SerializeObject(feeName));
-       Console.WriteLine( application.ServicesReports.Fees[feeIdx]);   
-          Console.WriteLine( JsonConvert.SerializeObject(line));   
                     application.ServicesReports.Fees[feeIdx].Value += (line?.Amount ?? 0m);
                 }
                 
@@ -714,6 +715,7 @@ Console.WriteLine( JsonConvert.SerializeObject(feeName));
                 }
             }
         }
+        appRows.Add(application);
     }
     catch (Exception e)
     {
@@ -729,10 +731,9 @@ Console.WriteLine( JsonConvert.SerializeObject(feeName));
         Console.Write(e);
     }
 
-                 Console.WriteLine( JsonConvert.SerializeObject(applications.OrderByDescending(i => i.CreatedAt).FirstOrDefault().ServicesReports));
            soareports = new Reports()
             {
-                Docs = applications.OrderByDescending(i => i.CreatedAt).ToList(),
+                Docs = appRows.OrderByDescending(i => i.CreatedAt).ToList(),
                 Total = totals,
              TotalSum = totalSum
             };
@@ -904,7 +905,7 @@ public sealed class RepoInfo
 }
 public class Reports
 {
-    public List<ApplicationModel> Docs { get; set; }
+    public List<AppRow> Docs { get; set; }
     public int Total { get; set; }
     public decimal TotalSum { get; set; } 
 }
