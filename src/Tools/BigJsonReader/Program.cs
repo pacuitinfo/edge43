@@ -765,21 +765,19 @@ application.ServicesReports = new ServicesReports();
                         Name = "SOA"
                     });
                     report.Touch();
-                 var tags = new List<string> { "soa" };
+  var tags = new[] { "soa" };
 
-var dateStartEnv = Environment.GetEnvironmentVariable("DATE_START");
-if (!string.IsNullOrWhiteSpace(dateStartEnv))
-    tags.Add(dateStartEnv);
+var envDateStart = Environment.GetEnvironmentVariable("DATE_START");
+if (!string.IsNullOrEmpty(envDateStart))
+    tags = tags.Concat(new[] { envDateStart }).ToArray();
 
-var dateEndEnv = Environment.GetEnvironmentVariable("DATE_END");
-if (!string.IsNullOrWhiteSpace(dateEndEnv))
-    tags.Add(dateEndEnv);
-
-// later when calling your helper:
+var envDateEnd = Environment.GetEnvironmentVariable("DATE_END");
+if (!string.IsNullOrEmpty(envDateEnd))
+    tags = tags.Concat(new[] { envDateEnd }).ToArray();
 var resultSoa = await GitHubHelper.CreateOrUpdateIssue(
     soaRegionKey,
     JsonConvert.SerializeObject(report),
-    tags.ToArray() // convert List<string> to string[]
+   tags
 );
          Console.WriteLine(  JsonConvert.SerializeObject(resultSoa))  ;        
                 }
