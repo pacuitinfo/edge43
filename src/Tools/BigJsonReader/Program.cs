@@ -765,13 +765,15 @@ application.ServicesReports = new ServicesReports();
                         Name = "SOA"
                     });
                     report.Touch();
-                  var tags =  new[] { "soa"  };
-                  if(Environment.GetEnvironmentVariable("DATE_START") != null){
-                    tags.Add(Environment.GetEnvironmentVariable("DATE_START"));
-                  }
-                  if(Environment.GetEnvironmentVariable("DATE_END") != null){
-                    tags.Add(Environment.GetEnvironmentVariable("DATE_END"));
-                  }
+                  var tags = new[] { "soa" };
+
+                    var dateStart = Environment.GetEnvironmentVariable("DATE_START");
+                    if (!string.IsNullOrEmpty(dateStart))
+                        tags = tags.Concat(new[] { dateStart }).ToArray();
+
+                    var dateEnd = Environment.GetEnvironmentVariable("DATE_END");
+                    if (!string.IsNullOrEmpty(dateEnd))
+                        tags = tags.Concat(new[] { dateEnd }).ToArray();
                     
 
                    var resultSoa = await GitHubHelper.CreateOrUpdateIssue(
