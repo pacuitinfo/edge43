@@ -663,9 +663,9 @@ foreach (var application in applications
         if (application.Soa != null)
         {
             decimal surcharge =
-                (application.Soa.Find(x => x.Item == "Surcharge")?.Amount ?? 0m) +
-                (application.Soa.Find(x => x.Item == "SUR - License Fee")?.Amount ?? 0m) +
-                (application.Soa.Find(x => x.Item == "SUR - Spectrum User Fee")?.Amount ?? 0m);
+                (decimal)(application.Soa.Find(x => x.Item == "Surcharge")?.Amount ?? 0m) +
+                (decimal)(application.Soa.Find(x => x.Item == "SUR - License Fee")?.Amount ?? 0m) +
+                (decimal)(application.Soa.Find(x => x.Item == "SUR - Spectrum User Fee")?.Amount ?? 0m);
 
             service.Surcharge += surcharge;
         }
