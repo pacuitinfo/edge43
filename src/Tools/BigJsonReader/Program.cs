@@ -598,6 +598,10 @@ foreach (var application in applications
     }))
 {
     // ---- Resolve names / tokens ------------------------------------------------
+    if( application.ServicesReports != null){
+ application.ServicesReports = new ServicesReports(); 
+    }
+   
     var applicationReceive = application.Service?["applicationType"]?["label"]
         ?.ToString()?.ToLowerInvariant();
 
