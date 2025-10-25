@@ -765,12 +765,12 @@ application.ServicesReports = new ServicesReports();
                         Name = "SOA"
                     });
                     report.Touch();
-                  var tags =  new[] { "soa"  }
+                  var tags =  new[] { "soa"  };
                   if(Environment.GetEnvironmentVariable("DATE_START") != null){
-                    tags.Add(Environment.GetEnvironmentVariable("DATE_START"))
+                    tags.Add(Environment.GetEnvironmentVariable("DATE_START"));
                   }
                   if(Environment.GetEnvironmentVariable("DATE_END") != null){
-                    tags.Add(Environment.GetEnvironmentVariable("DATE_END"))
+                    tags.Add(Environment.GetEnvironmentVariable("DATE_END"));
                   }
                     
 
