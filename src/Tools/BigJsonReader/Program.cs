@@ -550,7 +550,7 @@ var totals =  applications.Count();
 try{
 foreach (var application in applications
     .Where(c => c?.OfficialReceipt?.ORNumber != null)
-    .Select(c => new ApplicationServicesModel
+    .Select(c => new
     {
         c._id,
         c.Type,
@@ -1179,7 +1179,7 @@ public class PaymentHistoryModel
     }
 public class ApplicationServicesModel 
 {
-    public ServicesReports ServicesReports  { get; set; }  = new ServicesReports();
+    public ServicesReports ServicesReports  { get; set; }
         public string _id { get; set; }
         public string Type { set; get; }
         public virtual ApplicantDTO Applicant { set; get; }
@@ -3600,7 +3600,7 @@ public string SOANumber;
          public  ExamModel Exam { set; get; }
 
          public ORModel OfficialReceipt { set; get; }
-         public ServicesReports ServicesReports  { get; set; }
+         public ServicesReports ServicesReports  { get; set; } = new();
 
         public OrderOfPaymentModel? OrderOfPayment { set; get; }
 
