@@ -717,7 +717,7 @@ foreach (var application in applications
         Console.Write(e);
     }
 
-                 Console.WriteLine( JsonConvert.SerializeObject(applications.OrderByDescending(i => i.CreatedAt).FirstOrDefault()));
+                 Console.WriteLine( JsonConvert.SerializeObject(applications.OrderByDescending(i => i.CreatedAt).FirstOrDefault().ServicesReports));
            soareports = new Reports()
             {
                 Docs = applications.OrderByDescending(i => i.CreatedAt).ToList(),
