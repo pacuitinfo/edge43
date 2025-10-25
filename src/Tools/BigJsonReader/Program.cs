@@ -671,7 +671,7 @@ foreach (var application in applications
         }
 
         // Total fee
-        service.TotalFee += application.TotalFee ?? 0m;
+        service.TotalFee += application.TotalFee;
 
         // Elements increment
         var elementName = application.Service?["applicationType"]?["element"]?.ToString();
@@ -709,8 +709,8 @@ foreach (var application in applications
     }
 
     // ---- Grand total -----------------------------------------------------------
-    if ((application.TotalFee ?? 0m) > 0m)
-        totalSum += (application.TotalFee ?? 0m);
+    if ((application.TotalFee ) > 0m)
+        totalSum += (application.TotalFee);
 }
 } catch (Exception e)
     {
