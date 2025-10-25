@@ -85,16 +85,10 @@ jobs:
           echo "REPO=${REPO}"
           echo "LABELS_IN=${LABELS_IN}"
           echo "REGION=${REGION}"
-          QUERY="repo:${REPO} state:open"
-          OWNER=$(echo "${REPO}" | cut -d'/' -f1)
-          NAME=$(echo "${REPO}" | cut -d'/' -f2)
-          API_URL="https://api.github.com/search/issues"
 
-          per_page=100
-          page=1
-          all_items=()
+          QUERY="repo:${REPO} state:${STATE}"
 
-          labels_combined=""
+          # Append labels to query
           if [ -n "${LABELS_IN}" ]; then
             QUERY="${QUERY} label:${LABELS_IN}"
           fi
@@ -103,42 +97,41 @@ jobs:
           fi
           echo "Search query: ${QUERY}"
 
-          echo "Fetching issues with labels: ${labels_combined:-none}"
+          API_URL="https://api.github.com/search/issues"
+          per_page=100
+          page=1
+          all_items=()
 
           while :; do
             echo "Fetching page $page..."
-
             resp=$(curl -sSL \
-                -H "Authorization: Bearer $GH_TOKEN" \
-                -H "Accept: application/vnd.github+json" \
-                "${API_URL}?q=$(jq -rn --arg q "$QUERY" '$q|@uri')&per_page=$per_page&page=$page")
+              -H "Authorization: Bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              "${API_URL}?q=$(jq -rn --arg q "$QUERY" '$q|@uri')&per_page=$per_page&page=$page")
 
-            # If curl failed or response is empty, break safely
+            # Handle empty or null response
             if [ -z "$resp" ] || [ "$resp" = "null" ]; then
               echo "⚠️ Empty or null response received, stopping pagination."
               break
             fi
 
-            # Detect GitHub API rate-limit messages
+            # Detect rate limit
             if echo "$resp" | jq -e '.message? | contains("API rate limit exceeded")' >/dev/null 2>&1; then
               echo "🚫 GitHub API rate limit exceeded — use GH_PAT with higher quota."
               exit 1
             fi
 
-            # Safely extract count of issues
+            # Safely count issues
             count=$(echo "$resp" | jq -r '.items | length // 0' 2>/dev/null || echo 0)
             echo "Page $page: $count issues"
 
-            # If no issues returned, stop fetching
-            if [ "$count" -eq 0 ]; then
-              echo "✅ No more issues to fetch."
-              break
-            fi
+            # Stop if no issues
+            [ "$count" -eq 0 ] && break
 
-            # Append valid page JSON to array
+            # Append page JSON to array
             all_items+=("$resp")
 
-            # Print first issue title for debugging (if present)
+            # Print first issue title for quick debug
             first_title=$(echo "$resp" | jq -r '.items[0].title // empty')
             [ -n "$first_title" ] && echo "→ $first_title"
 
@@ -147,15 +140,11 @@ jobs:
 
           echo "📦 Finished fetching: ${#all_items[@]} pages total."
 
-          raw=$(printf '%s\n' "${all_items[@]}" | jq -s 'flatten')
-
-          SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
-          SAFE=${SAFE:-ALL}
-          issuesJson="cache/report:${DATE_START:+${DATE_START}:}${DATE_END:+${DATE_END}:}${REGION}"
-          echo "Writing ${issuesJson}"
-
-          printf '%s' "$raw" | jq -cs '
-            flatten
+          # Safely flatten all pages, skip nulls, remove pull requests, map fields
+          raw=$(printf '%s\n' "${all_items[@]}" | jq -s '
+            map(select(type == "object" and .items != null))
+            | map(.items)
+            | add
             | map(select(.pull_request | not))
             | map({
                 Number: .number,
@@ -165,10 +154,19 @@ jobs:
                 Url: .html_url,
                 Labels: (.labels | map(.name))
               })
-          ' > "$issuesJson"
+          ')
 
-          echo "Preview:"
+          # Build safe filename
+          SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
+          SAFE=${SAFE:-ALL}
+          issuesJson="cache/report:${DATE_START:+${DATE_START}:}${DATE_END:+${DATE_END}:}${REGION}"
+          echo "Writing ${issuesJson}"
+
+          printf '%s' "$raw" > "$issuesJson"
+
+          echo "Preview first 3 issues:"
           jq '.[0:3]' "$issuesJson" || true
+
           [ -s "$issuesJson" ] || { echo "❌ No issues produced"; exit 1; }
 
       - name: Show preview
