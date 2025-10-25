@@ -597,6 +597,10 @@ var rows = applications
 try{
 foreach (var application in rows)
 {
+     if (application.ServicesReports == null){
+application.ServicesReports = new ServicesReports();
+     }
+        
    
     var applicationReceive = application.Service?["applicationType"]?["label"]
         ?.ToString()?.ToLowerInvariant();
