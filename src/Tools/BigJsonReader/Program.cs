@@ -684,8 +684,7 @@ if (natureOfService?.Type == JTokenType.Object)
 
         // ---- TOTAL FEES ----
         service.TotalFee += application.TotalFee;
-        Console.WriteLine( service.Elements);
-        Console.WriteLine("---- ELEMENTS ----");
+   
         // ---- ELEMENTS ----
         if (service.Elements != null)
         {
@@ -737,7 +736,7 @@ if (natureOfService?.Type == JTokenType.Object)
         Console.Write(e);
     }
 
-            
+                 Console.WriteLine( JsonConvert.SerializeObject(applications.OrderByDescending(i => i.CreatedAt && i.TotalFee > 0).FirstOrDefault()));
            soareports = new Reports()
             {
                 Docs = applications.OrderByDescending(i => i.CreatedAt).ToList(),
