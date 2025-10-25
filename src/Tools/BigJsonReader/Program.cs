@@ -751,8 +751,7 @@ application.ServicesReports = new ServicesReports();
                     folder: "reports",
                     branch: "main"
                 );
-                if (uploadResult.Success)
-                    Console.WriteLine($"✅ Upload succeeded: {uploadResult.Url}");
+                if (uploadResult.Success){
                     var report = new SoaReportModel
                     {
                         Name = $"SOA ${regionKey}",
@@ -763,6 +762,8 @@ application.ServicesReports = new ServicesReports();
                     report.Touch();
                     var result = await GitHubHelper.CreateOrUpdateIssue($"soa-reports/cache/{regionKey}", JsonConvert.SerializeObject(report));
                     
+                }
+                   
                 else
                     Console.WriteLine($"❌ Upload failed: {uploadResult.Message}");
             }
