@@ -742,7 +742,8 @@ application.ServicesReports = new ServicesReports();
 
             if (fileContext != null)
             {
-                var fileSoaName = $"soa-reports/cache/{regionKey}"; 
+                  string soaRegionKey = Regex.Replace(regionKey, @"T[\d:.]+Z", string.Empty);
+                var fileSoaName = $"soa-reports/cache/{soaRegionKey}"; 
                 var uploadResult = await GitHubHelper.UploadStream(
                     name: $"{fileSoaName}.xlsx",
                     file: fileContext, // ✅ use fileContext here
@@ -759,13 +760,24 @@ application.ServicesReports = new ServicesReports();
                         Description = "Auto-generated Excel reports",
                         Status = "completed"
                     };
-                    report.Urls.Add(uploadResult.Url);
+                    report.Urls.Add( new UrlModel(){
+                        Url = uploadResult.Url,
+                        Name = "SOA"
+                    });
                     report.Touch();
-                    string soaRegionKey = Regex.Replace(fileSoaName, @"T[\d:.]+Z", string.Empty);
+                  var tags =  new[] { "soa"  }
+                  if(Environment.GetEnvironmentVariable("DATE_START") != null){
+                    tags.Add(Environment.GetEnvironmentVariable("DATE_START"))
+                  }
+                  if(Environment.GetEnvironmentVariable("DATE_END") != null){
+                    tags.Add(Environment.GetEnvironmentVariable("DATE_END"))
+                  }
+                    
+
                    var resultSoa = await GitHubHelper.CreateOrUpdateIssue(
-                        soaRegionKey,
+                        fileSoaName,
                         JsonConvert.SerializeObject(report),
-                        new[] { "soa" }   // ✅ correct shorthand for string[]
+                         tags // ✅ correct shorthand for string[]
                     );
                 }
                    
@@ -862,13 +874,16 @@ var result = await GitHubHelper.CreateOrUpdateIssue(newPath, issueBody);
 
  
 // ===================== types (must come AFTER all top-level statements) =====================
-
+public class UrlModel {
+    public string Url { get; set; } = "";
+    public string Name { get; set; }
+}
 public class SoaReportModel
 {
     public string Status { get; set; } = "queued";
     public string? Name { get; set; }
 
-    public List<string> Urls { get; set; } = new();
+    public List<UrlModel> Urls { get; set; } = new();
 
     public string? Description { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
