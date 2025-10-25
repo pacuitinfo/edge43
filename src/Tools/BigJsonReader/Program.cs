@@ -742,8 +742,9 @@ application.ServicesReports = new ServicesReports();
 
             if (fileContext != null)
             {
+                var fileSoaName = $"soa-reports/cache/{regionKey}"; 
                 var uploadResult = await GitHubHelper.UploadStream(
-                    name: $"soa-reports/cache/{regionKey}.xlsx",
+                    name: $"{fileSoaName}.xlsx",
                     file: fileContext, // ✅ use fileContext here
                     githubToken: Environment.GetEnvironmentVariable("GH_PAT"),
                     repoOwner: "pacuitinfo",
@@ -760,7 +761,8 @@ application.ServicesReports = new ServicesReports();
                     };
                     report.Urls.Add(uploadResult.Url);
                     report.Touch();
-                    var resultSoa = await GitHubHelper.CreateOrUpdateIssue($"soa-reports/cache/{regionKey}", JsonConvert.SerializeObject(report));
+                    string soaRegionKey = Regex.Replace(fileSoaName, @"T[\d:.]+Z", string.Empty);
+                    var resultSoa = await GitHubHelper.CreateOrUpdateIssue(soaRegionKey, JsonConvert.SerializeObject(report));
                     
                 }
                    
