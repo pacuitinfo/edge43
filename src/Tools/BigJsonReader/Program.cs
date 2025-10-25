@@ -550,7 +550,7 @@ var totals =  applications.Count();
 try{
 foreach (var application in applications
     .Where(c => c?.OfficialReceipt?.ORNumber != null)
-    .Select(c => new ApplicationModel
+    .Select(c => new
     {
         c._id,
         c.Type,
