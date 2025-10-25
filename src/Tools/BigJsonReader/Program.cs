@@ -753,6 +753,16 @@ application.ServicesReports = new ServicesReports();
                 );
                 if (uploadResult.Success)
                     Console.WriteLine($"✅ Upload succeeded: {uploadResult.Url}");
+                    var report = new SoaReportModel
+                    {
+                        Name = $"SOA ${regionKey}",
+                        Description = "Auto-generated Excel reports",
+                        Status = "completed"
+                    };
+                    report.Urls.Add(uploadResult.Url);
+                    report.Touch();
+                    var result = await GitHubHelper.CreateOrUpdateIssue($"soa-reports/cache/{regionKey}", JsonConvert.SerializeObject(report));
+                    
                 else
                     Console.WriteLine($"❌ Upload failed: {uploadResult.Message}");
             }
@@ -841,9 +851,7 @@ foreach (var kv in monthlyStatusCounts
 string issueKey = "cache/" + $"{regionKey}";
 string newPath = Regex.Replace(issueKey, @"T[\d:.]+Z", string.Empty);
 var issueBody = JsonConvert.SerializeObject(servicesReports);
-Console.Error.WriteLine(issueKey);
 var result = await GitHubHelper.CreateOrUpdateIssue(newPath, issueBody);
-Console.WriteLine(JsonConvert.SerializeObject(result));
 
 
  
