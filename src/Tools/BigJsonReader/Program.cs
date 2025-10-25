@@ -546,59 +546,59 @@ while (await reader.ReadAsync())
 }
 totalSum = 0;
 var totals =  applications.Count();
-
-try{
-foreach (var application in applications
+var rows = applications
     .Where(c => c?.OfficialReceipt?.ORNumber != null)
-    .Select(c => new
+    .Select(c => new AppRow
     {
-        c._id,
-        c.Type,
-        c.Applicant,
-        c.Service,
-        c.Region,
-        c.Status,
-        c.PaymentStatus,
-        c.PaymentMethod,
-        c.Amnesty,
-        c.TotalFee,                         // assume decimal?
-        c.AmnestyTotalFee,
-        c.AssignedPersonnel,
-        c.IsPinned,
-        c.ApprovalHistory,
-        c.PaymentHistory,
-        c.Soa,                              // List<SoaLine> with Amount: decimal?
-        c.SoaHistory,
-        c.Exam,
-        c.OfficialReceipt,
-        c.OrderOfPayment,
-        c.Make,
-        c.Schedule,
-        c.ProofOfPayment,
-        c.Evaluator,
-        c.Cashier,
-        c.Director,
-        c.Commissioner,
-        c.Document,
-        c.TempDocument,
-        c.DocumentNumber,
-        c.QRCode,
-        c.Note,
-        c.DateOfExpiry,
-        c.ValidUntil,
-        c.CreatedAt,
+        _id = c._id,
+        Type = c.Type,
+        Applicant = c.Applicant,
+        Service = c.Service,
+        Region = c.Region,
+        Status = c.Status,
+        PaymentStatus = c.PaymentStatus,
+        PaymentMethod = c.PaymentMethod,
+        Amnesty = c.Amnesty,
+        TotalFee = c.TotalFee,
+        AmnestyTotalFee = c.AmnestyTotalFee,
+        AssignedPersonnel = c.AssignedPersonnel,
+        IsPinned = c.IsPinned,
+        ApprovalHistory = c.ApprovalHistory,
+        PaymentHistory = c.PaymentHistory,
+        Soa = c.Soa,
+        SoaHistory = c.SoaHistory,
+        Exam = c.Exam,
+        OfficialReceipt = c.OfficialReceipt,
+        OrderOfPayment = c.OrderOfPayment,
+        Make = c.Make,
+        Schedule = c.Schedule,
+        ProofOfPayment = c.ProofOfPayment,
+        Evaluator = c.Evaluator,
+        Cashier = c.Cashier,
+        Director = c.Director,
+        Commissioner = c.Commissioner,
+        Document = c.Document,
+        TempDocument = c.TempDocument,
+        DocumentNumber = c.DocumentNumber,
+        QRCode = c.QRCode,
+        Note = c.Note,
+        DateOfExpiry = c.DateOfExpiry,
+        ValidUntil = c.ValidUntil,
+        CreatedAt = c.CreatedAt,
         UpdatedAt = c.UpdatedAt ?? DateTime.MinValue,
-        c.DateOfBirth,
-        c.Validity,
-        c.Renew,
-        c.IsModified,
-        c.ReferenceNumber,
-        c.PermitNumber,
-        ServicesReports = new ServicesReports()   // gets all defaults/seed data
-    }))
+        DateOfBirth = c.DateOfBirth,
+        Validity = c.Validity,
+        Renew = c.Renew,
+        IsModified = c.IsModified,
+        ReferenceNumber = c.ReferenceNumber,
+        PermitNumber = c.PermitNumber,
+        ServicesReports = new ServicesReports()
+    });
+try{
+foreach (var application in rows)
 {
     // ---- Resolve names / tokens ------------------------------------------------
-    if( application.ServicesReports != null){
+    if( application.ServicesReports == null){
  application.ServicesReports = new ServicesReports(); 
     }
    
@@ -1181,6 +1181,53 @@ public class PaymentHistoryModel
 
         public virtual EmployeeModel EmployeeDetails { set; get; }
     }
+
+    public class AppRow
+{
+    public string _id { get; set; }
+    public string Type { get; set; }
+    public ApplicantDTO Applicant { get; set; }
+    public JToken Service { get; set; }
+    public RegionDTO Region { get; set; }
+    public string Status { get; set; }
+    public string PaymentStatus { get; set; }
+    public string PaymentMethod { get; set; }
+    public string Amnesty { get; set; }
+    public decimal TotalFee { get; set; }
+    public string AmnestyTotalFee { get; set; }
+    public PersonnelModel AssignedPersonnel { get; set; }
+    public bool IsPinned { get; set; }
+    public List<ApprovalHistoryModel> ApprovalHistory { get; set; }
+    public List<PaymentHistoryModel> PaymentHistory { get; set; }
+    public List<SoaModel> Soa { get; set; }
+    public List<SoaHistoryModel> SoaHistory { get; set; }
+    public ExamModel Exam { get; set; }
+    public ORModel OfficialReceipt { get; set; }
+    public OrderOfPaymentModel OrderOfPayment { get; set; }
+    public RadioTypeModel Make { get; set; }
+    public ScheduleDTO Schedule { get; set; }
+    public List<PaymentImagesModel> ProofOfPayment { get; set; }
+    public PersonnelModel Evaluator { get; set; }
+    public PersonnelModel Cashier { get; set; }
+    public PersonnelDTO Director { get; set; }
+    public PersonnelDTO Commissioner { get; set; }
+    public string Document { get; set; }
+    public string TempDocument { get; set; }
+    public string DocumentNumber { get; set; }
+    public string QRCode { get; set; }
+    public string Note { get; set; }
+    public DateTime? DateOfExpiry { get; set; }
+    public DateTime? ValidUntil { get; set; }
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
+    public string DateOfBirth { get; set; }
+    public DateTime Validity { get; set; }
+    public ApplicationRenewModel Renew { get; set; }
+    public bool IsModified { get; set; }
+    public string ReferenceNumber { get; set; }
+    public string PermitNumber { get; set; }
+    public ServicesReports ServicesReports { get; set; } = new();
+}
 public class ApplicationServicesModel 
 {
     public ServicesReports ServicesReports  { get; set; }
