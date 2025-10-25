@@ -107,13 +107,34 @@ jobs:
 
           while :; do
             echo "Fetching page $page..."
-            resp=$(curl -sSL -H "Authorization: Bearer $GH_TOKEN" \
-                            -H "Accept: application/vnd.github+json" \
-                            "${API_URL}?q=$(jq -rn --arg q "$QUERY" '$q|@uri')&per_page=$per_page&page=$page")
+
+            resp=$(curl -sSL \
+                -H "Authorization: Bearer $GH_TOKEN" \
+                -H "Accept: application/vnd.github+json" \
+                "${API_URL}?q=$(jq -rn --arg q "$QUERY" '$q|@uri')&per_page=$per_page&page=$page")
+
+            # Check for API rate limiting or other errors
+            if echo "$resp" | jq -e '.message? | contains("API rate limit exceeded")' >/dev/null 2>&1; then
+              echo "⚠️ GitHub API rate limit exceeded — try using a personal access token with higher limits."
+              exit 1
+            fi
+
+            # Count items returned
             count=$(echo "$resp" | jq '.items | length')
-            echo resp
-            [ "$count" -eq 0 ] && break
+            echo "Page $page: $count issues"
+
+            # If no issues returned, stop fetching
+            if [ "$count" -eq 0 ]; then
+              echo "No more issues to fetch."
+              break
+            fi
+
+            # Append this page to array
             all_items+=("$resp")
+
+            # Optional: print the first issue title for debugging
+            echo "$resp" | jq -r '.items[0].title' | head -1
+
             ((page++))
           done
 
