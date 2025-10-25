@@ -736,7 +736,7 @@ if (natureOfService?.Type == JTokenType.Object)
         Console.Write(e);
     }
 
-                 Console.WriteLine( JsonConvert.SerializeObject(applications.OrderByDescending(i => i.CreatedAt && i.TotalFee > 0).FirstOrDefault()));
+                 Console.WriteLine( JsonConvert.SerializeObject(applications.OrderByDescending(i => i.CreatedAt).FirstOrDefault()));
            soareports = new Reports()
             {
                 Docs = applications.OrderByDescending(i => i.CreatedAt).ToList(),
