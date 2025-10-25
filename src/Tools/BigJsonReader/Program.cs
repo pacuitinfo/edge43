@@ -698,10 +698,12 @@ application.ServicesReports = new ServicesReports();
                     f.Name.Equals(feeName ?? "", StringComparison.OrdinalIgnoreCase));
 
             
-                if (feeIdx >= 0)
-                Console.WriteLine( JsonConvert.SerializeObject(feeName));
+                if (feeIdx >= 0){
+Console.WriteLine( JsonConvert.SerializeObject(feeName));
        Console.WriteLine( application.ServicesReports.Fees[feeIdx]);   
                     application.ServicesReports.Fees[feeIdx].Value += (line?.Amount ?? 0m);
+                }
+                
                 else
                 {
                     var otherIdx = application.ServicesReports.Fees.FindIndex(f =>
