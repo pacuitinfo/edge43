@@ -689,15 +689,15 @@ application.ServicesReports = new ServicesReports();
         // SOA fees into Fees bucket (case-insensitive; fall back to "Other")
         if (application.Soa != null)
         {
-             Console.WriteLine( JsonConvert.SerializeObject(application.Soa));
-          
+             
             
             foreach (var line in application.Soa)
             {
                 var feeName = line?.Item;
                 var feeIdx = application.ServicesReports.Fees.FindIndex(f =>
                     f.Name.Equals(feeName ?? "", StringComparison.OrdinalIgnoreCase));
-
+Console.WriteLine( JsonConvert.SerializeObject(feeName));
+       Console.WriteLine( JsonConvert.SerializeObject(feeIdx));   
                 if (feeIdx >= 0)
                     application.ServicesReports.Fees[feeIdx].Value += (line?.Amount ?? 0m);
                 else
