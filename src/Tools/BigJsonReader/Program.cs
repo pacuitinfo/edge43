@@ -689,6 +689,9 @@ application.ServicesReports = new ServicesReports();
         // SOA fees into Fees bucket (case-insensitive; fall back to "Other")
         if (application.Soa != null)
         {
+             Console.WriteLine( JsonConvert.SerializeObject(application.Soa));
+          
+            
             foreach (var line in application.Soa)
             {
                 var feeName = line?.Item;
