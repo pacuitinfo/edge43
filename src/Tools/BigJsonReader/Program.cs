@@ -663,9 +663,9 @@ foreach (var application in applications
         if (application.Soa != null)
         {
             decimal surcharge =
-                (decimal)(application.Soa.Find(x => x.Item == "Surcharge")?.Amount ?? 0m) +
-                (decimal)(application.Soa.Find(x => x.Item == "SUR - License Fee")?.Amount ?? 0m) +
-                (decimal)(application.Soa.Find(x => x.Item == "SUR - Spectrum User Fee")?.Amount ?? 0m);
+                (application.Soa.Find(x => x.Item == "Surcharge")?.Amount ?? 0m) +
+                (application.Soa.Find(x => x.Item == "SUR - License Fee")?.Amount ?? 0m) +
+                (application.Soa.Find(x => x.Item == "SUR - Spectrum User Fee")?.Amount ?? 0m);
 
             service.Surcharge += surcharge;
         }
@@ -1004,8 +1004,8 @@ public class ApplicantDTO
         public string Sex { get; set; }= string.Empty;
         public string Signature { get; set; }= string.Empty;
 
-        public float Height { get; set; }= 0;
-        public float Weight { get; set; }= 0;
+        public decimal Height { get; set; }= 0;
+        public decimal Weight { get; set; }= 0;
 
        public  AddressModel Address { get; set; }
         public  ContactModel Contact { get; set; }
@@ -1093,7 +1093,7 @@ public class PaymentHistoryModel
         {
             public string Id { set; get; } 
              [JsonProperty("Item")]   public string Item { get; set; } = "";
-    [JsonProperty("Amount")] public float  Amount { get; set; } = 0;
+    [JsonProperty("Amount")] public decimal  Amount { get; set; } = 0;
         
             public string Type { set; get; }
             public string Description { set; get; }
@@ -1103,7 +1103,7 @@ public class PaymentHistoryModel
         public class SoaHistoryModel
     {
         public List<SoaModel> Soa { get; set; }
-        public float TotalFee { set; get; }
+        public decimal TotalFee { set; get; }
         public string UserId { set; get; }
         public DateTime CreatedAt { set; get; }
     }
@@ -1189,7 +1189,7 @@ public class ApplicationServicesModel
         public string PaymentStatus { set; get; }
         public string PaymentMethod { set; get; }
         public string Amnesty { set; get; }
-        public float TotalFee { set; get; }
+        public decimal TotalFee { set; get; }
         
         public string AmnestyTotalFee { set; get; }
         public  PersonnelModel AssignedPersonnel { set; get; }
@@ -1306,8 +1306,8 @@ public class Services
 {
     public int Value { get; set; }
     public string Service { get; set; } = "";     // default to avoid CS8618
-    public decimal TotalFee { get; set; }         // was float
-    public decimal Surcharge { get; set; }        // was float
+    public decimal TotalFee { get; set; }         // was decimal
+    public decimal Surcharge { get; set; }        // was decimal
     public List<Element>? Elements { get; set; }
     public string? Type { get; set; }
     public string? ApplicationReceive { get; set; }
@@ -1332,8 +1332,8 @@ public class ServicesReports
         return idx;
     }
      public List<ChartData> ChartDataList { get; set; } = new List<ChartData>();
-    public float OtherDSTFee;
-    public float AmateurAnsROCFineFee;
+    public decimal OtherDSTFee;
+    public decimal AmateurAnsROCFineFee;
     public string ORNumber{ get; set; } = "";
     public string ORBy{ get; set; } = "";
     public string ORAmount{ get; set; } = "";
@@ -3515,38 +3515,38 @@ public class ServicesReports
     public string EvaluatorSignature { get; set; }
     public string ApprovedBySignature { get; set; }
     public string? Region { get; set; }
-    public float OtherOtherFee { get; set; }
-    public float OtherMiscFee { get; set; }
-    public float OtherModiFee { get; set; }
-    public float OtherClearanceFee { get; set; }
-    public float OtherExaminationFee { get; set; }
-    public float OtherVerificationFee { get; set; }
-    public float OtherRegFee { get; set; }
-    public float OtherSupervision { get; set; }
-    public float AmateurFines { get; set; }
-    public float AmateurSeminarFee { get; set; }
-    public float AmateurApplicationFee { get; set; }
-    public float AmateurRadioOperationLicense { get; set; }
-    public float PermitFineFee { get; set; }
-    public float PermitFillingFee { get; set; }
-    public float PermitInspectionFee { get; set; }
-    public float PermitPermitFee { get; set; }
-    public float LicensesFinePenaltiesSurchangesFee { get; set; }
-    public float LicensesSpectrumUserFee { get; set; }
-    public float LicensesInspectionFee { get; set; }
-    public float LicensesRadioStationLicense { get; set; }
-    public float LicensesContructionPermitFee { get; set; }
-    public float PermittoPurchase { get; set; }
-    public float FillingFee { get; set; }
-    public float LicensesPermittoPossessStorageFee { get; set; }
-    public float AmateurPtp { get; set; }
+    public decimal OtherOtherFee { get; set; }
+    public decimal OtherMiscFee { get; set; }
+    public decimal OtherModiFee { get; set; }
+    public decimal OtherClearanceFee { get; set; }
+    public decimal OtherExaminationFee { get; set; }
+    public decimal OtherVerificationFee { get; set; }
+    public decimal OtherRegFee { get; set; }
+    public decimal OtherSupervision { get; set; }
+    public decimal AmateurFines { get; set; }
+    public decimal AmateurSeminarFee { get; set; }
+    public decimal AmateurApplicationFee { get; set; }
+    public decimal AmateurRadioOperationLicense { get; set; }
+    public decimal PermitFineFee { get; set; }
+    public decimal PermitFillingFee { get; set; }
+    public decimal PermitInspectionFee { get; set; }
+    public decimal PermitPermitFee { get; set; }
+    public decimal LicensesFinePenaltiesSurchangesFee { get; set; }
+    public decimal LicensesSpectrumUserFee { get; set; }
+    public decimal LicensesInspectionFee { get; set; }
+    public decimal LicensesRadioStationLicense { get; set; }
+    public decimal LicensesContructionPermitFee { get; set; }
+    public decimal PermittoPurchase { get; set; }
+    public decimal FillingFee { get; set; }
+    public decimal LicensesPermittoPossessStorageFee { get; set; }
+    public decimal AmateurPtp { get; set; }
     public string OtherText { get; set; }
 }
 
 public class Element
 {
-    private float? _value = 0;
-    public float? Value { get => _value ?? 0; set => _value = value; }
+    private decimal? _value = 0;
+    public decimal? Value { get => _value ?? 0; set => _value = value; }
     public string Name { get; set; } = "";   // <- fixes CS8618
 }
 
