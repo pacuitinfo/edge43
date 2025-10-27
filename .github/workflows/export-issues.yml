@@ -69,6 +69,9 @@ jobs:
           fi
 
       - name: Fetch issues via GraphQL (no 1k cap, debug-friendly)
+        permissions:
+          contents: read
+          actions: read
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
