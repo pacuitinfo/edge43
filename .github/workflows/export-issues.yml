@@ -85,6 +85,7 @@ jobs:
           echo "REPO=${REPO} | STATE=${STATE} | LABELS_IN=${LABELS_IN} | REGION=${REGION} | DATE_START=${DATE_START} | DATE_END=${DATE_END}"
           [ -n "${GH_TOKEN:-}" ] || { echo "❌ GH_TOKEN missing"; exit 1; }
 
+          # Validate REPO format
           if [[ -z "${REPO:-}" || "$REPO" != */* ]]; then
             echo "❌ REPO must be 'owner/repo' (got: '$REPO')"; exit 1
           fi
@@ -93,123 +94,94 @@ jobs:
           NAME="${REPO##*/}"
           echo "OWNER=$OWNER | NAME=$NAME"
 
-          # ---- Probe repo access ----
-          read -r -d '' Q_PROBE <<'EOF'
-          query($owner:String!, $name:String!) {
-            repository(owner:$owner, name:$name){ id isPrivate nameWithOwner viewerPermission }
+          BASE_URL="https://api.github.com/repos/${OWNER}/${NAME}/issues"
+          PER_PAGE=100
+
+          # Combine labels for server-side filter (optional)
+          # GitHub accepts comma-separated labels (AND semantics).
+          LABELS_COMBINED=$(jq -rn --arg a "${LABELS_IN:-}" --arg b "${REGION:-}" '
+            [$a,$b]|join(",")|split(",")
+            | map(gsub("^\\s+|\\s+$";""))
+            | map(select(length>0))
+            | unique
+            | join(",")
+          ')
+
+          build_params() {
+            # Use --get/--data to handle escaping
+            echo --data "state=${STATE:-open}"
+            echo --data "per_page=${PER_PAGE}"
+            [[ -n "$LABELS_COMBINED" ]] && echo --data "labels=${LABELS_COMBINED}"
+            # Sort asc by created time for predictable DATE_END early stop if you want to add later
+            echo --data "sort=created"
+            echo --data "direction=asc"
           }
-          EOF
-
-          VARS_PROBE=$(jq -n --arg owner "$OWNER" --arg name "$NAME" '{owner:$owner,name:$name}')
-          PROBE=$(curl -sS -X POST https://api.github.com/graphql \
-            -H "Authorization: bearer ${GH_TOKEN}" \
-            -H "Accept: application/vnd.github+json" \
-            -d "$(jq -n --arg query "$Q_PROBE" --argjson variables "$VARS_PROBE" '{query:$query, variables:$variables}')")
-
-          if jq -e '.errors' >/dev/null <<<"$PROBE"; then
-            echo "❌ Repo probe failed:"; jq -C '.errors' <<<"$PROBE"
-            echo "➡️  Use a PAT with repo scope (GH_PAT). Ensure job permissions include: contents:read, issues:read."
-            exit 1
-          fi
-          echo "✅ Repo OK: $(jq -r '.data.repository.nameWithOwner') (perm: $(jq -r '.data.repository.viewerPermission'))"
-
-          # ---- States enum ----
-          case "${STATE,,}" in
-            all)    STATES_JSON='["OPEN","CLOSED"]' ;;
-            open)   STATES_JSON='["OPEN"]' ;;
-            closed) STATES_JSON='["CLOSED"]' ;;
-            *)      STATES_JSON='["OPEN"]' ;;
-          esac
-
-          # ---- GraphQL query (no server-side label/date filters) ----
-          read -r -d '' Q <<'EOF'
-          query($owner:String!, $name:String!, $after:String, $states:[IssueState!]) {
-            repository(owner:$owner, name:$name) {
-              issues(
-                first: 100,
-                after: $after,
-                states: $states,
-                orderBy:{field: CREATED_AT, direction: ASC}
-              ) {
-                nodes {
-                  number
-                  title
-                  body
-                  state
-                  url
-                  createdAt
-                  updatedAt
-                  closedAt
-                  labels(first: 100) { nodes { name } }
-                }
-                pageInfo { endCursor hasNextPage }
-              }
-            }
-          }
-          EOF
 
           OUT_TMP="$(mktemp)"; echo "[]" > "$OUT_TMP"
-          AFTER=null
-          BATCH=0
+          URL="$BASE_URL"
+          PAGE=0
 
           while :; do
-            BATCH=$((BATCH+1))
-            echo "🔎 Batch $BATCH (after: ${AFTER})"
+            PAGE=$((PAGE+1))
+            echo "Fetching page ${PAGE}…"
 
-            VARS=$(jq -n \
-              --arg owner "$OWNER" \
-              --arg name "$NAME" \
-              --argjson after "$AFTER" \
-              --argjson states "$STATES_JSON" \
-              '{owner:$owner, name:$name, after:$after, states:$states}')
-
-            RESP=$(curl -sS -X POST https://api.github.com/graphql \
-              -H "Authorization: bearer ${GH_TOKEN}" \
+            # Capture headers + body
+            RAW=$(curl -sS -D - -o - \
+              -H "Authorization: Bearer ${GH_TOKEN}" \
               -H "Accept: application/vnd.github+json" \
-              -d "$(jq -n --arg query "$Q" --argjson variables "$VARS" '{query:$query, variables:$variables}')")
+              --get "$URL" $(build_params))
 
-            if jq -e '.errors' >/dev/null <<<"$RESP"; then
-              echo "❌ GraphQL errors:"; jq -C '.errors' <<<"$RESP"
-              echo "ℹ️ pageInfo:"; jq '.data.repository.issues.pageInfo // {}' <<<"$RESP" || true
-              exit 1
+            # Split headers/body
+            HEADERS=$(printf "%s" "$RAW" | awk 'BEGIN{h=1} h{print} /^(\r)?$/{h=0}')
+            BODY=$(printf "%s" "$RAW" | awk 'BEGIN{h=1} h&&/^(\r)?$/{h=0;next} !h{print}')
+
+            # Rate-limit handling
+            REM=$(printf "%s" "$HEADERS" | awk -F': ' 'tolower($1)=="x-ratelimit-remaining"{print $2}' | tr -d '\r')
+            RESET=$(printf "%s" "$HEADERS" | awk -F': ' 'tolower($1)=="x-ratelimit-reset"{print $2}' | tr -d '\r')
+            if [[ -n "$REM" && "$REM" -eq 0 ]]; then
+              NOW=$(date +%s); SLEEP=$(( RESET - NOW + 5 ))
+              SLEEP=$(( SLEEP<0 ? 5 : SLEEP ))
+              echo "⏳ Hit rate limit. Sleeping ${SLEEP}s…"
+              sleep "$SLEEP"
+              continue
             fi
 
-            NODES=$(jq '.data.repository.issues.nodes' <<<"$RESP")
+            # Empty page?
+            COUNT=$(jq 'length' <<<"$BODY")
+            [[ "$COUNT" -eq 0 ]] && break
 
-            # ---- Client-side filters ----
-            # Labels: REGION + LABELS_IN (comma-separated)
-            REGION_LABEL="${REGION:-}"
-            LABELS_CSV="${LABELS_IN:-}"
-            NODES=$(jq --arg region "$REGION_LABEL" --arg labels_csv "$LABELS_CSV" '
-              . as $arr
-              | if ($region=="" and $labels_csv=="") then $arr
-                else
-                  $wanted := ( ($labels_csv|split(",")|map(gsub("^\\s+|\\s+$";""))|map(select(length>0)))
-                              + (if $region=="" then [] else [$region] end) ) | unique;
-                  [ $arr[] | select( any(.labels.nodes[]?; .name as $n | $wanted | index($n)) ) ]
-                end
-            ' <<<"$NODES")
+            # Filter out PRs (issues API returns PRs too)
+            PAGE_ITEMS=$(jq '[ .[] | select(.pull_request | not) ]' <<<"$BODY")
 
-            # Dates: createdAt in [DATE_START, DATE_END] if provided (ISO8601)
-            if [ -n "${DATE_START:-}" ]; then
-              NODES=$(jq --arg s "$DATE_START" '[ .[] | select(.createdAt >= $s) ]' <<<"$NODES")
-            fi
-            if [ -n "${DATE_END:-}" ]; then
-              NODES=$(jq --arg e "$DATE_END"   '[ .[] | select(.createdAt <= $e) ]' <<<"$NODES")
+            # Client-side label filter (in case you prefer strict matching beyond server-side)
+            if [[ -n "${LABELS_COMBINED}" ]]; then
+              PAGE_ITEMS=$(jq --arg csv "$LABELS_COMBINED" '
+                $need := ($csv|split(",")|map(select(length>0)));
+                [ .[] | select( all($need[]; .labels|map(.name)|index(.)) ) ]
+              ' <<<"$PAGE_ITEMS")
             fi
 
-            COUNT=$(jq 'length' <<<"$NODES")
-            echo "→ kept $COUNT nodes after filters"
+            # Client-side date range on createdAt
+            if [[ -n "${DATE_START:-}" ]]; then
+              PAGE_ITEMS=$(jq --arg s "$DATE_START" '[ .[] | select(.created_at >= $s) ]' <<<"$PAGE_ITEMS")
+            fi
+            if [[ -n "${DATE_END:-}" ]]; then
+              PAGE_ITEMS=$(jq --arg e "$DATE_END" '[ .[] | select(.created_at <= $e) ]' <<<"$PAGE_ITEMS")
+            fi
 
-            jq --argjson add "$NODES" '. + $add' "$OUT_TMP" > "${OUT_TMP}.next"
-            mv "${OUT_TMP}.next" "$OUT_TMP"
+            KEPT=$(jq 'length' <<<"$PAGE_ITEMS")
+            echo "→ kept ${KEPT} items"
 
-            HAS_NEXT=$(jq -r '.data.repository.issues.pageInfo.hasNextPage' <<<"$RESP")
-            END_CURSOR=$(jq -r '.data.repository.issues.pageInfo.endCursor' <<<"$RESP")
-            [ "$HAS_NEXT" = "true" ] || break
-            AFTER=$(jq -Rn --arg c "$END_CURSOR" '$c')
+            # Append to OUT_TMP
+            jq --argjson add "$PAGE_ITEMS" '. + $add' "$OUT_TMP" > "${OUT_TMP}.next" && mv "${OUT_TMP}.next" "$OUT_TMP"
+
+            # Follow Link: rel="next"
+            NEXT_URL=$(printf "%s" "$HEADERS" | sed -n 's/^link:.*<\([^>]*\)>; rel="next".*/\1/ip' | tr -d '\r')
+            [[ -z "$NEXT_URL" ]] && break
+            URL="$NEXT_URL"
           done
 
+          # Map to your target shape
           FINAL=$(jq '
             [ .[]
               | {
@@ -217,16 +189,17 @@ jobs:
                   Title:  .title,
                   Body:   (.body // ""),
                   State:  .state,
-                  Url:    .url,
-                  Labels: (.labels.nodes | map(.name))
+                  Url:    .html_url,
+                  Labels: (.labels | map(.name))
                 }
             ]
           ' "$OUT_TMP")
 
           OUT_PATH="cache/report:${DATE_START:+${DATE_START}:}${DATE_END:+${DATE_END}:}${REGION}"
           printf '%s' "$FINAL" > "$OUT_PATH"
+
           echo "Preview:"; jq '.[0:3]' "$OUT_PATH" || true
-          [ -s "$OUT_PATH" ] || { echo "❌ No issues produced (check labels/date filters)."; exit 1; }
+          [ -s "$OUT_PATH" ] || { echo "❌ No issues produced (check access/filters)."; exit 1; }
 
 
       - name: Show preview
