@@ -82,7 +82,7 @@ jobs:
 
           # Set default dates if inputs are empty
           DATE_START="${{ github.event.inputs.dateStart }}"
-          DATE_START="${DATE_START:-2020-01-01}"
+          DATE_START="${DATE_START:-2025-07-01}"
 
           DATE_END="${{ github.event.inputs.dateEnd }}"
           DATE_END="${DATE_END:-$(date +%F)}"
