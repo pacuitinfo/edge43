@@ -37,7 +37,481 @@ if (string.IsNullOrWhiteSpace(owner) || string.IsNullOrWhiteSpace(repo) || strin
     Console.Error.WriteLine("Missing --owner/--repo/--path");
     Environment.Exit(1);
 }
+public byte[] GenerateReportPdf(ServicesReports application, string? dateStart, string? dateEnd)
+    {
+        byte[] appStream = null;
+        var AmateurRepeaterATRnew = application.Services.Find(c => c.Service == "Amateur Radio Operator Certificate (NEW)");
+        var AmateurRepeaterATRrenew = application.Services.Find(c => c.Service == "Amateur Radio Operator Certificate (RENEWAL)");
+        var ATRepeaterClubnew = application.Services.Find(c => c.Service == "Amateur Club Radio Station License (NEW)");
+        var ATRepeaterClubrenew = application.Services.Find(c => c.Service == "Amateur Club Radio Station License (RENEWAL)");
+        var ATRadioLicTempPermitnew = application.Services.Find(c => c.Service == "Temporary Radio Operator Certificate for Foreign Pilot (NEW)");
+        var ATRadioLicTempPermitrenew = application.Services.Find(c => c.Service == "Temporary Radio Operator Certificate for Foreign Pilot (RENEWAL)");
+        
+        var PrivatePortablePCVnew = application.Services.Find(c => c.Service == "Private Radio Station License - Portable (NEW)");
+        var PrivatePortablePCVrenew = application.Services.Find(c => c.Service == "Private Radio Station License - Portable (RENEWAL)");
+        var PrivateLandMobileMLCVnew = application.Services.Find(c => c.Service == "Private Radio Station License - LandMobile (NEW)");
+        var PrivateLandMobileMLCVrenew = application.Services.Find(c => c.Service == "Private Radio Station License - LandMobile (RENEWAL)");
+        var PrivateLandBaseFBnew = application.Services.Find(c => c.Service == "Private Radio Station License - LandBase (NEW)");
+        var PrivateLandBaseFBrenew = application.Services.Find(c => c.Service == "Private Radio Station License - LandBase (RENEWAL)");
+        
+        var PrivateFixedFXCVnew = application.Services.Find(c => c.Service == "Private Radio Station License - Fixed (NEW)");
+        var PrivateFixedFXCVrenew = application.Services.Find(c => c.Service == "Private Radio Station License - Fixed (RENEWAL)");
+        
+        var PrivateFixedFXFBCVnew = application.Services.Find(c => c.Service == "Private Radio Station License - Fixed and LandBase (NEW)");
+        var PrivateFixedFXFBCVrenew = application.Services.Find(c => c.Service == "Private Radio Station License - Fixed and LandBase (RENEWAL)");
+        var PrivateRepeaterRPTCVnew = application.Services.Find(c => c.Service == "Private Radio Station License - Repeater (NEW)");
+        var PrivateRepeaterRPTCVrenew = application.Services.Find(c => c.Service == "Private Radio Station License - Repeater (RENEWAL)");
+        
+        
+        var PRSLandBasenew = application.Services.Find(c => c.Service == "Private Radio Station License - LandBase PRS (NEW)");
+        var PRSLandBaserenew = application.Services.Find(c => c.Service == "Private Radio Station License - LandBase PRS (RENEWAL)");
+        var PRSMLnew = application.Services.Find(c => c.Service == "Private Radio Station License - LandMobile PRS (NEW)");
+        var PRSMLrenew = application.Services.Find(c => c.Service == "Private Radio Station License - LandMobile PRS (RENEWAL)");
+        var PRSPortablenew = application.Services.Find(c => c.Service == "Private Radio Station License - Portable PRS (NEW)");
+        var PRSPortablerenew = application.Services.Find(c => c.Service == "Private Radio Station License - Portable PRS (RENEWAL)");
+        var CivicActionnew = application.Services.Find(c => c.Service == "Civic Action (NEW)");
+        var CivicActionrenew = application.Services.Find(c => c.Service == "Civic Action (RENEWAL)");
+        var VSATVerySmallAppertureTerminalnew = application.Services.Find(c => c.Service == "Radio Station License - Very Small Apperture Terminal (NEW)");
+        var VSATVerySmallAppertureTerminalrenew = application.Services.Find(c => c.Service == "Radio Station License - Very Small Apperture Terminal (RENEWAL)");
+        var TrunkRepeaternew = application.Services.Find(c => c.Service == "Radio Station License - Public Trunked (NEW)");
+        var TrunkRepeaterrenew = application.Services.Find(c => c.Service == "Radio Station License - Public Trunked (RENEWAL)");
+        var PrivateEarthStationnew = application.Services.Find(c => c.Service == "Private Earth Station License (NEW)");
+        var PrivateEarthStationrenew = application.Services.Find(c => c.Service == "Private Earth Station License (RENEWAL)");
+        var Telemetry1new = application.Services.Find(c => c.Service == "Radio Station License - Telemetry (NEW)");
+        var Telemetry1renew = application.Services.Find(c => c.Service == "Radio Station License - Telemetry (RENEWAL)");
+        var WDNBaseWirelessDataNetworknew = application.Services.Find(c => c.Service == "Radio Station License - WDN (NEW)");
+        var WDNBaseWirelessDataNetworkrenew = application.Services.Find(c => c.Service == "Radio Station License - WDN (RENEWAL)");
+        var WDNPortablenew = application.Services.Find(c => c.Service == "Private Radio Station License - Portable WDN (NEW)");
+        var WDNPortablerenew = application.Services.Find(c => c.Service == "Private Radio Station License - Portable WDN (RENEWAL)");
+        var WDNMobilenew = application.Services.Find(c => c.Service == "Private Radio Station License - LandMobile WDN (NEW)");
+        var WDNMobilerenew = application.Services.Find(c => c.Service == "Radio Station License - LandMobile (RENEWAL)");
+        var IntlMSShipStnLicensenew = application.Services.Find(c => c.Service == "Ship Station License INTERNATIONAL Trade (NEW)");
+        var IntlMSShipStnLicenserenew = application.Services.Find(c => c.Service == "Ship Station License INTERNATIONAL Trade (RENEWAL)");
+        var IntlCertSESCShipEarthStnInmarsatCminiCnew = application.Services.Find(c => c.Service == "Ship Earth Station License INTERNATIONAL Trade (NEW)");
+        var IntlCertSESCShipEarthStnInmarsatCminiCrenew = application.Services.Find(c => c.Service == "Ship Earth Station License INTERNATIONAL Trade (RENEWAL)");
+        var IntlCertSSASShipSecurityAlertSystemnew = application.Services.Find(c => c.Service == "Ship Earth Station License INTERNATIONAL Trade (NEW)");
+        var IntlCertSSASShipSecurityAlertSystemrenew = application.Services.Find(c => c.Service == "Ship Earth Station License INTERNATIONAL Trade (RENEWAL)");
+        var IntlCertLRITLongRangeIdentificationTrackingnew = application.Services.Find(c => c.Service == "Ship Earth Station License INTERNATIONAL Trade (NEW)");
+        var IntlCertLRITLongRangeIdentificationTrackingrenew = application.Services.Find(c => c.Service == "Ship Earth Station License INTERNATIONAL Trade (RENEWAL)");
+        var IntlCertSESFShipEarthStnInmarsatFnew = application.Services.Find(c => c.Service == "Ship Earth Station License INTERNATIONAL Trade (NEW)");
+        var IntlCertSESFShipEarthStnInmarsatFrenew = application.Services.Find(c => c.Service == "Ship Earth Station License INTERNATIONAL Trade (RENEWAL)");
+        var IntlCertSEFBShipEarthStnFleetBroadbandnew = application.Services.Find(c => c.Service == "Ship Earth Station License INTERNATIONAL Trade (NEW)");
+        var IntlCertSEFBShipEarthStnFleetBroadbandrenew = application.Services.Find(c => c.Service == "Ship Earth Station License INTERNATIONAL Trade (RENEWAL)");
+        var CoastalFCnew = application.Services.Find(c => c.Service == "Private Coastal Station License (NEW)");
+        var CoastalFCrenew = application.Services.Find(c => c.Service == "Private Coastal Station License (RENEWAL)");
+        var FishingBoatnew = application.Services.Find(c => c.Service == "Ship Station License (NEW)");
+        var FishingBoatrenew = application.Services.Find(c => c.Service == "Ship Station License (RENEWAL)");
+        var ShipMSDomesticnew = application.Services.Find(c => c.Service == "Ship Station License DOMESTIC Trade (NEW) (WITHOUT originally-installed equipment)");
+        var ShipMSDomesticrenew = application.Services.Find(c => c.Service == "Ship Station License DOMESTIC Trade (RENEWAL)");
+        var AircraftMAnew = application.Services.Find(c => c.Service == "Aircraft Station License (NEW)");
+        var AircraftMArenew = application.Services.Find(c => c.Service == "Aircraft Station License (RENEWAL)");
+        var AeronauticalFAnew = application.Services.Find(c => c.Service == "Fixed Aeronautical Station License (NEW)");
+        var AeronauticalFArenew = application.Services.Find(c => c.Service == "Fixed Aeronautical Station License (RENEWAL)");
+        var GovtPCOnew = application.Services.Find(c => c.Service == "Radio Station License - Portable (NEW)");
+        var GovtPCOrenew = application.Services.Find(c => c.Service == "Radio Station License - Portable (RENEWAL)");
+        var GovtMLCOnew = application.Services.Find(c => c.Service == "Radio Station License - LandMobile (NEW)");
+        var GovtMLCOrenew = application.Services.Find(c => c.Service == "Radio Station License - LandMobile (RENEWAL)");
+        var GovtFXCOnew = application.Services.Find(c => c.Service == "Radio Station License - Fixed (NEW)");
+        var GovtFXCOrenew = application.Services.Find(c => c.Service == "Radio Station License - Fixed (RENEWAL)");
+        var GovtFBCOnew = application.Services.Find(c => c.Service == "Radio Station License - LandBase (NEW)");
+        var GovtFBCOrenew = application.Services.Find(c => c.Service == "Radio Station License - LandBase (RENEWAL)");
+        var GovtFXFBCOnew = application.Services.Find(c => c.Service == "Radio Station License - Fixed And LandBase (NEW)");
+        var GovtFXFBCOrenew = application.Services.Find(c => c.Service == "Radio Station License - Fixed And LandBase (RENEWAL)");
+        var GovtRPTCOnew = application.Services.Find(c => c.Service == "Radio Station License - Repeater (NEW)");
+        var GovtRPTCOrenew = application.Services.Find(c => c.Service == "Radio Station License - Repeater (RENEWAL)");
+        var GovtPRSnew = application.Services.Find(c => c.Service == "Private Radio Station License - Repeater (NEW)");
+        var GovtPRSrenew = application.Services.Find(c => c.Service == "Private Radio Station License - Repeater (RENEWAL)");
+        var RPTCPnew = application.Services.Find(c => c.Service == "Radio Station License - Repeater (NEW)");
+        var RPTCPrenew = application.Services.Find(c => c.Service == "Radio Station License - Repeater (RENEWAL)");
+        var FixedMicrowaveFXCPnew = application.Services.Find(c => c.Service == "Radio Station License - Microwave Fixed CP (NEW)");
+        var FixedMicrowaveFXCPrenew = application.Services.Find(c => c.Service == "Radio Station License - Microwave Fixed CP (RENEWAL)");
+        var FXCPMicrowaveCellsitesnew = application.Services.Find(c => c.Service == "Radio Station License - Microwave Fixed CP (NEW)");
+        var FXCPMicrowaveCellsitesrenew = application.Services.Find(c => c.Service == "Radio Station License - Microwave Fixed CP (RENEWAL)");
+        var FBCPBTSBaseCellsitesnew = application.Services.Find(c => c.Service == "Radio Station License - BTS (NEW)");
+        var FBCPBTSBaseCellsitesrenew = application.Services.Find(c => c.Service == "Radio Station License - BTS (RENEWAL)");
+        var TCCPPublicCorrespondenceTELCOnew = application.Services.Find(c => c.Service == "Radio Station License - VSAT TC CP (NEW)");
+        var TCCPPublicCorrespondenceTELCOrenew = application.Services.Find(c => c.Service == "Radio Station License - VSAT TC CP (RENEWAL)");
+        var VSATTCCPnew = application.Services.Find(c => c.Service == "Radio Station License - VSAT (NEW)");
+        var VSATTCCPrenew = application.Services.Find(c => c.Service == "Radio Station License - VSAT (RENEWAL)");
+        
+        var BroadbandWDNWirelessDataNetworkFBnew = application.Services.Find(c => c.Service == "Radio Station License - LandBase CP WDN (NEW)");
+        var BroadbandWDNWirelessDataNetworkFBrenew = application.Services.Find(c => c.Service == "Radio Station License - LandBase CP WDN (RENEWAL)");
+        
+        var TrunkRepeaterRPTCOnew = application.Services.Find(c => c.Service == "Radio Station License - Public Trunked (NEW)");
+        var TrunkRepeaterRPTCOrenew = application.Services.Find(c => c.Service == "Radio Station License - Public Trunked (RENEWAL)");
+        var PublicEarthStnTCnew = application.Services.Find(c => c.Service == "Public Earth Station - Terrestrial Communication (NEW)");
+        var PublicEarthStnTCrenew = application.Services.Find(c => c.Service == "Public Earth Station - Terrestrial Communication (RENEWAL)");
+        var Telemetrynew = application.Services.Find(c => c.Service == "Telemetry (NEW)");
+        var Telemetryrenew = application.Services.Find(c => c.Service == "Telemetry (RENEWAL)");
+        var TVRORegOnetimeNewnew = application.Services.Find(c => c.Service == "TVRO Station License (NEW)");
+        var TVRORegOnetimeNewrenew = application.Services.Find(c => c.Service == "TVRO Station License (RENEWAL)");
+        var TVROLicenseRenewaleveryyearnew = application.Services.Find(c => c.Service == "TVRO Station License (NEW)");
+        var TVROLicenseRenewaleveryyearrenew = application.Services.Find(c => c.Service == "TVRO Station License (RENEWAL)");
+        var CATVLicensenew = application.Services.Find(c => c.Service == "CATV Station License (NEW)");
+        var CATVLicenserenew = application.Services.Find(c => c.Service == "CATV Station License (RENEWAL)");
+        var STLLicenseStudiotoTransmitterLinknew = application.Services.Find(c => c.Service == "Radio Station License - Studio To Transmitter Link (NEW)");
+        var STLLicenseStudiotoTransmitterLinkrenew = application.Services.Find(c => c.Service == "Radio Station License - Studio To Transmitter Link (RENEWAL)");
+        var radiostationlicensetotalnew =
+            $"{Convert.ToInt32(AmateurRepeaterATRnew?.Value + ATRepeaterClubnew?.Value + ATRadioLicTempPermitnew?.Value + PrivatePortablePCVnew?.Value + PrivateLandMobileMLCVnew?.Value + PrivateLandBaseFBnew?.Value + PrivateFixedFXCVnew?.Value + PrivateFixedFXFBCVnew?.Value + PrivateRepeaterRPTCVnew?.Value + PRSLandBasenew?.Value + PRSMLnew?.Value + PRSPortablenew?.Value + CivicActionnew?.Value + VSATVerySmallAppertureTerminalnew?.Value + TrunkRepeaternew?.Value + PrivateEarthStationnew?.Value + Telemetry1new?.Value + WDNBaseWirelessDataNetworknew?.Value + WDNPortablenew?.Value + WDNMobilenew?.Value + WDNMobilenew?.Value + IntlMSShipStnLicensenew?.Value + IntlCertSESCShipEarthStnInmarsatCminiCnew?.Value + IntlCertSSASShipSecurityAlertSystemnew?.Value + IntlCertLRITLongRangeIdentificationTrackingnew?.Value + IntlCertSESFShipEarthStnInmarsatFnew?.Value + IntlCertSEFBShipEarthStnFleetBroadbandnew?.Value + CoastalFCnew?.Value + FishingBoatnew?.Value + ShipMSDomesticnew?.Value + AircraftMAnew?.Value + AeronauticalFAnew?.Value + GovtPCOnew?.Value + GovtMLCOnew?.Value + GovtFXCOnew?.Value + GovtFBCOnew?.Value + GovtFXFBCOnew?.Value + GovtRPTCOnew?.Value + GovtPRSnew?.Value + RPTCPnew?.Value + FixedMicrowaveFXCPnew?.Value + FXCPMicrowaveCellsitesnew?.Value + FBCPBTSBaseCellsitesnew?.Value + TCCPPublicCorrespondenceTELCOnew?.Value + VSATTCCPnew?.Value + BroadbandWDNWirelessDataNetworkFBnew?.Value + TrunkRepeaterRPTCOnew?.Value + PublicEarthStnTCnew?.Value + Telemetrynew?.Value + TVRORegOnetimeNewnew?.Value + TVROLicenseRenewaleveryyearnew?.Value + CATVLicensenew?.Value + STLLicenseStudiotoTransmitterLinknew?.Value),5}";
+        var radiostationlicensetotalrenew =
+            $"{Convert.ToInt32(ATRepeaterClubrenew?.Value + ATRadioLicTempPermitrenew?.Value),5}";
 
+        var PermittoTransportnew = application.Services.Find(c => c.Service == "Permit to Transport");
+        var PermittoTransportrenew = application.Services.Find(c => c.Service == "Permit to Transport");
+        var PermittoPurchasenew = application.Services.Find(c => c.Service == "Amateur Radio Station Permit to PURCHASE");
+        var PermittoPurchaserenew = application.Services.Find(c => c.Service == "Amateur Radio Station Permit to PURCHASE (RENEWAL)");
+        var PermittoPossessnew = application.Services.Find(c => c.Service == "Amateur Radio Station Permit to POSSESS");
+        var PermittoPossessrenew = application.Services.Find(c => c.Service == "Amateur Radio Station Permit to POSSESS (RENEWAL)");
+        var PermittoSellTransfernew = application.Services.Find(c => c.Service == "Amateur Radio Station Permit to SELL/TRANSFER");
+        var PermittoSellTransferrenew = application.Services.Find(c => c.Service == "Amateur Radio Station Permit to SELL/TRANSFER");
+        var ConstructionPermitnew = application.Services.Find(c => c.Service == "Construction Permit (NEW)");
+        var ConstructionPermitrenew = application.Services.Find(c => c.Service == "Construction Permit (NEW)");
+        var Dealernew = application.Services.Find(c => c.Service == "Dealer Permit (NEW)");
+        var Dealerrenew = application.Services.Find(c => c.Service == "Dealer Permit (RENEWAL)");
+        var MFTRManufacturerTransceiverPermitnew = application.Services.Find(c => c.Service == "Manufacturer Permit (NEW)");
+        var MFTRManufacturerTransceiverPermitrenew = application.Services.Find(c => c.Service == "Manufacturer Permit (RENEWAL)");
+        var MPDPMobilePhoneDealersPermitnew = application.Services.Find(c => c.Service == "Dealer Permit (NEW)");
+        var MPDPMobilePhoneDealersPermitrenew = application.Services.Find(c => c.Service == "Dealer Permit (RENEWAL)");
+        var MPRRMobilePhoneRetailerResellerPermitnew = application.Services.Find(c => c.Service == "Retailer/Reseller Permit (NEW)");
+        var MPRRMobilePhoneRetailerResellerPermitrenew = application.Services.Find(c => c.Service == "Retailer/Reseller Permit (RENEWAL)");
+        var MPSCPMobilePhoneServiceCenterPermitnew = application.Services.Find(c => c.Service == "Service Center Permit (NEW)");
+        var MPSCPMobilePhoneServiceCenterPermitrenew = application.Services.Find(c => c.Service == "Service Center Permit (RENEWAL)");
+        var ServiceCenterRCERadioCommunicationEquipmentServiceCenterPermitnew = application.Services.Find(c => c.Service == "Service Center Permit (NEW)");
+        var ServiceCenterRCERadioCommunicationEquipmentServiceCenterPermitrenew = application.Services.Find(c => c.Service == "Service Center Permit (RENEWAL)");
+        var ServiceCenterWDNnew = application.Services.Find(c => c.Service == "Service Center Permit (NEW)");
+        var ServiceCenterWDNrenew = application.Services.Find(c => c.Service == "Service Center Permit (RENEWAL)");
+        var SRDShortRangeDeviceRegistrationnew = application.Services.Find(c => c.Service == "Amateur Radio Operator Certificate (NEW)");
+        var SRDShortRangeDeviceRegistrationrenew = application.Services.Find(c => c.Service == "Amateur Radio Operator Certificate (RENEWAL)");
+        var WDNRegistrationnew = application.Services.Find(c => c.Service == "Certificate Of Registration - WDN (NEW)");
+        var WDNRegistrationrenew = application.Services.Find(c => c.Service == "Certificate Of Registration - WDN (RENEWAL)");
+        var TVRORegistrationnew = application.Services.Find(c => c.Service == "Certificate Of Registration - TVRO (NEW)");
+        var TVRORegistrationrenew = application.Services.Find(c => c.Service == "Certificate Of Registration - TVRO (RENEWAL)");
+        var RFIDRegistrationnew = application.Services.Find(c => c.Service == "Certificate Of Registration - RFID (NEW)");
+        var RFIDRegistrationrenew = application.Services.Find(c => c.Service == "Certificate Of Registration - RFID (RENEWAL)");
+        var RadioRegistrationnew = application.Services.Find(c => c.Service == "Certificate Of Registration - Radio (NEW)");
+        var RadioRegistrationrenew = application.Services.Find(c => c.Service == "Certificate Of Registration - Radio (RENEWAL)");
+        var CommercialRadioDealernew = application.Services.Find(c => c.Service == "Dealer Permit (NEW)");
+        var CommercialRadioDealerrenew = application.Services.Find(c => c.Service == "Dealer Permit (RENEWAL)");
+        var CommercialWDNDealernew = application.Services.Find(c => c.Service == "Amateur Radio Operator Certificate (NEW)");
+        var CommercialWDNDealerrenew = application.Services.Find(c => c.Service == "Amateur Radio Operator Certificate (RENEWAL)");
+        var CPESupplierDealernew = application.Services.Find(c => c.Service == "Retailer/Reseller Permit (NEW)");
+        var CPESupplierDealerrenew = application.Services.Find(c => c.Service == "Retailer/Reseller Permit (RENEWAL)");
+        var PermittoImportnew = application.Services.Find(c => c.Service == "Permit to Import for Customer Premises Equipment");
+        var PermittoImportrenew = application.Services.Find(c => c.Service == "Amateur Radio Operator Certificate (RENEWAL)");
+        var CertificateofExemptionnew = application.Services.Find(c => c.Service == "Certificate Of Exemption");
+        var CertificateofExemptionrenew = application.Services.Find(c => c.Service == "Certificate Of Exemption");
+        var ReleaseClearancenew = application.Services.Find(c => c.Service == "Release Clearance");
+        var ReleaseClearancerenew = application.Services.Find(c => c.Service == "Release Clearance");
+        var DemoPermitTPnew = application.Services.Find(c => c.Service == "Demo/Propagate");
+        var DemoPermitTPrenew = application.Services.Find(c => c.Service == "Demo/Propagate (RENEWAL)");
+        var Storagenew = application.Services.Find(c => c.Service == "Permit to Possess for Storage (PTEs)");
+        var Storagerenew = application.Services.Find(c => c.Service == "Amateur Radio Operator Certificate (RENEWAL)");
+        var RSLDuplicatenew = application.Services.Find(c => c.Service == "Duplicate Copy");
+        var RSLDuplicaterenew = application.Services.Find(c => c.Service == "Duplicate Copy");
+        var PermittoDuplicatenew = application.Services.Find(c => c.Service == "Permit To Duplicate");
+        var PermittoDuplicaterenew = application.Services.Find(c => c.Service == "Permit To Duplicate (RENEWAL)");
+        var PermitforModificationnew = application.Services.Find(c => c.Service == "Permit For Modification");
+        var PermitforModificationrenew = application.Services.Find(c => c.Service == "Permit For Modification (RENEWAL)");
+        var VASValueAddedServicenew = application.Services.Find(c => c.Service == "Value Added Service");
+        var VASValueAddedServicerenew = application.Services.Find(c => c.Service == "Value Added Service (RENEWAL)");
+        var othercertificatespermitstotalnew = application.Services.Find(c => c.Service == "Amateur Radio Operator Certificate (NEW)");
+        var othercertificatespermitstotalrenew = application.Services.Find(c => c.Service == "Amateur Radio Operator Certificate (RENEWAL)");
+
+        var AmateurRadioOperatorCertificateNEW = application.Services.Find(c => c.Service == "Amateur Radio Operator Certificate (NEW)");
+        var AmateurRadioOperatorCertificateRENEW = application.Services.Find(c => c.Service == "Amateur Radio Operator Certificate (RENEWAL)");
+        var TemporaryPermittoOperateanAmateurRadioStationForeignVisitor = application.Services.Find(c => c.Service == "Temporary Permit to Operate an Amateur Radio Station - Foreign Visitor");
+        var AmateurClubRadioStationLicenseNEW = application.Services.Find(c => c.Service == "Amateur Club Radio Station License (NEW)");
+        var AmateurClubRadioStationLicenseRENEW = application.Services.Find(c => c.Service == "Amateur Club Radio Station License (RENEWAL)");
+        var FixedAeronauticalStationLicenseNEW = application.Services.Find(c => c.Service == "Fixed Aeronautical Station License (NEW)");
+        var FixedAeronauticalStationLicenseRENEW = application.Services.Find(c => c.Service == "Fixed Aeronautical Station License (RENEWAL)");
+        var AircraftStationLicenseNEW = application.Services.Find(c => c.Service == "Aircraft Station License (NEW)");
+        var AircraftStationLicenseRENEW = application.Services.Find(c => c.Service == "Aircraft Station License (RENEWAL)");
+        var CommercialRadioOperatorCertificateNEW = application.Services.Find(c => c.Service == "Commercial Radio Operator Certificate (NEW)");
+        var CommercialRadioOperatorCertificateRENEW = application.Services.Find(c => c.Service == "Commercial Radio Operator Certificate (RENEWAL)");
+        var AmateurCertificateNew = application.Services.Find(c => c.Service == "Amateur Radio Station License (NEW)");
+        var AmateurCertificateRenew = application.Services.Find(c => c.Service == "Amateur Radio Station License (RENEWAL)");
+
+        var CommercialRadioOperatorCertificateNEW1RTG = CommercialRadioOperatorCertificateNEW.Elements.Find(c => c.Name == "1RTG");
+        var CommercialRadioOperatorCertificateNEW2RTG = CommercialRadioOperatorCertificateNEW.Elements.Find(c => c.Name == "2RTG");
+        var CommercialRadioOperatorCertificateNEW3RTG = CommercialRadioOperatorCertificateNEW.Elements.Find(c => c.Name == "3RTG");
+        var CommercialRadioOperatorCertificateNEW1PHN = CommercialRadioOperatorCertificateNEW.Elements.Find(c => c.Name == "1PHN");
+        var CommercialRadioOperatorCertificateNEW2PHN = CommercialRadioOperatorCertificateNEW.Elements.Find(c => c.Name == "2PHN");
+        var CommercialRadioOperatorCertificateNEW3PHN = CommercialRadioOperatorCertificateNEW.Elements.Find(c => c.Name == "3PHN");
+        var CommercialRadioOperatorCertificateRENEW1RTG = CommercialRadioOperatorCertificateRENEW.Elements.Find(c => c.Name == "1RTG");
+        var CommercialRadioOperatorCertificateRENEW2RTG = CommercialRadioOperatorCertificateRENEW.Elements.Find(c => c.Name == "2RTG");
+        var CommercialRadioOperatorCertificateRENEW3RTG = CommercialRadioOperatorCertificateRENEW.Elements.Find(c => c.Name == "3RTG");
+        var CommercialRadioOperatorCertificateRENEW1PHN = CommercialRadioOperatorCertificateRENEW.Elements.Find(c => c.Name == "1PHN");
+        var CommercialRadioOperatorCertificateRENEW2PHN = CommercialRadioOperatorCertificateRENEW.Elements.Find(c => c.Name == "2PHN");
+        var CommercialRadioOperatorCertificateRENEW3PHN = CommercialRadioOperatorCertificateRENEW.Elements.Find(c => c.Name == "3PHN");
+
+        var AmateurCertificateClassANEW = AmateurCertificateNew.Elements.Find(c => c.Name == "Class A");
+        var AmateurCertificateClassBNEW = AmateurCertificateNew.Elements.Find(c => c.Name == "Class B");
+        var AmateurCertificateClassCNEW = AmateurCertificateNew.Elements.Find(c => c.Name == "Class C");
+        var AmateurCertificateClassDNEW = AmateurCertificateNew.Elements.Find(c => c.Name == "Class D");
+        var AmateurCertificateClassARENEW = AmateurCertificateRenew.Elements.Find(c => c.Name == "Class A");
+        var AmateurCertificateClassBRENEW = AmateurCertificateRenew.Elements.Find(c => c.Name == "Class B");
+        var AmateurCertificateClassCRENEW = AmateurCertificateRenew.Elements.Find(c => c.Name == "Class C");
+        var AmateurCertificateClassDRENEW = AmateurCertificateRenew.Elements.Find(c => c.Name == "Class D");
+
+        var AmateurCertificate = application.Services.Find(c => c.Service == "Amateur");
+
+        var RROCAircraftNEW = application.Services.Find(c => c.Service == "Aircraft Station License (NEW)");
+        var RROCAircraftRENEW = application.Services.Find(c => c.Service == "Aircraft Station License (RENEW)");
+
+        var RROCSHIPNEW = application.Services.Find(c => c.Service == "Ship Station License DOMESTIC Trade (NEW) (WITHOUT originally-installed equipment)");
+        var RROCSHIPRENEW = application.Services.Find(c => c.Service == "Ship Station License DOMESTIC Trade (RENEW) (WITHOUT originally-installed equipment)");
+
+        var SROPFBNEW = application.Services.Find(c => c.Service == "Special Radio Operator Certificate (NEW)");
+        var SROPFBRENEW = application.Services.Find(c => c.Service == "Special Radio Operator Certificate (RENEWAL)");
+        var SROPGOVGROCNEW = application.Services.Find(c => c.Service == "Government Radio Operator Certificate (NEW)");
+        var SROPGOVGROCRENEW = application.Services.Find(c => c.Service == "Government Radio Operator Certificate (RENEWAL)");
+
+        var RadioDealer = application.Services.Find(c => c.Service == "Dealer Permit (NEW)");
+        var RadioManufacturerSupplier = application.Services.Find(c => c.Service == "Manufacturer Permit (NEW)");
+        var RadioSupplier = application.Services.Find(c => c.Service == "Retailer/Reseller Permit (NEW)");
+        var RegisteredWirelessDataNetworkShortRange = application.Services.Find(c => c.Service == "Radio Station License - WDN (NEW)");
+        var RegisteredMobilePhoneEquipment = application.Services.Find(c => c.Service == "Service Center Permit (NEW)");
+
+        var Month = dateStart != null ?   CreateDbDateTime(dateStart, "MMMM dd").ToString() :  CreateDbDateTime(dateStart, "MMMM dd").ToString() + "-" + CreateDbDateTime(dateEnd, "MMMM dd").ToString() + ", " + CreateDbDateTime(dateEnd, "yyyy").ToString();
+        
+        MISReportModel applicationPdf = new()
+        {
+            AmateurRepeaterATRnew = AmateurRepeaterATRnew?.Value.ToString(),
+            AmateurRepeaterATRrenew = AmateurRepeaterATRrenew?.Value.ToString(),
+            ATRepeaterClubnew = ATRepeaterClubnew?.Value.ToString(),
+            ATRepeaterClubrenew = ATRepeaterClubrenew?.Value.ToString(),
+            ATRadioLicTempPermitnew = ATRadioLicTempPermitnew?.Value.ToString(),
+            ATRadioLicTempPermitrenew = AmateurRepeaterATRnew?.Value.ToString(),
+            PrivatePortablePCVnew = PrivatePortablePCVnew?.Value.ToString(),
+            PrivatePortablePCVrenew = PrivatePortablePCVrenew?.Value.ToString(),
+            PrivateLandMobileMLCVnew = PrivateLandMobileMLCVnew?.Value.ToString(),
+            PrivateLandMobileMLCVrenew = PrivateLandMobileMLCVrenew?.Value.ToString(),
+            PrivateLandBaseFBnew = PrivateLandBaseFBnew?.Value.ToString(),
+            PrivateLandBaseFBrenew = PrivateLandBaseFBrenew?.Value.ToString(),
+            PrivateFixedFXCVnew = PrivateFixedFXCVnew?.Value.ToString(),
+            PrivateFixedFXCVrenew = PrivateFixedFXCVrenew?.Value.ToString(),
+            PrivateFixedFXFBCVnew = PrivateFixedFXFBCVnew?.Value.ToString(),
+            PrivateFixedFXFBCVrenew = PrivateFixedFXFBCVrenew?.Value.ToString(),
+            PrivateRepeaterRPTCVnew = PrivateRepeaterRPTCVnew?.Value.ToString(),
+            PrivateRepeaterRPTCVrenew = PrivateRepeaterRPTCVrenew?.Value.ToString(),
+            PRSLandBasenew = PRSLandBasenew?.Value.ToString(),
+            PRSLandBaserenew = PRSLandBaserenew?.Value.ToString(),
+            PRSMLnew = PRSMLnew?.Value.ToString(),
+            PRSMLrenew = PRSMLrenew?.Value.ToString(),
+            PRSPortablenew = PRSPortablenew?.Value.ToString(),
+            PRSPortablerenew = PRSPortablerenew?.Value.ToString(),
+            CivicActionnew = CivicActionnew?.Value.ToString(),
+            CivicActionrenew = CivicActionrenew?.Value.ToString(),
+            VSATVerySmallAppertureTerminalnew = VSATVerySmallAppertureTerminalnew?.Value.ToString(),
+            VSATVerySmallAppertureTerminalrenew = VSATVerySmallAppertureTerminalrenew?.Value.ToString(),
+            TrunkRepeaternew = TrunkRepeaternew?.Value.ToString(),
+            TrunkRepeaterrenew = TrunkRepeaterrenew?.Value.ToString(),
+            PrivateEarthStationnew = PrivateEarthStationnew?.Value.ToString(),
+            PrivateEarthStationrenew = PrivateEarthStationrenew?.Value.ToString(),
+            Telemetry1new = Telemetry1new?.Value.ToString(),
+            Telemetry1renew = Telemetry1renew?.Value.ToString(),
+            WDNBaseWirelessDataNetworknew = WDNBaseWirelessDataNetworknew?.Value.ToString(),
+            WDNBaseWirelessDataNetworkrenew = WDNBaseWirelessDataNetworkrenew?.Value.ToString(),
+            WDNPortablenew = WDNPortablenew?.Value.ToString(),
+            WDNPortablerenew = WDNPortablerenew?.Value.ToString(),
+            WDNMobilenew = WDNMobilenew?.Value.ToString(),
+            WDNMobilerenew = WDNMobilerenew?.Value.ToString(),
+            IntlMSShipStnLicensenew = IntlMSShipStnLicensenew?.Value.ToString(),
+            IntlMSShipStnLicenserenew = IntlMSShipStnLicenserenew?.Value.ToString(),
+            IntlCertSESCShipEarthStnInmarsatCminiCnew = IntlCertSESCShipEarthStnInmarsatCminiCnew?.Value.ToString(),
+            IntlCertSESCShipEarthStnInmarsatCminiCrenew = IntlCertSESCShipEarthStnInmarsatCminiCrenew?.Value.ToString(),
+            IntlCertSSASShipSecurityAlertSystemnew = IntlCertSSASShipSecurityAlertSystemnew?.Value.ToString(),
+            IntlCertSSASShipSecurityAlertSystemrenew = IntlCertSSASShipSecurityAlertSystemrenew?.Value.ToString(),
+            IntlCertLRITLongRangeIdentificationTrackingnew = IntlCertLRITLongRangeIdentificationTrackingnew?.Value.ToString(),
+            IntlCertLRITLongRangeIdentificationTrackingrenew = IntlCertLRITLongRangeIdentificationTrackingrenew?.Value.ToString(),
+            IntlCertSESFShipEarthStnInmarsatFnew = IntlCertSESFShipEarthStnInmarsatFnew?.Value.ToString(),
+            IntlCertSESFShipEarthStnInmarsatFrenew = IntlCertSESFShipEarthStnInmarsatFrenew?.Value.ToString(),
+            IntlCertSEFBShipEarthStnFleetBroadbandnew = IntlCertSEFBShipEarthStnFleetBroadbandnew?.Value.ToString(),
+            IntlCertSEFBShipEarthStnFleetBroadbandrenew = IntlCertSEFBShipEarthStnFleetBroadbandrenew?.Value.ToString(),
+            CoastalFCnew = CoastalFCnew?.Value.ToString(),
+            CoastalFCrenew = CoastalFCrenew?.Value.ToString(),
+            FishingBoatnew = FishingBoatnew?.Value.ToString(),
+            FishingBoatrenew = FishingBoatrenew?.Value.ToString(),
+            ShipMSDomesticnew = ShipMSDomesticnew?.Value.ToString(),
+            ShipMSDomesticrenew = ShipMSDomesticrenew?.Value.ToString(),
+            AircraftMAnew = AircraftMAnew?.Value.ToString(),
+            AircraftMArenew = AircraftMArenew?.Value.ToString(),
+            AeronauticalFAnew = AeronauticalFAnew?.Value.ToString(),
+            AeronauticalFArenew = AeronauticalFArenew?.Value.ToString(),
+            GovtPCOnew = GovtPCOnew?.Value.ToString(),
+            GovtPCOrenew = GovtPCOrenew?.Value.ToString(),
+            GovtMLCOnew = GovtMLCOnew?.Value.ToString(),
+            GovtMLCOrenew = GovtMLCOrenew?.Value.ToString(),
+            GovtFXCOnew = GovtFXCOnew?.Value.ToString(),
+            GovtFXCOrenew = GovtFXCOrenew?.Value.ToString(),
+            GovtFBCOnew = GovtFBCOnew?.Value.ToString(),
+            GovtFBCOrenew = GovtFBCOrenew?.Value.ToString(),
+            GovtFXFBCOnew = GovtFXFBCOnew?.Value.ToString(),
+            GovtFXFBCOrenew = GovtFXFBCOrenew?.Value.ToString(),
+            GovtRPTCOnew = GovtRPTCOnew?.Value.ToString(),
+            GovtRPTCOrenew = GovtRPTCOrenew?.Value.ToString(),
+            GovtPRSnew = GovtPRSnew?.Value.ToString(),
+            GovtPRSrenew = GovtPRSrenew?.Value.ToString(),
+            RPTCPnew = RPTCPnew?.Value.ToString(),
+            RPTCPrenew = RPTCPrenew?.Value.ToString(),
+            FixedMicrowaveFXCPnew = FixedMicrowaveFXCPnew?.Value.ToString(),
+            FixedMicrowaveFXCPrenew = FixedMicrowaveFXCPrenew?.Value.ToString(),
+            FXCPMicrowaveCellsitesnew = FXCPMicrowaveCellsitesnew?.Value.ToString(),
+            FXCPMicrowaveCellsitesrenew = FXCPMicrowaveCellsitesrenew?.Value.ToString(),
+            FBCPBTSBaseCellsitesnew = FBCPBTSBaseCellsitesnew?.Value.ToString(),
+            FBCPBTSBaseCellsitesrenew = FBCPBTSBaseCellsitesrenew?.Value.ToString(),
+            TCCPPublicCorrespondenceTELCOnew = TCCPPublicCorrespondenceTELCOnew?.Value.ToString(),
+            TCCPPublicCorrespondenceTELCOrenew = TCCPPublicCorrespondenceTELCOrenew?.Value.ToString(),
+            VSATTCCPnew = VSATTCCPnew?.Value.ToString(),
+            VSATTCCPrenew = VSATTCCPrenew?.Value.ToString(),
+            BroadbandWDNWirelessDataNetworkFBnew = BroadbandWDNWirelessDataNetworkFBnew?.Value.ToString(),
+            BroadbandWDNWirelessDataNetworkFBrenew = BroadbandWDNWirelessDataNetworkFBrenew?.Value.ToString(),
+            TrunkRepeaterRPTCOnew = TrunkRepeaterRPTCOnew?.Value.ToString(),
+            TrunkRepeaterRPTCOrenew = TrunkRepeaterRPTCOrenew?.Value.ToString(),
+            PublicEarthStnTCnew = PublicEarthStnTCnew?.Value.ToString(),
+            PublicEarthStnTCrenew = PublicEarthStnTCrenew?.Value.ToString(),
+            Telemetrynew = Telemetrynew?.Value.ToString(),
+            Telemetryrenew = Telemetryrenew?.Value.ToString(),
+            TVRORegOnetimeNewnew = TVRORegOnetimeNewnew?.Value.ToString(),
+            TVRORegOnetimeNewrenew = TVRORegOnetimeNewrenew?.Value.ToString(),
+            TVROLicenseRenewaleveryyearnew = TVROLicenseRenewaleveryyearnew?.Value.ToString(),
+            TVROLicenseRenewaleveryyearrenew = TVROLicenseRenewaleveryyearrenew?.Value.ToString(),
+            CATVLicensenew = CATVLicensenew?.Value.ToString(),
+            CATVLicenserenew = CATVLicenserenew?.Value.ToString(),
+            STLLicenseStudiotoTransmitterLinknew = STLLicenseStudiotoTransmitterLinknew?.Value.ToString(),
+            STLLicenseStudiotoTransmitterLinkrenew = STLLicenseStudiotoTransmitterLinkrenew?.Value.ToString(),
+            radiostationlicensetotalnew = Convert.ToDouble(AmateurRepeaterATRnew?.Value + ATRepeaterClubnew?.Value + ATRadioLicTempPermitnew?.Value + PrivatePortablePCVnew?.Value + PrivateLandMobileMLCVnew?.Value + PrivateLandBaseFBnew?.Value + PrivateFixedFXCVnew?.Value + PrivateFixedFXFBCVnew?.Value + PrivateRepeaterRPTCVnew?.Value + PRSLandBasenew?.Value + PRSMLnew?.Value + PRSPortablenew?.Value + CivicActionnew?.Value + VSATVerySmallAppertureTerminalnew?.Value + TrunkRepeaternew?.Value + PrivateEarthStationnew?.Value + Telemetry1new?.Value + WDNBaseWirelessDataNetworknew?.Value + WDNPortablenew?.Value + WDNMobilenew?.Value + IntlMSShipStnLicensenew?.Value + IntlCertSESCShipEarthStnInmarsatCminiCnew?.Value + IntlCertSSASShipSecurityAlertSystemnew?.Value + IntlCertLRITLongRangeIdentificationTrackingnew?.Value + IntlCertSESFShipEarthStnInmarsatFnew?.Value + IntlCertSEFBShipEarthStnFleetBroadbandnew?.Value + CoastalFCnew?.Value + FishingBoatnew?.Value + ShipMSDomesticnew?.Value + AircraftMAnew?.Value + AeronauticalFAnew?.Value + GovtPCOnew?.Value + GovtMLCOnew?.Value + GovtFXCOnew?.Value + GovtFBCOnew?.Value + GovtFXFBCOnew?.Value + GovtRPTCOnew?.Value + GovtPRSnew?.Value + RPTCPnew?.Value + FixedMicrowaveFXCPnew?.Value + FXCPMicrowaveCellsitesnew?.Value + FBCPBTSBaseCellsitesnew?.Value + TCCPPublicCorrespondenceTELCOnew?.Value + VSATTCCPnew?.Value + BroadbandWDNWirelessDataNetworkFBnew?.Value + TrunkRepeaterRPTCOnew?.Value + PublicEarthStnTCnew?.Value + Telemetrynew?.Value + TVRORegOnetimeNewnew?.Value + TVROLicenseRenewaleveryyearnew?.Value + CATVLicensenew?.Value + STLLicenseStudiotoTransmitterLinknew?.Value).ToString(),
+            radiostationlicensetotalrenew = Convert.ToDouble(AmateurRepeaterATRrenew?.Value + ATRepeaterClubrenew?.Value + AmateurRepeaterATRrenew?.Value + PrivatePortablePCVrenew?.Value + PrivateLandMobileMLCVrenew?.Value + PrivateLandBaseFBrenew?.Value + PrivateFixedFXCVrenew?.Value + PrivateFixedFXFBCVrenew?.Value + PrivateRepeaterRPTCVrenew?.Value + PRSLandBaserenew?.Value + PRSMLrenew?.Value + PRSPortablerenew?.Value + CivicActionrenew?.Value + VSATVerySmallAppertureTerminalrenew?.Value + TrunkRepeaterrenew?.Value + PrivateEarthStationrenew?.Value + Telemetry1renew?.Value + WDNBaseWirelessDataNetworkrenew?.Value + WDNPortablerenew?.Value + WDNMobilerenew?.Value + IntlMSShipStnLicenserenew?.Value + IntlCertSESCShipEarthStnInmarsatCminiCrenew?.Value + IntlCertSSASShipSecurityAlertSystemrenew?.Value + IntlCertLRITLongRangeIdentificationTrackingrenew?.Value + IntlCertSESFShipEarthStnInmarsatFrenew?.Value + IntlCertSEFBShipEarthStnFleetBroadbandrenew?.Value + CoastalFCrenew?.Value + FishingBoatrenew?.Value + ShipMSDomesticrenew?.Value + AircraftMArenew?.Value + AeronauticalFArenew?.Value + GovtPCOrenew?.Value + GovtMLCOrenew?.Value + GovtFXCOrenew?.Value + GovtFBCOrenew?.Value + GovtFXFBCOrenew?.Value + GovtRPTCOrenew?.Value + GovtPRSrenew?.Value + RPTCPrenew?.Value + FixedMicrowaveFXCPrenew?.Value + FXCPMicrowaveCellsitesrenew?.Value + FBCPBTSBaseCellsitesrenew?.Value + TCCPPublicCorrespondenceTELCOrenew?.Value + VSATTCCPrenew?.Value + BroadbandWDNWirelessDataNetworkFBrenew?.Value + TrunkRepeaterRPTCOrenew?.Value + PublicEarthStnTCrenew?.Value + Telemetryrenew?.Value + TVRORegOnetimeNewrenew?.Value + TVROLicenseRenewaleveryyearrenew?.Value + CATVLicenserenew?.Value + STLLicenseStudiotoTransmitterLinkrenew?.Value).ToString(),
+
+            PermittoTransportnew = PermittoTransportnew?.Value.ToString(),
+            PermittoTransportrenew = PermittoTransportrenew?.Value.ToString(),
+            PermittoPurchasenew = PermittoPurchasenew?.Value.ToString(),
+            PermittoPurchaserenew = PermittoPurchaserenew?.Value.ToString(),
+            PermittoPossessnew = PermittoPossessnew?.Value.ToString(),
+            PermittoPossessrenew = PermittoPossessrenew?.Value.ToString(),
+            PermittoSellTransfernew = PermittoSellTransfernew?.Value.ToString(),
+            PermittoSellTransferrenew = PermittoSellTransferrenew?.Value.ToString(),
+            ConstructionPermitnew = ConstructionPermitnew?.Value.ToString(),
+            ConstructionPermitrenew = ConstructionPermitrenew?.Value.ToString(),
+            Dealernew = Dealernew?.Value.ToString(),
+            Dealerrenew = Dealerrenew?.Value.ToString(),
+            MFTRManufacturerTransceiverPermitnew = MFTRManufacturerTransceiverPermitnew?.Value.ToString(),
+            MFTRManufacturerTransceiverPermitrenew = MFTRManufacturerTransceiverPermitrenew?.Value.ToString(),
+            MPDPMobilePhoneDealersPermitnew = MPDPMobilePhoneDealersPermitnew?.Value.ToString(),
+            MPDPMobilePhoneDealersPermitrenew = MPDPMobilePhoneDealersPermitrenew?.Value.ToString(),
+            MPRRMobilePhoneRetailerResellerPermitnew = MPRRMobilePhoneRetailerResellerPermitnew?.Value.ToString(),
+            MPRRMobilePhoneRetailerResellerPermitrenew = MPRRMobilePhoneRetailerResellerPermitrenew?.Value.ToString(),
+            MPSCPMobilePhoneServiceCenterPermitnew = MPSCPMobilePhoneServiceCenterPermitnew?.Value.ToString(),
+            MPSCPMobilePhoneServiceCenterPermitrenew = MPSCPMobilePhoneServiceCenterPermitrenew?.Value.ToString(),
+            ServiceCenterRCERadioCommunicationEquipmentServiceCenterPermitnew = ServiceCenterRCERadioCommunicationEquipmentServiceCenterPermitnew?.Value.ToString(),
+            ServiceCenterRCERadioCommunicationEquipmentServiceCenterPermitrenew = ServiceCenterRCERadioCommunicationEquipmentServiceCenterPermitrenew?.Value.ToString(),
+            ServiceCenterWDNnew = ServiceCenterWDNnew?.Value.ToString(),
+            ServiceCenterWDNrenew = ServiceCenterWDNrenew?.Value.ToString(),
+            SRDShortRangeDeviceRegistrationnew = SRDShortRangeDeviceRegistrationnew?.Value.ToString(),
+            SRDShortRangeDeviceRegistrationrenew = SRDShortRangeDeviceRegistrationrenew?.Value.ToString(),
+            WDNRegistrationnew = WDNRegistrationnew?.Value.ToString(),
+            WDNRegistrationrenew = WDNRegistrationrenew?.Value.ToString(),
+            TVRORegistrationnew = TVRORegistrationnew?.Value.ToString(),
+            TVRORegistrationrenew = TVRORegistrationrenew?.Value.ToString(),
+            RFIDRegistrationnew = RFIDRegistrationnew?.Value.ToString(),
+            RFIDRegistrationrenew = RFIDRegistrationrenew?.Value.ToString(),
+            RadioRegistrationnew = RadioRegistrationnew?.Value.ToString(),
+            RadioRegistrationrenew = RadioRegistrationrenew?.Value.ToString(),
+            CommercialRadioDealernew = CommercialRadioDealernew?.Value.ToString(),
+            CommercialRadioDealerrenew = CommercialRadioDealerrenew?.Value.ToString(),
+            CommercialWDNDealernew = CommercialWDNDealernew?.Value.ToString(),
+            CommercialWDNDealerrenew = CommercialWDNDealerrenew?.Value.ToString(),
+            CPESupplierDealernew = CPESupplierDealernew?.Value.ToString(),
+            CPESupplierDealerrenew = CPESupplierDealerrenew?.Value.ToString(),
+            PermittoImportnew = PermittoImportnew?.Value.ToString(),
+            PermittoImportrenew = PermittoImportrenew?.Value.ToString(),
+            CertificateofExemptionnew = CertificateofExemptionnew?.Value.ToString(),
+            CertificateofExemptionrenew = CertificateofExemptionrenew?.Value.ToString(),
+            ReleaseClearancenew = ReleaseClearancenew?.Value.ToString(),
+            ReleaseClearancerenew = ReleaseClearancerenew?.Value.ToString(),
+            DemoPermitTPnew = DemoPermitTPnew?.Value.ToString(),
+            DemoPermitTPrenew = DemoPermitTPrenew?.Value.ToString(),
+            Storagenew = Storagenew?.Value.ToString(),
+            Storagerenew = Storagerenew?.Value.ToString(),
+            RSLDuplicatenew = RSLDuplicatenew?.Value.ToString(),
+            RSLDuplicaterenew = RSLDuplicaterenew?.Value.ToString(),
+            PermittoDuplicatenew = PermittoDuplicatenew?.Value.ToString(),
+            PermittoDuplicaterenew = PermittoDuplicaterenew?.Value.ToString(),
+            PermitforModificationnew = PermitforModificationnew?.Value.ToString(),
+            PermitforModificationrenew = PermitforModificationrenew?.Value.ToString(),
+            VASValueAddedServicenew = VASValueAddedServicenew?.Value.ToString(),
+            VASValueAddedServicerenew = VASValueAddedServicerenew?.Value.ToString(),
+            othercertificatespermitstotalnew = Convert.ToDouble(PermittoTransportnew?.Value + PermittoPurchasenew?.Value + PermittoPossessnew?.Value + PermittoSellTransfernew?.Value + ConstructionPermitnew?.Value + Dealernew?.Value + MFTRManufacturerTransceiverPermitnew?.Value + MPDPMobilePhoneDealersPermitnew?.Value + MPRRMobilePhoneRetailerResellerPermitnew?.Value + MPSCPMobilePhoneServiceCenterPermitnew?.Value + ServiceCenterRCERadioCommunicationEquipmentServiceCenterPermitnew?.Value + ServiceCenterWDNnew?.Value + SRDShortRangeDeviceRegistrationnew?.Value + WDNRegistrationnew?.Value + TVRORegistrationnew?.Value + RFIDRegistrationnew?.Value + RadioRegistrationnew?.Value + CommercialRadioDealernew?.Value + CommercialWDNDealernew?.Value + CPESupplierDealernew?.Value + PermittoImportnew?.Value + CertificateofExemptionnew?.Value + ReleaseClearancenew?.Value + DemoPermitTPnew?.Value + Storagenew?.Value + RSLDuplicatenew?.Value + PermittoDuplicatenew?.Value + PermitforModificationnew?.Value + VASValueAddedServicenew?.Value).ToString(),
+            othercertificatespermitstotalrenew = Convert.ToDouble(PermittoTransportrenew?.Value + PermittoPurchaserenew?.Value + PermittoPossessrenew?.Value + PermittoSellTransferrenew?.Value + ConstructionPermitrenew?.Value + Dealerrenew?.Value + MFTRManufacturerTransceiverPermitrenew?.Value + MPDPMobilePhoneDealersPermitrenew?.Value + MPRRMobilePhoneRetailerResellerPermitrenew?.Value + MPSCPMobilePhoneServiceCenterPermitrenew?.Value + ServiceCenterRCERadioCommunicationEquipmentServiceCenterPermitrenew?.Value + ServiceCenterWDNrenew?.Value + SRDShortRangeDeviceRegistrationrenew?.Value + WDNRegistrationrenew?.Value + TVRORegistrationrenew?.Value + RFIDRegistrationrenew?.Value + RadioRegistrationrenew?.Value + CommercialRadioDealerrenew?.Value + CommercialWDNDealerrenew?.Value + CPESupplierDealerrenew?.Value + PermittoImportrenew?.Value + CertificateofExemptionrenew?.Value + ReleaseClearancerenew?.Value + DemoPermitTPrenew?.Value + Storagerenew?.Value + RSLDuplicaterenew?.Value + PermittoDuplicaterenew?.Value + PermitforModificationrenew?.Value + VASValueAddedServicerenew?.Value).ToString(),
+
+            month = Month,
+            firstRTGnew = CommercialRadioOperatorCertificateNEW1RTG?.Value.ToString(),
+            firstRTGrenew = CommercialRadioOperatorCertificateRENEW1RTG?.Value.ToString(),
+            firstPHNnew = CommercialRadioOperatorCertificateNEW1PHN?.Value.ToString(),
+            firstPHNrenew = CommercialRadioOperatorCertificateRENEW1PHN?.Value.ToString(),
+            secondRTGnew = CommercialRadioOperatorCertificateNEW2RTG?.Value.ToString(),
+            secondRTGrenew = CommercialRadioOperatorCertificateRENEW2RTG?.Value.ToString(),
+            secondPHNnew = CommercialRadioOperatorCertificateNEW2PHN?.Value.ToString(),
+            secondPHNrenew = CommercialRadioOperatorCertificateRENEW2PHN?.Value.ToString(),
+            thirdRTGnew = CommercialRadioOperatorCertificateNEW3RTG?.Value.ToString(),
+            thirdRTGrenew = CommercialRadioOperatorCertificateRENEW3RTG?.Value.ToString(),
+            thirdPHNnew = CommercialRadioOperatorCertificateNEW3PHN?.Value.ToString(),
+            thirdPHNrenew = CommercialRadioOperatorCertificateRENEW3PHN?.Value.ToString(),
+            commercialtotalnew = Convert.ToDouble(CommercialRadioOperatorCertificateNEW1RTG?.Value + CommercialRadioOperatorCertificateNEW1PHN?.Value + CommercialRadioOperatorCertificateNEW2RTG?.Value + CommercialRadioOperatorCertificateNEW2PHN?.Value +  CommercialRadioOperatorCertificateNEW3RTG?.Value + CommercialRadioOperatorCertificateNEW3PHN?.Value).ToString(),
+            commercialtotalrenew = Convert.ToDouble(CommercialRadioOperatorCertificateRENEW1RTG?.Value + CommercialRadioOperatorCertificateRENEW1PHN?.Value + CommercialRadioOperatorCertificateRENEW2RTG?.Value + CommercialRadioOperatorCertificateRENEW2PHN?.Value + CommercialRadioOperatorCertificateRENEW3RTG?.Value + CommercialRadioOperatorCertificateRENEW3PHN?.Value).ToString(),
+            amateurcertificatenew = AmateurRadioOperatorCertificateNEW?.Value.ToString(),
+            amateurcertificaterenew = AmateurRadioOperatorCertificateRENEW?.Value.ToString(),
+            classAnew = AmateurCertificateClassANEW?.Value.ToString(),
+            classArenew = AmateurCertificateClassARENEW?.Value.ToString(),
+            classBnew = AmateurCertificateClassBNEW?.Value.ToString(),
+            classBrenew = AmateurCertificateClassBRENEW?.Value.ToString(),
+            classCnew = AmateurCertificateClassCNEW?.Value.ToString(),
+            classCrenew = AmateurCertificateClassCRENEW?.Value.ToString(),
+            classDnew = AmateurCertificateClassDNEW?.Value.ToString(),
+            classDrenew = AmateurCertificateClassDRENEW?.Value.ToString(),
+            RLMOPnew = AmateurCertificateClassCNEW?.Value.ToString(),
+            RLMOPrenew = AmateurCertificateClassCRENEW?.Value.ToString(),
+            RROCAircraftnew = RROCAircraftNEW?.Value.ToString(),
+            RROCAircraftrenew = AmateurCertificateClassCRENEW?.Value.ToString(),
+            RROCshipnew = RROCSHIPNEW?.Value.ToString(),
+            RROCshiprenew = AmateurCertificateClassCRENEW?.Value.ToString(),
+            RSTPSLOPnew = AmateurCertificateClassCNEW?.Value.ToString(),
+            RSTPSLOPrenew = AmateurCertificateClassCRENEW?.Value.ToString(),
+            RTTYnew = AmateurCertificateClassCNEW?.Value.ToString(),
+            RTTYrenew = AmateurCertificateClassCRENEW?.Value.ToString(),
+            SROPFBnew = SROPFBNEW?.Value.ToString(),
+            SROPFBrenew = SROPGOVGROCRENEW?.Value.ToString(),
+            SROPGOVnew = SROPGOVGROCNEW?.Value.ToString(),
+            SROPGOVrenew = SROPGOVGROCRENEW?.Value.ToString(),
+            specialtotalnew = Convert.ToDouble(AmateurRadioOperatorCertificateNEW?.Value +
+                                               AmateurCertificateClassANEW?.Value +
+                                               AmateurCertificateClassBNEW?.Value +
+                                               AmateurCertificateClassCNEW?.Value +
+                                               AmateurCertificateClassDNEW?.Value +
+                                               AmateurCertificateClassCNEW?.Value +
+                                               RROCAircraftNEW?.Value +
+                                               RROCSHIPNEW?.Value +
+                                               AmateurCertificateClassCNEW?.Value +
+                                               AmateurCertificateClassCNEW?.Value +
+                                               SROPFBNEW?.Value +
+                                               SROPGOVGROCNEW?.Value)
+                .ToString(CultureInfo.InvariantCulture),
+            specialtotalrenew = Convert.ToDouble(AmateurRadioOperatorCertificateRENEW?.Value + AmateurCertificateClassARENEW?.Value + AmateurCertificateClassBRENEW?.Value + AmateurCertificateClassCRENEW?.Value + AmateurCertificateClassDRENEW?.Value + AmateurCertificateClassCRENEW?.Value + RROCAircraftRENEW?.Value + RROCSHIPRENEW?.Value + AmateurCertificateClassCRENEW?.Value + AmateurCertificateClassCRENEW?.Value + SROPFBRENEW?.Value + SROPGOVGROCRENEW?.Value).ToString(),
+            grandtotalnew = Convert.ToDouble(AmateurRepeaterATRnew?.Value + ATRepeaterClubnew?.Value + ATRadioLicTempPermitnew?.Value + PrivatePortablePCVnew?.Value + PrivateLandMobileMLCVnew?.Value + PrivateLandBaseFBnew?.Value + PrivateFixedFXCVnew?.Value + PrivateFixedFXFBCVnew?.Value + PrivateRepeaterRPTCVnew?.Value + PRSLandBasenew?.Value + PRSMLnew?.Value + (PRSPortablenew?.Value ?? 0) + CivicActionnew?.Value + VSATVerySmallAppertureTerminalnew?.Value + TrunkRepeaternew?.Value + PrivateEarthStationnew?.Value + Telemetry1new?.Value + WDNBaseWirelessDataNetworknew?.Value + WDNPortablenew?.Value + WDNMobilenew?.Value + IntlMSShipStnLicensenew?.Value + IntlCertSESCShipEarthStnInmarsatCminiCnew?.Value + IntlCertSSASShipSecurityAlertSystemnew?.Value + IntlCertLRITLongRangeIdentificationTrackingnew?.Value + IntlCertSESFShipEarthStnInmarsatFnew?.Value + IntlCertSEFBShipEarthStnFleetBroadbandnew?.Value + CoastalFCnew?.Value + FishingBoatnew?.Value + ShipMSDomesticnew?.Value + AircraftMAnew?.Value + AeronauticalFAnew?.Value + GovtPCOnew?.Value + GovtMLCOnew?.Value + GovtFXCOnew?.Value + GovtFBCOnew?.Value + GovtFXFBCOnew?.Value + GovtRPTCOnew?.Value + GovtPRSnew?.Value + RPTCPnew?.Value + FixedMicrowaveFXCPnew?.Value + FXCPMicrowaveCellsitesnew?.Value + FBCPBTSBaseCellsitesnew?.Value + TCCPPublicCorrespondenceTELCOnew?.Value + VSATTCCPnew?.Value + BroadbandWDNWirelessDataNetworkFBnew?.Value + TrunkRepeaterRPTCOnew?.Value + PublicEarthStnTCnew?.Value + Telemetrynew?.Value + TVRORegOnetimeNewnew?.Value + TVROLicenseRenewaleveryyearnew?.Value + CATVLicensenew?.Value + STLLicenseStudiotoTransmitterLinknew?.Value + PermittoTransportnew?.Value + PermittoPurchasenew?.Value + PermittoPossessnew?.Value + PermittoSellTransfernew?.Value + ConstructionPermitnew?.Value + Dealernew?.Value + MFTRManufacturerTransceiverPermitnew?.Value + MPDPMobilePhoneDealersPermitnew?.Value + MPRRMobilePhoneRetailerResellerPermitnew?.Value + MPSCPMobilePhoneServiceCenterPermitnew?.Value + ServiceCenterRCERadioCommunicationEquipmentServiceCenterPermitnew?.Value + ServiceCenterWDNnew?.Value + SRDShortRangeDeviceRegistrationnew?.Value + WDNRegistrationnew?.Value + TVRORegistrationnew?.Value + RFIDRegistrationnew?.Value + RadioRegistrationnew?.Value + CommercialRadioDealernew?.Value + CommercialWDNDealernew?.Value + CPESupplierDealernew?.Value + PermittoImportnew?.Value + CertificateofExemptionnew?.Value + ReleaseClearancenew?.Value + DemoPermitTPnew?.Value + Storagenew?.Value + RSLDuplicatenew?.Value + PermittoDuplicatenew?.Value + PermitforModificationnew?.Value + VASValueAddedServicenew?.Value + CommercialRadioOperatorCertificateNEW1RTG?.Value + CommercialRadioOperatorCertificateNEW1PHN?.Value + CommercialRadioOperatorCertificateNEW2RTG?.Value + CommercialRadioOperatorCertificateNEW2PHN?.Value + CommercialRadioOperatorCertificateNEW3RTG?.Value + CommercialRadioOperatorCertificateNEW3PHN?.Value + AmateurRadioOperatorCertificateNEW?.Value + AmateurCertificateClassANEW?.Value + AmateurCertificateClassBNEW?.Value + AmateurCertificateClassCNEW?.Value + AmateurCertificateClassDNEW?.Value + AmateurCertificateClassCNEW?.Value + RROCAircraftNEW?.Value + RROCSHIPNEW?.Value + AmateurCertificateClassCNEW?.Value + SROPFBNEW?.Value + SROPGOVGROCNEW?.Value).ToString(),
+            grandtotalrenew = Convert.ToDouble(AmateurRepeaterATRrenew?.Value + ATRepeaterClubrenew?.Value + AmateurRepeaterATRrenew?.Value + PrivatePortablePCVrenew?.Value + PrivateLandMobileMLCVrenew?.Value + PrivateLandBaseFBrenew?.Value + PrivateFixedFXCVrenew?.Value + PrivateFixedFXFBCVrenew?.Value + PrivateRepeaterRPTCVrenew?.Value + PRSLandBaserenew?.Value + PRSMLrenew?.Value + PRSPortablerenew?.Value + CivicActionrenew?.Value + VSATVerySmallAppertureTerminalrenew?.Value + TrunkRepeaterrenew?.Value + PrivateEarthStationrenew?.Value + Telemetry1renew?.Value + WDNBaseWirelessDataNetworkrenew?.Value + WDNPortablerenew?.Value + WDNMobilerenew?.Value + IntlMSShipStnLicenserenew?.Value + IntlCertSESCShipEarthStnInmarsatCminiCrenew?.Value + IntlCertSSASShipSecurityAlertSystemrenew?.Value + IntlCertLRITLongRangeIdentificationTrackingrenew?.Value + IntlCertSESFShipEarthStnInmarsatFrenew?.Value + IntlCertSEFBShipEarthStnFleetBroadbandrenew?.Value + CoastalFCrenew?.Value + FishingBoatrenew?.Value + ShipMSDomesticrenew?.Value + AircraftMArenew?.Value + AeronauticalFArenew?.Value + GovtPCOrenew?.Value + GovtMLCOrenew?.Value + GovtFXCOrenew?.Value + GovtFBCOrenew?.Value + GovtFXFBCOrenew?.Value + GovtRPTCOrenew?.Value + GovtPRSrenew?.Value + RPTCPrenew?.Value + FixedMicrowaveFXCPrenew?.Value + FXCPMicrowaveCellsitesrenew?.Value + FBCPBTSBaseCellsitesrenew?.Value + TCCPPublicCorrespondenceTELCOrenew?.Value + VSATTCCPrenew?.Value + BroadbandWDNWirelessDataNetworkFBrenew?.Value + TrunkRepeaterRPTCOrenew?.Value + PublicEarthStnTCrenew?.Value + Telemetryrenew?.Value + TVRORegOnetimeNewrenew?.Value + TVROLicenseRenewaleveryyearrenew?.Value + CATVLicenserenew?.Value + STLLicenseStudiotoTransmitterLinkrenew?.Value + CommercialRadioOperatorCertificateRENEW1RTG?.Value + CommercialRadioOperatorCertificateRENEW1PHN?.Value + CommercialRadioOperatorCertificateRENEW2RTG?.Value + CommercialRadioOperatorCertificateRENEW2PHN?.Value + CommercialRadioOperatorCertificateRENEW3RTG?.Value + CommercialRadioOperatorCertificateRENEW3PHN?.Value).ToString(),
+            radiodealer = RadioDealer?.Value.ToString(),
+            radiomanufacturersupplier = RadioManufacturerSupplier?.Value.ToString(),
+            radiosupplier = RadioSupplier?.Value.ToString(),
+            WDNshortrange = RegisteredWirelessDataNetworkShortRange?.Value.ToString(),
+            mobilephoneequipment = RegisteredMobilePhoneEquipment?.Value.ToString(),
+            total = Convert.ToDouble(RadioDealer?.Value + RadioManufacturerSupplier?.Value + RadioSupplier?.Value + RegisteredWirelessDataNetworkShortRange?.Value + RegisteredMobilePhoneEquipment?.Value).ToString(),
+        };
+
+        appStream = FormsManager.CreateApplicationPdf(applicationPdf, "Reporting_Format_Licensing_Final.pdf");
+
+
+        return appStream;
+    }
 // ---------- helpers ----------
 static DateTime? TryParseDate(string? s)
 {
@@ -48,6 +522,7 @@ static DateTime? TryParseDate(string? s)
 }
 static string EscapeSegments(string p) =>
     string.Join("/", p.Split('/', StringSplitOptions.RemoveEmptyEntries).Select(Uri.EscapeDataString));
+
 static string Lower(string? s) => string.IsNullOrWhiteSpace(s) ? "" : s.ToLowerInvariant();
 static byte[] GenerateCashReceiptsRecordExcel(Reports report, UserModel? user)
     {
@@ -230,6 +705,9 @@ static byte[] GenerateCashReceiptsRecordExcel(Reports report, UserModel? user)
 
         return fileContent;
     }
+
+
+
 static (ApplicationModel? app, JObject? raw) ParseApplicationFromBody(string? body)
 {
     if (string.IsNullOrWhiteSpace(body)) return (null, null);
