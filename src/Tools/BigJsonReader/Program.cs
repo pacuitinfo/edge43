@@ -524,7 +524,7 @@ static DateTime? TryParseDate(string? s)
 }
 
 
- public object CreateDbDateTime(string date, string? format = "")
+object CreateDbDateTime(string date, string? format = "")
 {
     DateTime result;
     if (DateTime.TryParse(date , out result))
