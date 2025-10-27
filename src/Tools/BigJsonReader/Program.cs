@@ -13,6 +13,7 @@ using Newtonsoft.Json.Linq;
 using ClosedXML.Excel;
 using ClosedXML.Report;
 using System.Globalization;
+using EDGE.Application.Processing.Infra.Pdf;
 // ---------- CLI args ----------
 string Arg(string name, string def = "")
 {
