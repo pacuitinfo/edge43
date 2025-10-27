@@ -83,80 +83,107 @@ jobs:
           mkdir -p cache
 
           echo "REPO=${REPO}"
-          echo "LABELS_IN=${LABELS_IN}"
           echo "REGION=${REGION}"
 
-          # Dates
-          start_date="${DATE_START:-2024-01-01}"
-          end_date="${DATE_END:-$(date +%Y-%m-%d)}"
-          current="$start_date"
+          # Default dates
+          START_DATE=${DATE_START:-2020-01-01}
+          END_DATE=${DATE_END:-$(date +%Y-%m-%d)}
 
-          while [ "$(date -d "$current" +%s)" -le "$(date -d "$end_date" +%s)" ]; do
-            next_day=$(date -d "$current +1 day" +%Y-%m-%d)
-            echo "📅 Fetching issues for ${current} → ${next_day}"
+          # Function to get last day of month
+          last_day_of_month() {
+            date -d "$1-01 +1 month -1 day" +%d
+          }
 
-            QUERY="repo:${REPO} state:${STATE} created:${current}..${next_day}"
+          # Function to compute day ranges (1-8, 9-16, 17-end)
+          get_day_ranges() {
+            local year=$1
+            local month=$2
+            local last_day
+            last_day=$(last_day_of_month $year-$month)
 
-            # Append labels to query
-            [ -n "$LABELS_IN" ] && QUERY="${QUERY} label:${LABELS_IN}"
-            [ -n "$REGION" ] && QUERY="${QUERY} label:${REGION}"
+            echo "${year}-${month}-01:${year}-${month}-08"
+            echo "${year}-${month}-09:${year}-${month}-16"
+            echo "${year}-${month}-17:${year}-${month}-${last_day}"
+          }
 
-            echo "Search query: ${QUERY}"
+          YEAR_START=$(echo $START_DATE | cut -d- -f1)
+          YEAR_END=$(echo $END_DATE | cut -d- -f1)
+          MONTH_START=$(echo $START_DATE | cut -d- -f2)
+          MONTH_END=$(echo $END_DATE | cut -d- -f2)
 
-            API_URL="https://api.github.com/search/issues"
-            per_page=100
-            page=1
-            all_items=()
+          all_items=()
 
-            while :; do
-              echo "  Fetching page $page..."
-              resp=$(curl -sSL \
-                -H "Authorization: Bearer $GH_TOKEN" \
-                -H "Accept: application/vnd.github+json" \
-                "${API_URL}?q=$(jq -rn --arg q "$QUERY" '$q|@uri')&per_page=$per_page&page=$page")
+          for YEAR in $(seq $YEAR_START $YEAR_END); do
+            for MONTH in $(seq -w 1 12); do
+              # Skip months outside the start/end range
+              if [[ $YEAR -eq $YEAR_START && $MONTH -lt $MONTH_START ]]; then continue; fi
+              if [[ $YEAR -eq $YEAR_END && $MONTH -gt $MONTH_END ]]; then continue; fi
 
-              [ -z "$resp" ] || [ "$resp" = "null" ] && break
+              for RANGE in $(get_day_ranges $YEAR $MONTH); do
+                echo "🔍 Fetching issues for $RANGE"
 
-              if echo "$resp" | jq -e '.message? | contains("API rate limit exceeded")' >/dev/null 2>&1; then
-                echo "🚫 GitHub API rate limit exceeded — use GH_PAT with higher quota."
-                exit 1
-              fi
+                QUERY="repo:${REPO} state:${STATE} created:${RANGE}"
+                [ -n "$REGION" ] && QUERY="${QUERY} label:${REGION}"
+                [ -n "$LABELS_IN" ] && QUERY="${QUERY} label:${LABELS_IN}"
 
-              count=$(echo "$resp" | jq -r '.items | length // 0' 2>/dev/null || echo 0)
-              echo "  Page $page: $count issues"
-              [ "$count" -eq 0 ] && break
+                API_URL="https://api.github.com/search/issues"
+                per_page=100
+                page=1
+                range_items=()
 
-              all_items+=("$resp")
-              ((page++))
+                while :; do
+                  echo "Fetching page $page..."
+                  resp=$(curl -sSL \
+                    -H "Authorization: Bearer $GH_TOKEN" \
+                    -H "Accept: application/vnd.github+json" \
+                    "${API_URL}?q=$(jq -rn --arg q "$QUERY" '$q|@uri')&per_page=$per_page&page=$page")
+
+                  [ -z "$resp" ] || [ "$resp" = "null" ] && break
+
+                  if echo "$resp" | jq -e '.message? | contains("API rate limit exceeded")' >/dev/null 2>&1; then
+                    echo "🚫 GitHub API rate limit exceeded — use GH_PAT with higher quota."
+                    exit 1
+                  fi
+
+                  count=$(echo "$resp" | jq -r '.items | length // 0' 2>/dev/null || echo 0)
+                  echo "Page $page: $count issues"
+                  [ "$count" -eq 0 ] && break
+
+                  range_items+=("$resp")
+                  ((page++))
+                done
+
+                raw=$(printf '%s\n' "${range_items[@]}" | jq -s '
+                  map(select(type == "object" and .items != null))
+                  | map(.items)
+                  | add
+                  | map(select(.pull_request | not))
+                  | map({
+                      Number: .number,
+                      Title: .title,
+                      Body: (.body // ""),
+                      State: .state,
+                      Url: .html_url,
+                      Labels: (.labels | map(.name))
+                    })
+                ')
+
+                all_items+=("$raw")
+                echo "✅ Collected $(jq length <<<"$raw") issues for $RANGE"
+              done
             done
-
-            # Flatten pages and remove PRs
-            raw=$(printf '%s\n' "${all_items[@]}" | jq -s '
-              map(select(type == "object" and .items != null))
-              | map(.items)
-              | add
-              | map(select(.pull_request | not))
-              | map({
-                  Number: .number,
-                  Title: .title,
-                  Body: (.body // ""),
-                  State: .state,
-                  Url: .html_url,
-                  Labels: (.labels | map(.name))
-                })
-            ')
-
-            issuesJson="cache/report_${current}.json"
-            echo "Writing ${issuesJson}"
-            printf '%s' "$raw" > "$issuesJson"
-
-            echo "Preview first 3 issues for ${current}:"
-            jq '.[0:3]' "$issuesJson" || true
-
-            [ -s "$issuesJson" ] || echo "⚠️ No issues for ${current}"
-
-            current="$next_day"
           done
+
+          # Combine all ranges into one JSON
+          combined=$(printf '%s\n' "${all_items[@]}" | jq -s 'add')
+
+          issuesJson="cache/report_combined.json"
+          echo "Writing combined issues to ${issuesJson}"
+          printf '%s' "$combined" > "$issuesJson"
+
+          echo "Preview first 3 issues:"
+          jq '.[0:3]' "$issuesJson" || true
+
 
 
       - name: Show preview
