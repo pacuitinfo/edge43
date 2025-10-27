@@ -37,7 +37,7 @@ if (string.IsNullOrWhiteSpace(owner) || string.IsNullOrWhiteSpace(repo) || strin
     Console.Error.WriteLine("Missing --owner/--repo/--path");
     Environment.Exit(1);
 }
-public byte[] GenerateReportPdf(ServicesReports application, string? dateStart, string? dateEnd)
+static byte[] GenerateReportPdf(ServicesReports application, string? dateStart, string? dateEnd)
     {
         byte[] appStream = null;
         var AmateurRepeaterATRnew = application.Services.Find(c => c.Service == "Amateur Radio Operator Certificate (NEW)");
