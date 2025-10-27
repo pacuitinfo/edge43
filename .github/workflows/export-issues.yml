@@ -134,7 +134,7 @@ jobs:
               # Skip months outside the start/end range
               if [[ $YEAR -eq $YEAR_START && $MONTH -lt $MONTH_START ]]; then continue; fi
               if [[ $YEAR -eq $YEAR_END && $MONTH -gt $MONTH_END ]]; then continue; fi
-
+              sleep $SLEEP_TIME
               # Generate day ranges for this month
               DAYS=($(get_days_in_range "$YEAR-$MONTH-01" "$(date -d "$YEAR-$MONTH-01 +1 month -1 day" +%F)"))
               for DAY in "${DAYS[@]}"; do
@@ -156,7 +156,7 @@ jobs:
                     "${API_URL}?q=$(jq -rn --arg q "$QUERY" '$q|@uri')&per_page=$per_page&page=$page")
 
                   [ -z "$resp" ] || [ "$resp" = "null" ] && break
-                  sleep $SLEEP_TIME
+                  
                   if echo "$resp" | jq -e '.message? | contains("API rate limit exceeded")' >/dev/null 2>&1; then
                     echo "🚫 GitHub API rate limit exceeded — use GH_PAT with higher quota."
                     exit 1
