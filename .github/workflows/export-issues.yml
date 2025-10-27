@@ -68,101 +68,167 @@ jobs:
             sudo apt-get update && sudo apt-get install -y gh
           fi
 
-      - name: Fetch issues from source repo (no 1000 limit)
+      - name: Fetch issues from source repo (GraphQL, no 1000 limit)
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
           REPO: ${{ github.event.inputs.source_repo || github.repository }}
-          STATE: ${{ 'open' }}
-          LABELS_IN: ${{ github.event.inputs.labels || '' }}
-          DATE_START: ${{ github.event.inputs.dateStart }}
-          DATE_END: ${{ github.event.inputs.dateEnd }}
-          REGION: ${{ github.event.inputs.region }}
+          STATE: ${{ 'open' }}                         # open | closed | all
+          LABELS_IN: ${{ github.event.inputs.labels || '' }}  # comma-separated
+          DATE_START: ${{ github.event.inputs.dateStart }}    # ISO8601 (lower bound)
+          DATE_END: ${{ github.event.inputs.dateEnd }}        # ISO8601 (upper bound, client-side)
+          REGION: ${{ github.event.inputs.region }}           # optional extra label
         run: |
           set -euo pipefail
           mkdir -p cache
 
           echo "REPO=${REPO}"
+          echo "STATE=${STATE}"
           echo "LABELS_IN=${LABELS_IN}"
           echo "REGION=${REGION}"
+          echo "DATE_START=${DATE_START}"
+          echo "DATE_END=${DATE_END}"
 
-          QUERY="repo:${REPO} state:${STATE}"
+          OWNER="${REPO%%/*}"
+          NAME="${REPO##*/}"
 
-          # Append labels to query
-          if [ -n "${LABELS_IN}" ]; then
-            QUERY="${QUERY} label:${LABELS_IN}"
-          fi
-          if [ -n "${REGION}" ]; then
-            QUERY="${QUERY} label:${REGION}"
-          fi
-          echo "Search query: ${QUERY}"
+          # Build states array for GraphQL
+          case "${STATE,,}" in
+            all)   STATES_JSON='["OPEN","CLOSED"]' ;;
+            open)  STATES_JSON='["OPEN"]' ;;
+            closed)STATES_JSON='["CLOSED"]' ;;
+            *)     STATES_JSON='["OPEN"]' ;;
+          esac
 
-          API_URL="https://api.github.com/repos/${REPO}/issues"
-          per_page=100
-          page=1
-          all_items=()
+          # Combine labels (LABELS_IN + REGION) into array (split by comma), drop empties, trim spaces
+          LABELS_JSON=$(jq -cn --arg a "${LABELS_IN}" --arg b "${REGION}" '
+            [$a, $b]
+            | map( . // "" )
+            | join(",")
+            | split(",")
+            | map( . | gsub("^\\s+|\\s+$";"") )
+            | map(select(length>0))
+            | unique
+          ')
+
+          # GraphQL query: page through repository.issues via cursor
+          read -r -d '' GQL_QUERY <<'EOF'
+          query($owner:String!, $name:String!, $after:String, $states:[IssueState!], $labels:[String!], $since:DateTime) {
+            repository(owner:$owner, name:$name) {
+              issues(
+                first: 100,
+                after: $after,
+                states: $states,
+                orderBy: {field: CREATED_AT, direction: ASC},
+                filterBy: { labels: $labels, since: $since }
+              ) {
+                nodes {
+                  number
+                  title
+                  body
+                  state
+                  url
+                  createdAt
+                  updatedAt
+                  closedAt
+                  labels(first: 100) { nodes { name } }
+                }
+                pageInfo { endCursor hasNextPage }
+              }
+            }
+          }
+          EOF
+
+          OUT_TMP="$(mktemp)"
+          echo "[]" > "$OUT_TMP"
+          AFTER=null
+          BATCH=0
 
           while :; do
-            echo "Fetching page $page..."
-            resp=$(curl -sSL \
-              -H "Authorization: Bearer $GH_TOKEN" \
-              -H "Accept: application/vnd.github+json" \
-              "${API_URL}?q=$(jq -rn --arg q "$QUERY" '$q|@uri')&per_page=$per_page&page=$page")
+            BATCH=$((BATCH+1))
+            echo "🔎 Batch $BATCH (after: ${AFTER})"
 
-            # Handle empty or null response
-            if [ -z "$resp" ] || [ "$resp" = "null" ]; then
-              echo "⚠️ Empty or null response received, stopping pagination."
+            VARS=$(jq -n \
+              --arg owner "$OWNER" \
+              --arg name "$NAME" \
+              --argjson states "$STATES_JSON" \
+              --argjson labels "$LABELS_JSON" \
+              --argjson after "$AFTER" \
+              --arg since "${DATE_START:-}" '
+                {
+                  owner: $owner,
+                  name: $name,
+                  after: $after,
+                  states: $states,
+                  labels: $labels
+                }
+                + (if $since == "" then {} else { since: $since } end)
+              ')
+
+            RESP=$(curl -sS -X POST https://api.github.com/graphql \
+              -H "Authorization: bearer $GH_TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -d "$(jq -n --arg query "$GQL_QUERY" --argjson variables "$VARS" '{query:$query, variables:$variables}')")
+
+            # Error handling
+            if jq -e '.errors' >/dev/null 2>&1 <<<"$RESP"; then
+              echo "❌ GraphQL errors:"; jq '.errors' <<<"$RESP"; exit 1
+            fi
+
+            NODES=$(jq '.data.repository.issues.nodes' <<<"$RESP")
+            COUNT=$(jq 'length' <<<"$NODES")
+            echo "→ fetched $COUNT nodes"
+
+            # Stop if no items
+            if [ "$COUNT" -eq 0 ]; then
               break
             fi
 
-            # Detect rate limit
-            if echo "$resp" | jq -e '.message? | contains("API rate limit exceeded")' >/dev/null 2>&1; then
-              echo "🚫 GitHub API rate limit exceeded — use GH_PAT with higher quota."
-              exit 1
+            # Append nodes; if DATE_END set, drop those created after DATE_END
+            if [ -n "${DATE_END:-}" ]; then
+              NODES=$(jq --arg end "${DATE_END}" '[ .[] | select(.createdAt <= $end) ]' <<<"$NODES")
             fi
 
-            # Safely count issues
-            count=$(echo "$resp" | jq -r '.items | length // 0' 2>/dev/null || echo 0)
-            echo "Page $page: $count issues"
+            # Merge into OUT_TMP
+            jq --argjson add "$NODES" '. + $add' "$OUT_TMP" > "${OUT_TMP}.next"
+            mv "${OUT_TMP}.next" "$OUT_TMP"
 
-            # Stop if no issues
-            [ "$count" -eq 0 ] && break
+            # If DATE_END set and last node exceeds end, stop
+            if [ -n "${DATE_END:-}" ]; then
+              ANY_AFTER_END=$(jq --arg end "${DATE_END}" '[ .[] | select(.createdAt > $end) ] | length' <<<"$NODES")
+              # If current filtered NODES is empty or we saw nodes beyond end, and since we sort ASC, we can stop when page has any > end
+              if [ "$ANY_AFTER_END" -gt 0 ] || [ "$(jq 'length' <<<"$NODES")" -eq 0 ]; then
+                echo "⏹️ Reached DATE_END=${DATE_END}; stopping."
+                break
+              fi
+            fi
 
-            # Append page JSON to array
-            all_items+=("$resp")
+            HAS_NEXT=$(jq -r '.data.repository.issues.pageInfo.hasNextPage' <<<"$RESP")
+            END_CURSOR=$(jq -r '.data.repository.issues.pageInfo.endCursor' <<<"$RESP")
 
-            # Print first issue title for quick debug
-            first_title=$(echo "$resp" | jq -r '.items[0].title // empty')
-            [ -n "$first_title" ] && echo "→ $first_title"
-
-            ((page++))
+            [ "$HAS_NEXT" = "true" ] || break
+            AFTER=$(jq -Rn --arg c "$END_CURSOR" '$c')
           done
 
-          echo "📦 Finished fetching: ${#all_items[@]} pages total."
+          # Map to your target shape
+          FINAL=$(jq '
+            [ .[]
+              | {
+                  Number: .number,
+                  Title: .title,
+                  Body:  (.body // ""),
+                  State: .state,
+                  Url:   .url,
+                  Labels: (.labels.nodes | map(.name))
+                }
+            ]
+          ' "$OUT_TMP")
 
-          # Safely flatten all pages, skip nulls, remove pull requests, map fields
-          raw=$(printf '%s\n' "${all_items[@]}" | jq -s '
-            map(select(type == "object" and .items != null))
-            | map(.items)
-            | add
-            | map(select(.pull_request | not))
-            | map({
-                Number: .number,
-                Title: .title,
-                Body: (.body // ""),
-                State: .state,
-                Url: .html_url,
-                Labels: (.labels | map(.name))
-              })
-          ')
-
-          # Build safe filename
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
           issuesJson="cache/report:${DATE_START:+${DATE_START}:}${DATE_END:+${DATE_END}:}${REGION}"
           echo "Writing ${issuesJson}"
-
-          printf '%s' "$raw" > "$issuesJson"
+          printf '%s' "$FINAL" > "$issuesJson"
 
           echo "Preview first 3 issues:"
           jq '.[0:3]' "$issuesJson" || true
