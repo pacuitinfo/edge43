@@ -522,15 +522,14 @@ static DateTime? TryParseDate(string? s)
 }
 
 
-static object CreateDBDateTime(string date)
+ public object CreateDbDateTime(string date, string? format = "")
 {
     DateTime result;
-    if (DateTime.TryParse(date, out result))
+    if (DateTime.TryParse(date , out result))
     {
-        return result;
+        return result.ToString(!string.IsNullOrEmpty(format) ? format : "MM/dd/yyyy" );
     }
-
-    return result;
+    return DBNull.Value;
 }
 static string EscapeSegments(string p) =>
     string.Join("/", p.Split('/', StringSplitOptions.RemoveEmptyEntries).Select(Uri.EscapeDataString));
