@@ -89,30 +89,31 @@ jobs:
             echo "❌ REPO must be 'owner/repo' (got: '$REPO')"; exit 1
           fi
 
-          OWNER="${REPO%%/*}"   # text before first slash
-          NAME="${REPO##*/}"    # text after last slash
-
+          OWNER="${REPO%%/*}"
+          NAME="${REPO##*/}"
           echo "OWNER=$OWNER | NAME=$NAME"
 
-          # Probe repo access first (prints real error if any)
+          # ---- Probe repo access ----
           read -r -d '' Q_PROBE <<'EOF'
           query($owner:String!, $name:String!) {
             repository(owner:$owner, name:$name){ id isPrivate nameWithOwner viewerPermission }
           }
           EOF
+
           VARS_PROBE=$(jq -n --arg owner "$OWNER" --arg name "$NAME" '{owner:$owner,name:$name}')
           PROBE=$(curl -sS -X POST https://api.github.com/graphql \
             -H "Authorization: bearer ${GH_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
             -d "$(jq -n --arg query "$Q_PROBE" --argjson variables "$VARS_PROBE" '{query:$query, variables:$variables}')")
+
           if jq -e '.errors' >/dev/null <<<"$PROBE"; then
             echo "❌ Repo probe failed:"; jq -C '.errors' <<<"$PROBE"
-            echo "➡️  Use a PAT with repo scope (GH_PAT). Ensure workflow has permissions: contents:read, issues:read."
+            echo "➡️  Use a PAT with repo scope (GH_PAT). Ensure job permissions include: contents:read, issues:read."
             exit 1
           fi
           echo "✅ Repo OK: $(jq -r '.data.repository.nameWithOwner') (perm: $(jq -r '.data.repository.viewerPermission'))"
 
-          # States enum
+          # ---- States enum ----
           case "${STATE,,}" in
             all)    STATES_JSON='["OPEN","CLOSED"]' ;;
             open)   STATES_JSON='["OPEN"]' ;;
@@ -120,13 +121,25 @@ jobs:
             *)      STATES_JSON='["OPEN"]' ;;
           esac
 
-          # GraphQL query (no labels/date args; we’ll filter client-side)
+          # ---- GraphQL query (no server-side label/date filters) ----
           read -r -d '' Q <<'EOF'
           query($owner:String!, $name:String!, $after:String, $states:[IssueState!]) {
             repository(owner:$owner, name:$name) {
-              issues(first: 100, after: $after, states: $states, orderBy:{field:CREATED_AT, direction:ASC}) {
+              issues(
+                first: 100,
+                after: $after,
+                states: $states,
+                orderBy:{field: CREATED_AT, direction: ASC}
+              ) {
                 nodes {
-                  number title body state url createdAt updatedAt closedAt
+                  number
+                  title
+                  body
+                  state
+                  url
+                  createdAt
+                  updatedAt
+                  closedAt
                   labels(first: 100) { nodes { name } }
                 }
                 pageInfo { endCursor hasNextPage }
@@ -136,11 +149,18 @@ jobs:
           EOF
 
           OUT_TMP="$(mktemp)"; echo "[]" > "$OUT_TMP"
-          AFTER=null; BATCH=0
+          AFTER=null
+          BATCH=0
 
           while :; do
-            BATCH=$((BATCH+1)); echo "🔎 Batch $BATCH (after: ${AFTER})"
-            VARS=$(jq -n --arg owner "$OWNER" --arg name "$NAME" --argjson after "$AFTER" --argjson states "$STATES_JSON" \
+            BATCH=$((BATCH+1))
+            echo "🔎 Batch $BATCH (after: ${AFTER})"
+
+            VARS=$(jq -n \
+              --arg owner "$OWNER" \
+              --arg name "$NAME" \
+              --argjson after "$AFTER" \
+              --argjson states "$STATES_JSON" \
               '{owner:$owner, name:$name, after:$after, states:$states}')
 
             RESP=$(curl -sS -X POST https://api.github.com/graphql \
@@ -155,23 +175,22 @@ jobs:
             fi
 
             NODES=$(jq '.data.repository.issues.nodes' <<<"$RESP")
-            COUNT=$(jq 'length' <<<"$NODES")
-            [ "$COUNT" -eq 0 ] && break
 
-            # Client-side filters
-            # 1) Labels: keep if matches REGION and/or any of LABELS_IN
-            REGION_LABEL=$(printf '%s' "${REGION:-}")
-            LABELS_CSV=$(printf '%s' "${LABELS_IN:-}")
+            # ---- Client-side filters ----
+            # Labels: REGION + LABELS_IN (comma-separated)
+            REGION_LABEL="${REGION:-}"
+            LABELS_CSV="${LABELS_IN:-}"
             NODES=$(jq --arg region "$REGION_LABEL" --arg labels_csv "$LABELS_CSV" '
               . as $arr
               | if ($region=="" and $labels_csv=="") then $arr
                 else
-                  $wanted := ( ($labels_csv|split(",")|map(gsub("^\\s+|\\s+$";""))|map(select(length>0))) + (if $region=="" then [] else [$region] end) ) | unique;
+                  $wanted := ( ($labels_csv|split(",")|map(gsub("^\\s+|\\s+$";""))|map(select(length>0)))
+                              + (if $region=="" then [] else [$region] end) ) | unique;
                   [ $arr[] | select( any(.labels.nodes[]?; .name as $n | $wanted | index($n)) ) ]
                 end
             ' <<<"$NODES")
 
-            # 2) Date range: createdAt within [DATE_START, DATE_END] if provided
+            # Dates: createdAt in [DATE_START, DATE_END] if provided (ISO8601)
             if [ -n "${DATE_START:-}" ]; then
               NODES=$(jq --arg s "$DATE_START" '[ .[] | select(.createdAt >= $s) ]' <<<"$NODES")
             fi
@@ -179,7 +198,11 @@ jobs:
               NODES=$(jq --arg e "$DATE_END"   '[ .[] | select(.createdAt <= $e) ]' <<<"$NODES")
             fi
 
-            jq --argjson add "$NODES" '. + $add' "$OUT_TMP" > "${OUT_TMP}.next" && mv "${OUT_TMP}.next" "$OUT_TMP"
+            COUNT=$(jq 'length' <<<"$NODES")
+            echo "→ kept $COUNT nodes after filters"
+
+            jq --argjson add "$NODES" '. + $add' "$OUT_TMP" > "${OUT_TMP}.next"
+            mv "${OUT_TMP}.next" "$OUT_TMP"
 
             HAS_NEXT=$(jq -r '.data.repository.issues.pageInfo.hasNextPage' <<<"$RESP")
             END_CURSOR=$(jq -r '.data.repository.issues.pageInfo.endCursor' <<<"$RESP")
@@ -204,6 +227,7 @@ jobs:
           printf '%s' "$FINAL" > "$OUT_PATH"
           echo "Preview:"; jq '.[0:3]' "$OUT_PATH" || true
           [ -s "$OUT_PATH" ] || { echo "❌ No issues produced (check labels/date filters)."; exit 1; }
+
 
       - name: Show preview
         shell: bash
