@@ -86,7 +86,7 @@ jobs:
           echo "REGION=${REGION}"
 
           # Default dates
-          START_DATE=${DATE_START:-2020-01-01}
+          START_DATE=${DATE_START:-2024-07-01}
           END_DATE=${DATE_END:-$(date +%Y-%m-%d)}
 
           # Function to get last day of month
