@@ -77,6 +77,9 @@ jobs:
           REPO: ${{ github.event.inputs.source_repo || github.repository }}
           STATE: ${{ github.event.inputs.state || 'open' }}
           LABELS: ${{ github.event.inputs.labels || '' }}
+          DATE_START: ${{ github.event.inputs.dateStart }}
+          DATE_END: ${{ github.event.inputs.dateEnd }}
+          REGION: ${{ github.event.inputs.region }}
         run: |
           set -euo pipefail
 
