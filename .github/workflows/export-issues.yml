@@ -68,7 +68,7 @@ jobs:
             sudo apt-get update && sudo apt-get install -y gh
           fi
 
-      - name: Fetch ALL issues from source repo (GraphQL — day-by-day, fixed JSON)
+      - name: Fetch issues per day (GraphQL, stable JSON payload)
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
@@ -96,37 +96,55 @@ jobs:
 
           while [ "$(date -d "$current" +%s)" -le "$(date -d "$end_date" +%s)" ]; do
             next_day=$(date -d "$current +1 day" +%Y-%m-%d)
-            echo "📅 Fetching issues from ${current}..${next_day}"
+            echo "📅 ${current}..${next_day}"
 
-            afterCursor=null
+            afterCursor=""
             hasNextPage=true
             page=1
             > "cache/page_${current}.jsonl"
 
             while [ "$hasNextPage" = true ]; do
-              # Use jq to build a valid single-line JSON payload
-              QUERY=$(jq -cn --arg owner "$OWNER" --arg name "$NAME" --arg after "$afterCursor" --arg since "${current}T00:00:00Z" --arg until "${next_day}T00:00:00Z" --arg state "$STATE" '
-                {
-                  query: "query($owner:String!, $name:String!, $after:String, $since:DateTime, $until:DateTime, $state:IssueState!) { repository(owner:$owner, name:$name) { issues(first:100, after:$after, states:[$state], filterBy:{since:$since, until:$until}) { nodes { number title body state url createdAt updatedAt labels(first:10){nodes{name}} } pageInfo { hasNextPage endCursor } } } }",
-                  variables: {
-                    owner: $owner,
-                    name: $name,
-                    after: ($after | select(. != "null")),
-                    since: $since,
-                    until: $until,
-                    state: $state
-                  }
-                }')
+              # Build the JSON request directly
+              cat > query.json <<EOF
+      {
+        "query": "query (\$owner:String!, \$name:String!, \$after:String, \$since:DateTime, \$until:DateTime, \$state:IssueState!) {
+          repository(owner:\$owner, name:\$name) {
+            issues(first:100, after:\$after, states:[\$state], filterBy:{since:\$since, until:\$until}) {
+              nodes {
+                number
+                title
+                body
+                state
+                url
+                createdAt
+                updatedAt
+                labels(first:10) { nodes { name } }
+              }
+              pageInfo { hasNextPage endCursor }
+            }
+          }
+        }",
+        "variables": {
+          "owner": "${OWNER}",
+          "name": "${NAME}",
+          "after": ${afterCursor:-null},
+          "since": "${current}T00:00:00Z",
+          "until": "${next_day}T00:00:00Z",
+          "state": "${STATE^^}"
+        }
+      }
+      EOF
 
               RESP=$(curl -sSL \
                 -H "Authorization: bearer $GH_TOKEN" \
                 -H "Content-Type: application/json" \
-                -d "$QUERY" \
+                --data-binary @query.json \
                 "$API_URL")
 
               if echo "$RESP" | jq -e '.errors' >/dev/null 2>&1; then
                 echo "🚫 GraphQL error:"
                 echo "$RESP" | jq '.errors'
+                cat query.json
                 exit 1
               fi
 
@@ -137,7 +155,7 @@ jobs:
               afterCursor=$(echo "$RESP" | jq -r '.data.repository.issues.pageInfo.endCursor')
               hasNextPage=$(echo "$RESP" | jq -r '.data.repository.issues.pageInfo.hasNextPage')
               [ "$hasNextPage" = "true" ] || break
-              ((page++))
+              page=$((page+1))
             done
 
             jq -s '
@@ -164,6 +182,7 @@ jobs:
           jq -s 'add' cache/issues_*.json > cache/all_issues.json
           echo "Preview:"
           jq '.[0:3]' cache/all_issues.json || true
+
 
 
 
