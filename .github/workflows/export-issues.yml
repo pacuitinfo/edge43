@@ -153,10 +153,9 @@ jobs:
                   ((page++))
                 done
 
-                raw=$(printf '%s\n' "${range_items[@]}" | jq -s '
-                  map(select(type == "object" and .items != null))
-                  | map(.items)
-                  | add
+                raw=$(printf '%s\n' "${all_items[@]}" | jq -s '
+                  map(select(. != null and .items != null) | .items)
+                  | add // []
                   | map(select(.pull_request | not))
                   | map({
                       Number: .number,
