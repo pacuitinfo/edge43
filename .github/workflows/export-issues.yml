@@ -124,7 +124,7 @@ jobs:
             # Safely count issues
             count=$(echo "$resp" | jq -r '.items | length // 0' 2>/dev/null || echo 0)
             echo "Page $page: $count issues"
-            echo "$resp"
+            
             # Stop if no issues
             [ "$count" -eq 0 ] && break
 
