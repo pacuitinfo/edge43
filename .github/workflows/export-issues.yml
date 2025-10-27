@@ -97,7 +97,7 @@ jobs:
           echo "Search query: ${QUERY}"
 
           API_URL="https://api.github.com/search/issues"
-          per_page=100
+          per_page=4000
           page=1
           all_items=()
 
