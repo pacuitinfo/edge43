@@ -68,50 +68,64 @@ jobs:
             sudo apt-get update && sudo apt-get install -y gh
           fi
 
-      - name: Fetch issues from source repo (no 1000 limit)
+      - name: Fetch issues from source repo (by day)
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
           REPO: ${{ github.event.inputs.source_repo || github.repository }}
           STATE: ${{ 'open' }}
           LABELS_IN: ${{ github.event.inputs.labels || '' }}
-          DATE_START: ${{ github.event.inputs.dateStart }}
-          DATE_END: ${{ github.event.inputs.dateEnd }}
           REGION: ${{ github.event.inputs.region }}
+          DATE_START: ${{ github.event.inputs.dateStart || '2020-01-01' }}
+          DATE_END: ${{ github.event.inputs.dateEnd || $(date +%F) }}
         run: |
           set -euo pipefail
           mkdir -p cache
 
           echo "REPO=${REPO}"
+          echo "LABELS_IN=${LABELS_IN}"
           echo "REGION=${REGION}"
+          echo "DATE_START=${DATE_START}"
+          echo "DATE_END=${DATE_END}"
 
-          # Default dates
-          START_DATE=${DATE_START:-2024-07-01}
-          END_DATE=${DATE_END:-$(date +%Y-%m-%d)}
-
-          # Function to get last day of month
-          last_day_of_month() {
-            date -d "$1-01 +1 month -1 day" +%d
+          # Function: list all days in a range
+          get_days_in_range() {
+            local START="$1"
+            local END="$2"
+            current="$START"
+            while [[ "$current" < "$END" || "$current" == "$END" ]]; do
+              echo "$current"
+              current=$(date -I -d "$current + 1 day")
+            done
           }
 
-          # Function to compute day ranges (1-8, 9-16, 17-end)
+          # Function: group days into ranges 1-8, 9-16, 17-24, 25-end
           get_day_ranges() {
-            local year=$1
-            local month=$2
-            local last_day
-            last_day=$(last_day_of_month $year-$month)
+            local YEAR="$1"
+            local MONTH="$2"
+            local DAYS_IN_MONTH
+            DAYS_IN_MONTH=$(date -d "$YEAR-$MONTH-01 +1 month -1 day" +%d)
 
-            echo "${year}-${month}-01:${year}-${month}-08"
-            echo "${year}-${month}-09:${year}-${month}-16"
-            echo "${year}-${month}-17:${year}-${month}-${last_day}"
+            local RANGES=()
+            RANGES+=($(seq -w 1 8))
+            RANGES+=($(seq -w 9 16))
+            RANGES+=($(seq -w 17 24))
+            RANGES+=($(seq -w 25 "$DAYS_IN_MONTH"))
+            
+            local RANGE_LABELS=()
+            for i in {0..3}; do
+              RANGE_LABELS+=("${RANGES[@]:$((i*8)):8}")
+            done
+            echo "${RANGE_LABELS[@]}"
           }
-
-          YEAR_START=$(echo $START_DATE | cut -d- -f1)
-          YEAR_END=$(echo $END_DATE | cut -d- -f1)
-          MONTH_START=$(echo $START_DATE | cut -d- -f2)
-          MONTH_END=$(echo $END_DATE | cut -d- -f2)
 
           all_items=()
+
+          # Parse years and months from start/end dates
+          YEAR_START=$(date -d "$DATE_START" +%Y)
+          YEAR_END=$(date -d "$DATE_END" +%Y)
+          MONTH_START=$(date -d "$DATE_START" +%m)
+          MONTH_END=$(date -d "$DATE_END" +%m)
 
           for YEAR in $(seq $YEAR_START $YEAR_END); do
             for MONTH in $(seq -w 1 12); do
@@ -119,20 +133,21 @@ jobs:
               if [[ $YEAR -eq $YEAR_START && $MONTH -lt $MONTH_START ]]; then continue; fi
               if [[ $YEAR -eq $YEAR_END && $MONTH -gt $MONTH_END ]]; then continue; fi
 
-              for RANGE in $(get_day_ranges $YEAR $MONTH); do
-                echo "🔍 Fetching issues for $RANGE"
+              # Generate day ranges for this month
+              DAYS=($(get_days_in_range "$YEAR-$MONTH-01" "$(date -d "$YEAR-$MONTH-01 +1 month -1 day" +%F)"))
+              for DAY in "${DAYS[@]}"; do
+                echo "🔍 Fetching issues for $DAY"
 
-                QUERY="repo:${REPO} state:${STATE} created:${RANGE}"
+                QUERY="repo:${REPO} state:${STATE} label:${DAY}"
                 [ -n "$REGION" ] && QUERY="${QUERY} label:${REGION}"
                 [ -n "$LABELS_IN" ] && QUERY="${QUERY} label:${LABELS_IN}"
 
                 API_URL="https://api.github.com/search/issues"
                 per_page=100
                 page=1
-                range_items=()
+                day_items=()
 
                 while :; do
-                  echo "Fetching page $page..."
                   resp=$(curl -sSL \
                     -H "Authorization: Bearer $GH_TOKEN" \
                     -H "Accept: application/vnd.github+json" \
@@ -149,11 +164,12 @@ jobs:
                   echo "Page $page: $count issues"
                   [ "$count" -eq 0 ] && break
 
-                  range_items+=("$resp")
+                  day_items+=("$resp")
                   ((page++))
                 done
 
-                raw=$(printf '%s\n' "${all_items[@]}" | jq -s '
+                # Flatten results for this day
+                raw=$(printf '%s\n' "${day_items[@]}" | jq -s '
                   map(select(. != null and .items != null) | .items)
                   | add // []
                   | map(select(.pull_request | not))
@@ -167,24 +183,28 @@ jobs:
                     })
                 ')
 
-                # Only add if raw is not null or empty array
                 if [ "$raw" != "null" ] && [ "$raw" != "[]" ]; then
                     all_items+=("$raw")
                 fi
-                echo "✅ Collected $(jq length <<<"$raw") issues for $RANGE"
+                echo "✅ Collected $(jq length <<<"$raw") issues for $DAY"
               done
             done
           done
 
-          # Combine all ranges into one JSON
-          combined=$(printf '%s\n' "${all_items[@]}" | jq -s 'map(select(. != null)) | add // []')
+          # Combine all days into one JSON file
+          combined=$(printf '%s\n' "${all_items[@]}" | jq -s 'add // []')
 
-          issuesJson="cache/report_combined.json"
-          echo "Writing combined issues to ${issuesJson}"
+          SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
+          SAFE=${SAFE:-ALL}
+          issuesJson="cache/report:${DATE_START}:${DATE_END}:${REGION}"
+          echo "Writing ${issuesJson}"
+
           printf '%s' "$combined" > "$issuesJson"
 
           echo "Preview first 3 issues:"
           jq '.[0:3]' "$issuesJson" || true
+
+          [ -s "$issuesJson" ] || { echo "❌ No issues produced"; exit 1; }
 
 
 
