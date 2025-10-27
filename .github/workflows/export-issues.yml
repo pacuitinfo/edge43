@@ -153,11 +153,16 @@ jobs:
             # Filter out PRs (issues API returns PRs too)
             PAGE_ITEMS=$(jq '[ .[] | select(.pull_request | not) ]' <<<"$BODY")
 
-            # Client-side label filter (in case you prefer strict matching beyond server-side)
             if [[ -n "${LABELS_COMBINED}" ]]; then
               PAGE_ITEMS=$(jq --arg csv "$LABELS_COMBINED" '
-                $need := ($csv|split(",")|map(select(length>0)));
-                [ .[] | select( all($need[]; .labels|map(.name)|index(.)) ) ]
+                # parse wanted labels once -> $need
+                ($csv | split(",") | map(select(length>0))) as $need
+                | [ .[] 
+                    | select(
+                        # keep item only if ALL needed labels are present in its labels
+                        all($need[]; (.labels | map(.name) | index(.)))
+                      )
+                  ]
               ' <<<"$PAGE_ITEMS")
             fi
 
