@@ -106,34 +106,34 @@ jobs:
             while [ "$hasNextPage" = true ]; do
               # Build the JSON request directly
               cat > query.json <<EOF
-      {
-        "query": "query (\$owner:String!, \$name:String!, \$after:String, \$since:DateTime, \$until:DateTime, \$state:IssueState!) {
-          repository(owner:\$owner, name:\$name) {
-            issues(first:100, after:\$after, states:[\$state], filterBy:{since:\$since, until:\$until}) {
-              nodes {
-                number
-                title
-                body
-                state
-                url
-                createdAt
-                updatedAt
-                labels(first:10) { nodes { name } }
+              {
+                "query": "query (\$owner:String!, \$name:String!, \$after:String, \$since:DateTime, \$until:DateTime, \$state:IssueState!) {
+                  repository(owner:\$owner, name:\$name) {
+                    issues(first:100, after:\$after, states:[\$state], filterBy:{since:\$since, until:\$until}) {
+                      nodes {
+                        number
+                        title
+                        body
+                        state
+                        url
+                        createdAt
+                        updatedAt
+                        labels(first:10) { nodes { name } }
+                      }
+                      pageInfo { hasNextPage endCursor }
+                    }
+                  }
+                }",
+                "variables": {
+                  "owner": "${OWNER}",
+                  "name": "${NAME}",
+                  "after": ${afterCursor:-null},
+                  "since": "${current}T00:00:00Z",
+                  "until": "${next_day}T00:00:00Z",
+                  "state": "${STATE^^}"
+                }
               }
-              pageInfo { hasNextPage endCursor }
-            }
-          }
-        }",
-        "variables": {
-          "owner": "${OWNER}",
-          "name": "${NAME}",
-          "after": ${afterCursor:-null},
-          "since": "${current}T00:00:00Z",
-          "until": "${next_day}T00:00:00Z",
-          "state": "${STATE^^}"
-        }
-      }
-      EOF
+              EOF
 
               RESP=$(curl -sSL \
                 -H "Authorization: bearer $GH_TOKEN" \
