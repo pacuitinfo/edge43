@@ -68,31 +68,30 @@ jobs:
             sudo apt-get update && sudo apt-get install -y gh
           fi
 
-      - name: Fetch issues from source repo (GraphQL, no 1k cap)
+      - name: Fetch issues via GraphQL (no 1k cap, debug-friendly)
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
           REPO: ${{ github.event.inputs.source_repo || github.repository }}
           STATE: ${{ 'open' }}                         # open|closed|all
-          LABELS_IN: ${{ github.event.inputs.labels || '' }}  # comma-separated
-          DATE_START: ${{ github.event.inputs.dateStart }}    # ISO8601
-          DATE_END: ${{ github.event.inputs.dateEnd }}        # ISO8601
-          REGION: ${{ github.event.inputs.region }}           # extra label (e.g., VII)
+          LABELS_IN: ${{ github.event.inputs.labels || '' }}  # comma-separated (optional)
+          REGION: ${{ github.event.inputs.region || '' }}     # optional single label, e.g. VII
+          DATE_START: ${{ github.event.inputs.dateStart || '' }} # ISO8601
+          DATE_END: ${{ github.event.inputs.dateEnd   || '' }}   # ISO8601
         run: |
           set -euo pipefail
           mkdir -p cache
 
-          [ -n "${GH_TOKEN:-}" ] || { echo "❌ GH_TOKEN missing"; exit 1; }
-
           echo "REPO=${REPO} | STATE=${STATE} | LABELS_IN=${LABELS_IN} | REGION=${REGION} | DATE_START=${DATE_START} | DATE_END=${DATE_END}"
+          [ -n "${GH_TOKEN:-}" ] || { echo "❌ GH_TOKEN missing"; exit 1; }
 
           OWNER="${REPO%%/*}"
           NAME="${REPO##*/}"
 
-          # Probe repo to fail early with readable error
+          # Probe repo access first (prints real error if any)
           read -r -d '' Q_PROBE <<'EOF'
-          query($owner:String!, $name:String!){
-            repository(owner:$owner, name:$name){ id nameWithOwner isPrivate viewerPermission }
+          query($owner:String!, $name:String!) {
+            repository(owner:$owner, name:$name){ id isPrivate nameWithOwner viewerPermission }
           }
           EOF
           VARS_PROBE=$(jq -n --arg owner "$OWNER" --arg name "$NAME" '{owner:$owner,name:$name}')
@@ -100,13 +99,14 @@ jobs:
             -H "Authorization: bearer ${GH_TOKEN}" \
             -H "Accept: application/vnd.github+json" \
             -d "$(jq -n --arg query "$Q_PROBE" --argjson variables "$VARS_PROBE" '{query:$query, variables:$variables}')")
-
           if jq -e '.errors' >/dev/null <<<"$PROBE"; then
-            echo "❌ Repo probe failed:"; jq '.errors' <<<"$PROBE"; exit 1
+            echo "❌ Repo probe failed:"; jq -C '.errors' <<<"$PROBE"
+            echo "➡️  Use a PAT with repo scope (GH_PAT). Ensure workflow has permissions: contents:read, issues:read."
+            exit 1
           fi
-          echo "✅ Repo: $(jq -r '.data.repository.nameWithOwner') (perm: $(jq -r '.data.repository.viewerPermission'))"
+          echo "✅ Repo OK: $(jq -r '.data.repository.nameWithOwner') (perm: $(jq -r '.data.repository.viewerPermission'))"
 
-          # Build states enum
+          # States enum
           case "${STATE,,}" in
             all)    STATES_JSON='["OPEN","CLOSED"]' ;;
             open)   STATES_JSON='["OPEN"]' ;;
@@ -114,23 +114,11 @@ jobs:
             *)      STATES_JSON='["OPEN"]' ;;
           esac
 
-          # Merge LABELS_IN + REGION into GraphQL labels array
-          LABELS_JSON=$(jq -cn --arg a "${LABELS_IN:-}" --arg b "${REGION:-}" '
-            [$a,$b] | join(",") | split(",")
-            | map(gsub("^\\s+|\\s+$";"")) | map(select(length>0)) | unique
-          ')
-
-          # GraphQL without filterBy (labels only; date filtering done client-side)
+          # GraphQL query (no labels/date args; we’ll filter client-side)
           read -r -d '' Q <<'EOF'
-          query($owner:String!, $name:String!, $after:String, $states:[IssueState!], $labels:[String!]) {
+          query($owner:String!, $name:String!, $after:String, $states:[IssueState!]) {
             repository(owner:$owner, name:$name) {
-              issues(
-                first: 100,
-                after: $after,
-                states: $states,
-                labels: $labels,
-                orderBy: {field: CREATED_AT, direction: ASC}
-              ) {
+              issues(first: 100, after: $after, states: $states, orderBy:{field:CREATED_AT, direction:ASC}) {
                 nodes {
                   number title body state url createdAt updatedAt closedAt
                   labels(first: 100) { nodes { name } }
@@ -145,17 +133,9 @@ jobs:
           AFTER=null; BATCH=0
 
           while :; do
-            BATCH=$((BATCH+1))
-            echo "🔎 Batch $BATCH (after: ${AFTER})"
-
-            VARS=$(jq -n \
-              --arg owner "$OWNER" \
-              --arg name "$NAME" \
-              --argjson states "$STATES_JSON" \
-              --argjson labels "$LABELS_JSON" \
-              --argjson after "$AFTER" '
-                { owner:$owner, name:$name, after:$after, states:$states, labels:$labels }
-              ')
+            BATCH=$((BATCH+1)); echo "🔎 Batch $BATCH (after: ${AFTER})"
+            VARS=$(jq -n --arg owner "$OWNER" --arg name "$NAME" --argjson after "$AFTER" --argjson states "$STATES_JSON" \
+              '{owner:$owner, name:$name, after:$after, states:$states}')
 
             RESP=$(curl -sS -X POST https://api.github.com/graphql \
               -H "Authorization: bearer ${GH_TOKEN}" \
@@ -163,14 +143,29 @@ jobs:
               -d "$(jq -n --arg query "$Q" --argjson variables "$VARS" '{query:$query, variables:$variables}')")
 
             if jq -e '.errors' >/dev/null <<<"$RESP"; then
-              echo "❌ GraphQL errors:"; jq '.errors' <<<"$RESP"
-              echo "ℹ️ Last pageInfo:"; jq '.data.repository.issues.pageInfo // {}' <<<"$RESP" || true
+              echo "❌ GraphQL errors:"; jq -C '.errors' <<<"$RESP"
+              echo "ℹ️ pageInfo:"; jq '.data.repository.issues.pageInfo // {}' <<<"$RESP" || true
               exit 1
             fi
 
             NODES=$(jq '.data.repository.issues.nodes' <<<"$RESP")
+            COUNT=$(jq 'length' <<<"$NODES")
+            [ "$COUNT" -eq 0 ] && break
 
-            # Apply DATE_START/DATE_END client-side (ISO strings, ASC order)
+            # Client-side filters
+            # 1) Labels: keep if matches REGION and/or any of LABELS_IN
+            REGION_LABEL=$(printf '%s' "${REGION:-}")
+            LABELS_CSV=$(printf '%s' "${LABELS_IN:-}")
+            NODES=$(jq --arg region "$REGION_LABEL" --arg labels_csv "$LABELS_CSV" '
+              . as $arr
+              | if ($region=="" and $labels_csv=="") then $arr
+                else
+                  $wanted := ( ($labels_csv|split(",")|map(gsub("^\\s+|\\s+$";""))|map(select(length>0))) + (if $region=="" then [] else [$region] end) ) | unique;
+                  [ $arr[] | select( any(.labels.nodes[]?; .name as $n | $wanted | index($n)) ) ]
+                end
+            ' <<<"$NODES")
+
+            # 2) Date range: createdAt within [DATE_START, DATE_END] if provided
             if [ -n "${DATE_START:-}" ]; then
               NODES=$(jq --arg s "$DATE_START" '[ .[] | select(.createdAt >= $s) ]' <<<"$NODES")
             fi
@@ -178,19 +173,7 @@ jobs:
               NODES=$(jq --arg e "$DATE_END"   '[ .[] | select(.createdAt <= $e) ]' <<<"$NODES")
             fi
 
-            COUNT=$(jq 'length' <<<"$NODES")
-            echo "→ fetched $COUNT nodes after date/label filter"
-
             jq --argjson add "$NODES" '. + $add' "$OUT_TMP" > "${OUT_TMP}.next" && mv "${OUT_TMP}.next" "$OUT_TMP"
-
-            # If DATE_END set and we’ve reached/passed it (ASC), we can stop early
-            if [ -n "${DATE_END:-}" ]; then
-              LAST_CREATED=$(jq -r 'last?.createdAt // empty' <<<"$NODES")
-              if [ -n "$LAST_CREATED" ] && [ "$LAST_CREATED" \> "$DATE_END" ]; then
-                echo "⏹️ Reached DATE_END limit (${DATE_END}); stopping."
-                break
-              fi
-            fi
 
             HAS_NEXT=$(jq -r '.data.repository.issues.pageInfo.hasNextPage' <<<"$RESP")
             END_CURSOR=$(jq -r '.data.repository.issues.pageInfo.endCursor' <<<"$RESP")
@@ -211,12 +194,11 @@ jobs:
             ]
           ' "$OUT_TMP")
 
-          issuesJson="cache/report:${DATE_START:+${DATE_START}:}${DATE_END:+${DATE_END}:}${REGION}"
-          printf '%s' "$FINAL" > "$issuesJson"
+          OUT_PATH="cache/report:${DATE_START:+${DATE_START}:}${DATE_END:+${DATE_END}:}${REGION}"
+          printf '%s' "$FINAL" > "$OUT_PATH"
+          echo "Preview:"; jq '.[0:3]' "$OUT_PATH" || true
+          [ -s "$OUT_PATH" ] || { echo "❌ No issues produced (check labels/date filters)."; exit 1; }
 
-          echo "Preview:"
-          jq '.[0:3]' "$issuesJson" || true
-          [ -s "$issuesJson" ] || { echo "❌ No issues produced"; exit 1; }
       - name: Show preview
         shell: bash
         env:
