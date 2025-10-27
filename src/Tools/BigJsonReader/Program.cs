@@ -31,16 +31,7 @@ string outPath   = Arg("out", "");
 string region    = Arg("region", "");      // OPTIONAL: filter by GitHub label and annotate chart labels
 string? token    = Environment.GetEnvironmentVariable("GH_PAT")
                 ?? Environment.GetEnvironmentVariable("GITHUB_TOKEN");
-static object CreateDBDateTime(string date)
-{
-    DateTime result;
-    if (DateTime.TryParse(date, out result))
-    {
-        return result;
-    }
 
-    return result;
-}
 if (string.IsNullOrWhiteSpace(owner) || string.IsNullOrWhiteSpace(repo) || string.IsNullOrWhiteSpace(path))
 {
     Console.Error.WriteLine("Missing --owner/--repo/--path");
@@ -528,6 +519,18 @@ static DateTime? TryParseDate(string? s)
     if (DateTimeOffset.TryParse(s, out var dto)) return dto.UtcDateTime.Date;
     if (DateTime.TryParse(s, out var dt)) return dt.Date;
     return null;
+}
+
+
+static object CreateDBDateTime(string date)
+{
+    DateTime result;
+    if (DateTime.TryParse(date, out result))
+    {
+        return result;
+    }
+
+    return result;
 }
 static string EscapeSegments(string p) =>
     string.Join("/", p.Split('/', StringSplitOptions.RemoveEmptyEntries).Select(Uri.EscapeDataString));
