@@ -68,14 +68,14 @@ jobs:
             sudo apt-get update && sudo apt-get install -y gh
           fi
 
-      - name: Fetch ALL issues from source repo (GraphQL — no 1000 limit)
+      - name: Fetch ALL issues from source repo (GraphQL — day-by-day)
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
           REPO: ${{ github.event.inputs.source_repo || github.repository }}
           STATE: ${{ github.event.inputs.state || 'OPEN' }}
           LABELS_IN: ${{ github.event.inputs.labels || '' }}
-          DATE_START: ${{ github.event.inputs.dateStart || '' }}
+          DATE_START: ${{ github.event.inputs.dateStart || '2020-01-01' }}
           DATE_END: ${{ github.event.inputs.dateEnd || '' }}
           REGION: ${{ github.event.inputs.region || '' }}
         run: |
@@ -84,97 +84,113 @@ jobs:
 
           OWNER=$(echo "$REPO" | cut -d'/' -f1)
           NAME=$(echo "$REPO" | cut -d'/' -f2)
-
-          echo "🔍 Fetching issues from $OWNER/$NAME (GraphQL mode)"
-          echo "State: ${STATE}, Labels: ${LABELS_IN}, Region: ${REGION}, Dates: ${DATE_START} → ${DATE_END}"
-
-          API_URL="https://api.github.com/graphql"
-          afterCursor="null"
-          hasNextPage=true
-          page=1
-
           STATE_UPPER=$(echo "$STATE" | tr '[:lower:]' '[:upper:]')
+          API_URL="https://api.github.com/graphql"
 
-          > cache/all_pages.jsonl
+          echo "🔍 Repo: $OWNER/$NAME"
+          echo "🗓️  Range: ${DATE_START} → ${DATE_END:-today}"
 
-          while [ "$hasNextPage" = true ]; do
-            echo "📄 Fetching page $page..."
+          # Default DATE_END = today
+          if [ -z "$DATE_END" ]; then
+            DATE_END=$(date +%Y-%m-%d)
+          fi
 
-            QUERY=$(jq -cn --arg owner "$OWNER" --arg name "$NAME" --arg after "$afterCursor" --arg state "$STATE_UPPER" '
-              {
-                query: "query($owner:String!, $name:String!, $after:String) {
-                  repository(owner:$owner, name:$name) {
-                    issues(first:100, after:$after, states: [" + $state + "]) {
-                      nodes {
-                        number
-                        title
-                        body
-                        state
-                        url
-                        createdAt
-                        updatedAt
-                        labels(first:10) { nodes { name } }
+          start_date=$(date -d "$DATE_START" +%Y-%m-%d)
+          end_date=$(date -d "$DATE_END" +%Y-%m-%d)
+
+          current="$start_date"
+          while [ "$(date -d "$current" +%s)" -le "$(date -d "$end_date" +%s)" ]; do
+            next_day=$(date -d "$current +1 day" +%Y-%m-%d)
+            echo "📅 Fetching issues created ${current}..${next_day}"
+
+            afterCursor="null"
+            hasNextPage=true
+            page=1
+            > "cache/page_${current}.jsonl"
+
+            while [ "$hasNextPage" = true ]; do
+              QUERY=$(jq -cn --arg owner "$OWNER" --arg name "$NAME" \
+                --arg after "$afterCursor" --arg state "$STATE_UPPER" \
+                --arg since "${current}T00:00:00Z" --arg until "${next_day}T00:00:00Z" '
+                {
+                  query: "query($owner:String!, $name:String!, $after:String, $since:DateTime, $until:DateTime){
+                    repository(owner:$owner, name:$name) {
+                      issues(first:100, after:$after, states:[$state], 
+                        filterBy:{since:$since, until:$until}) {
+                        nodes {
+                          number
+                          title
+                          body
+                          state
+                          url
+                          createdAt
+                          updatedAt
+                          labels(first:10) { nodes { name } }
+                        }
+                        pageInfo { hasNextPage endCursor }
                       }
-                      pageInfo { hasNextPage endCursor }
                     }
-                  }
-                }",
-                variables: { owner: $owner, name: $name, after: ($after | select(. != "null")) }
-              }')
+                  }",
+                  variables: { owner:$owner, name:$name, after:($after|select(.!="null")),
+                              since:$since, until:$until }
+                }')
 
-            RESP=$(curl -sSL \
-              -H "Authorization: bearer $GH_TOKEN" \
-              -H "Content-Type: application/json" \
-              -d "$QUERY" \
-              "$API_URL")
+              RESP=$(curl -sSL \
+                -H "Authorization: bearer $GH_TOKEN" \
+                -H "Content-Type: application/json" \
+                -d "$QUERY" \
+                "$API_URL")
 
-            if echo "$RESP" | jq -e '.errors' >/dev/null 2>&1; then
-              echo "🚫 GraphQL error:"
-              echo "$RESP" | jq '.errors'
-              exit 1
-            fi
+              if echo "$RESP" | jq -e '.errors' >/dev/null 2>&1; then
+                echo "🚫 GraphQL error:"
+                echo "$RESP" | jq '.errors'
+                exit 1
+              fi
 
-            COUNT=$(echo "$RESP" | jq '.data.repository.issues.nodes | length')
-            echo "→ Page $page: $COUNT issues"
+              COUNT=$(echo "$RESP" | jq '.data.repository.issues.nodes | length')
+              echo "  → Page $page: $COUNT issues"
+              echo "$RESP" >> "cache/page_${current}.jsonl"
 
-            echo "$RESP" >> cache/all_pages.jsonl
+              afterCursor=$(echo "$RESP" | jq -r '.data.repository.issues.pageInfo.endCursor')
+              hasNextPage=$(echo "$RESP" | jq -r '.data.repository.issues.pageInfo.hasNextPage')
+              [ "$hasNextPage" = "true" ] || break
+              ((page++))
+            done
 
-            afterCursor=$(echo "$RESP" | jq -r '.data.repository.issues.pageInfo.endCursor')
-            hasNextPage=$(echo "$RESP" | jq -r '.data.repository.issues.pageInfo.hasNextPage')
-            [ "$hasNextPage" = "true" ] || break
-            ((page++))
+            # Flatten per-day results
+            jq -s '
+              map(.data.repository.issues.nodes)
+              | add
+              | map({
+                  Number: .number,
+                  Title: .title,
+                  Body: (.body // ""),
+                  State: .state,
+                  Url: .url,
+                  CreatedAt: .createdAt,
+                  UpdatedAt: .updatedAt,
+                  Labels: (.labels.nodes | map(.name))
+                })
+            ' "cache/page_${current}.jsonl" > "cache/issues_${current}.json"
+
+            echo "✅ Day ${current}: $(jq length "cache/issues_${current}.json") issues saved."
+
+            current="$next_day"
           done
 
-          echo "📦 Finished fetching $page pages total."
+          echo "🧩 Combining all daily JSON files..."
+          jq -s 'add' cache/issues_*.json > cache/all_issues.json
 
-          echo "🧩 Combining all results..."
-          raw=$(jq -s '
-            map(.data.repository.issues.nodes)
-            | add
-            | map({
-                Number: .number,
-                Title: .title,
-                Body: (.body // ""),
-                State: .state,
-                Url: .url,
-                CreatedAt: .createdAt,
-                UpdatedAt: .updatedAt,
-                Labels: (.labels.nodes | map(.name))
-              })
-          ' cache/all_pages.jsonl)
-
-          # 🧠 Your dynamic filename logic
+          # Your dynamic filename logic
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
           issuesJson="cache/report:${DATE_START:+${DATE_START}:}${DATE_END:+${DATE_END}:}${REGION}"
           echo "📝 Writing ${issuesJson}"
-
-          printf '%s' "$raw" > "$issuesJson"
+          cp cache/all_issues.json "$issuesJson"
 
           echo "Preview first 3 issues:"
           jq '.[0:3]' "$issuesJson" || true
 
-          [ -s "$issuesJson" ] || { echo "❌ No issues produced"; exit 1; }
 
       - name: Show preview
         shell: bash
