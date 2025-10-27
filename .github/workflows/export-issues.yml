@@ -134,9 +134,10 @@ jobs:
               # Skip months outside the start/end range
               if [[ $YEAR -eq $YEAR_START && $MONTH -lt $MONTH_START ]]; then continue; fi
               if [[ $YEAR -eq $YEAR_END && $MONTH -gt $MONTH_END ]]; then continue; fi
-              sleep $SLEEP_TIME
+              
               # Generate day ranges for this month
               DAYS=($(get_days_in_range "$YEAR-$MONTH-01" "$(date -d "$YEAR-$MONTH-01 +1 month -1 day" +%F)"))
+              sleep $SLEEP_TIME
               for DAY in "${DAYS[@]}"; do
                 echo "🔍 Fetching issues for $DAY"
 
