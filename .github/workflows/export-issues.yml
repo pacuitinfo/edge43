@@ -97,7 +97,7 @@ jobs:
           fi
           echo "Search query: ${QUERY}"
 
-          API_URL="https://api.github.com/repos/{REPO}/issues"
+          API_URL="https://api.github.com/repos/${REPO}/issues"
           echo "${API_URL}"
           per_page=100
           page=1
