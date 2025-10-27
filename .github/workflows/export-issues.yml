@@ -79,7 +79,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p cache
-          SLEEP_TIME=10 
+          SLEEP_TIME=60 
           # Set default dates if inputs are empty
           DATE_START="${{ github.event.inputs.dateStart }}"
           DATE_START="${DATE_START:-2025-07-01}"
@@ -137,7 +137,7 @@ jobs:
               
               # Generate day ranges for this month
               DAYS=($(get_days_in_range "$YEAR-$MONTH-01" "$(date -d "$YEAR-$MONTH-01 +1 month -1 day" +%F)"))
-              sleep $SLEEP_TIME
+             
               for DAY in "${DAYS[@]}"; do
                 echo "🔍 Fetching issues for $DAY"
 
@@ -160,7 +160,7 @@ jobs:
                   
                   if echo "$resp" | jq -e '.message? | contains("API rate limit exceeded")' >/dev/null 2>&1; then
                     echo "🚫 GitHub API rate limit exceeded — use GH_PAT with higher quota."
-                    exit 1
+                    sleep $SLEEP_TIME
                   fi
 
                   count=$(echo "$resp" | jq -r '.items | length // 0' 2>/dev/null || echo 0)
