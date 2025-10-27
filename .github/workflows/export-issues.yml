@@ -69,9 +69,6 @@ jobs:
           fi
 
       - name: Fetch issues via GraphQL (no 1k cap, debug-friendly)
-        permissions:
-          contents: read
-          actions: read
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
@@ -88,8 +85,14 @@ jobs:
           echo "REPO=${REPO} | STATE=${STATE} | LABELS_IN=${LABELS_IN} | REGION=${REGION} | DATE_START=${DATE_START} | DATE_END=${DATE_END}"
           [ -n "${GH_TOKEN:-}" ] || { echo "❌ GH_TOKEN missing"; exit 1; }
 
-          OWNER="${REPO%%/*}"
-          NAME="${REPO##*/}"
+          if [[ -z "${REPO:-}" || "$REPO" != */* ]]; then
+            echo "❌ REPO must be 'owner/repo' (got: '$REPO')"; exit 1
+          fi
+
+          OWNER="${REPO%%/*}"   # text before first slash
+          NAME="${REPO##*/}"    # text after last slash
+
+          echo "OWNER=$OWNER | NAME=$NAME"
 
           # Probe repo access first (prints real error if any)
           read -r -d '' Q_PROBE <<'EOF'
