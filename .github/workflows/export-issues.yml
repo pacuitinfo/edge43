@@ -73,20 +73,22 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
           REPO: ${{ github.event.inputs.source_repo || github.repository }}
-          STATE: ${{ 'open' }}
+          STATE: open
           LABELS_IN: ${{ github.event.inputs.labels || '' }}
           REGION: ${{ github.event.inputs.region }}
-          DATE_START: ${{ github.event.inputs.dateStart || '2020-01-01' }}
-          DATE_END: ${{ github.event.inputs.dateEnd || $(date +%F) }}
         run: |
           set -euo pipefail
           mkdir -p cache
 
-          echo "REPO=${REPO}"
-          echo "LABELS_IN=${LABELS_IN}"
-          echo "REGION=${REGION}"
-          echo "DATE_START=${DATE_START}"
-          echo "DATE_END=${DATE_END}"
+          # Set default dates if inputs are empty
+          DATE_START="${{ github.event.inputs.dateStart }}"
+          DATE_START="${DATE_START:-2020-01-01}"
+
+          DATE_END="${{ github.event.inputs.dateEnd }}"
+          DATE_END="${DATE_END:-$(date +%F)}"
+
+          echo "DATE_START=$DATE_START"
+          echo "DATE_END=$DATE_END"
 
           # Function: list all days in a range
           get_days_in_range() {
