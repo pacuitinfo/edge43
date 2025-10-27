@@ -153,16 +153,25 @@ jobs:
             # Filter out PRs (issues API returns PRs too)
             PAGE_ITEMS=$(jq '[ .[] | select(.pull_request | not) ]' <<<"$BODY")
 
+            # Client-side label filter (AND semantics) — robust to odd/missing shapes
             if [[ -n "${LABELS_COMBINED}" ]]; then
               PAGE_ITEMS=$(jq --arg csv "$LABELS_COMBINED" '
-                # parse wanted labels once -> $need
+                # Wanted labels as $need (["VII","foo",...])
                 ($csv | split(",") | map(select(length>0))) as $need
-                | [ .[] 
-                    | select(
-                        # keep item only if ALL needed labels are present in its labels
-                        all($need[]; (.labels | map(.name) | index(.)))
-                      )
-                  ]
+                |
+                [ .[]
+                  | . as $it
+                  # Normalize labels to an array of strings: $have
+                  | ( ($it.labels // [])
+                      | if type=="array" then .
+                        else []          # if labels isn’t an array, treat as empty
+                        end
+                      | map( if type=="string" then . else (.name // "") end )
+                      | map(select(length>0))
+                    ) as $have
+                  # Keep only if all needed labels are present (AND)
+                  | select( ($need|length)==0 or all($need[]; $have | index(.)) )
+                ]
               ' <<<"$PAGE_ITEMS")
             fi
 
@@ -171,7 +180,7 @@ jobs:
               PAGE_ITEMS=$(jq --arg s "$DATE_START" '[ .[] | select(.created_at >= $s) ]' <<<"$PAGE_ITEMS")
             fi
             if [[ -n "${DATE_END:-}" ]]; then
-              PAGE_ITEMS=$(jq --arg e "$DATE_END" '[ .[] | select(.created_at <= $e) ]' <<<"$PAGE_ITEMS")
+              PAGE_ITEMS=$(jq --arg e "$DATE_END"   '[ .[] | select(.created_at <= $e) ]' <<<"$PAGE_ITEMS")
             fi
 
             KEPT=$(jq 'length' <<<"$PAGE_ITEMS")
