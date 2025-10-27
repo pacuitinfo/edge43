@@ -68,7 +68,7 @@ jobs:
             sudo apt-get update && sudo apt-get install -y gh
           fi
 
-      - name: Fetch issues per day (GraphQL, stable JSON payload)
+      - name: Fetch issues per day (GraphQL, fixed heredoc quoting)
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
@@ -104,36 +104,29 @@ jobs:
             > "cache/page_${current}.jsonl"
 
             while [ "$hasNextPage" = true ]; do
-              # Build the JSON request directly
-              cat > query.json <<EOF
+              # Write JSON payload safely; quote heredoc with single quotes
+              cat > query.json <<'EOF'
               {
-                "query": "query (\$owner:String!, \$name:String!, \$after:String, \$since:DateTime, \$until:DateTime, \$state:IssueState!) {
-                  repository(owner:\$owner, name:\$name) {
-                    issues(first:100, after:\$after, states:[\$state], filterBy:{since:\$since, until:\$until}) {
-                      nodes {
-                        number
-                        title
-                        body
-                        state
-                        url
-                        createdAt
-                        updatedAt
-                        labels(first:10) { nodes { name } }
-                      }
-                      pageInfo { hasNextPage endCursor }
-                    }
-                  }
-                }",
+                "query": "query ($owner:String!, $name:String!, $after:String, $since:DateTime, $until:DateTime, $state:IssueState!) { repository(owner:$owner, name:$name) { issues(first:100, after:$after, states:[$state], filterBy:{since:$since, until:$until}) { nodes { number title body state url createdAt updatedAt labels(first:10){nodes{name}} } pageInfo { hasNextPage endCursor } } } }",
                 "variables": {
-                  "owner": "${OWNER}",
-                  "name": "${NAME}",
-                  "after": ${afterCursor:-null},
-                  "since": "${current}T00:00:00Z",
-                  "until": "${next_day}T00:00:00Z",
-                  "state": "${STATE^^}"
+                  "owner": "REPO_OWNER",
+                  "name": "REPO_NAME",
+                  "after": AFTER_CURSOR,
+                  "since": "SINCE_TIME",
+                  "until": "UNTIL_TIME",
+                  "state": "STATE_VAL"
                 }
               }
               EOF
+
+              # Replace placeholders
+              sed -i \
+                -e "s|REPO_OWNER|$OWNER|g" \
+                -e "s|REPO_NAME|$NAME|g" \
+                -e "s|AFTER_CURSOR|${afterCursor:-null}|g" \
+                -e "s|SINCE_TIME|${current}T00:00:00Z|g" \
+                -e "s|UNTIL_TIME|${next_day}T00:00:00Z|g" \
+                -e "s|STATE_VAL|${STATE^^}|g" query.json
 
               RESP=$(curl -sSL \
                 -H "Authorization: bearer $GH_TOKEN" \
@@ -174,7 +167,6 @@ jobs:
             ' "cache/page_${current}.jsonl" > "cache/issues_${current}.json"
 
             echo "✅ ${current}: $(jq length "cache/issues_${current}.json") issues saved."
-
             current=$next_day
           done
 
@@ -182,6 +174,7 @@ jobs:
           jq -s 'add' cache/issues_*.json > cache/all_issues.json
           echo "Preview:"
           jq '.[0:3]' cache/all_issues.json || true
+
 
 
 
