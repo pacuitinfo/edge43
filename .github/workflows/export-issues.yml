@@ -68,7 +68,7 @@ jobs:
             sudo apt-get update && sudo apt-get install -y gh
           fi
 
-      - name: Fetch ALL issues from source repo (GraphQL — day-by-day)
+      - name: Fetch ALL issues from source repo (GraphQL — day-by-day, fixed)
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
@@ -90,15 +90,14 @@ jobs:
           echo "🔍 Repo: $OWNER/$NAME"
           echo "🗓️  Range: ${DATE_START} → ${DATE_END:-today}"
 
-          # Default DATE_END = today
           if [ -z "$DATE_END" ]; then
             DATE_END=$(date +%Y-%m-%d)
           fi
 
           start_date=$(date -d "$DATE_START" +%Y-%m-%d)
           end_date=$(date -d "$DATE_END" +%Y-%m-%d)
-
           current="$start_date"
+
           while [ "$(date -d "$current" +%s)" -le "$(date -d "$end_date" +%s)" ]; do
             next_day=$(date -d "$current +1 day" +%Y-%m-%d)
             echo "📅 Fetching issues created ${current}..${next_day}"
@@ -109,14 +108,18 @@ jobs:
             > "cache/page_${current}.jsonl"
 
             while [ "$hasNextPage" = true ]; do
-              QUERY=$(jq -cn --arg owner "$OWNER" --arg name "$NAME" \
-                --arg after "$afterCursor" --arg state "$STATE_UPPER" \
-                --arg since "${current}T00:00:00Z" --arg until "${next_day}T00:00:00Z" '
+              # Build JSON payload properly — GraphQL query as a string
+              QUERY=$(jq -nc \
+                --arg owner "$OWNER" \
+                --arg name "$NAME" \
+                --arg after "$afterCursor" \
+                --arg since "${current}T00:00:00Z" \
+                --arg until "${next_day}T00:00:00Z" \
+                --arg state "$STATE_UPPER" '
                 {
-                  query: "query($owner:String!, $name:String!, $after:String, $since:DateTime, $until:DateTime){
+                  query: "query($owner:String!, $name:String!, $after:String, $since:DateTime, $until:DateTime, $state:IssueState!) {
                     repository(owner:$owner, name:$name) {
-                      issues(first:100, after:$after, states:[$state], 
-                        filterBy:{since:$since, until:$until}) {
+                      issues(first:100, after:$after, states:[$state], filterBy:{since:$since, until:$until}) {
                         nodes {
                           number
                           title
@@ -131,8 +134,14 @@ jobs:
                       }
                     }
                   }",
-                  variables: { owner:$owner, name:$name, after:($after|select(.!="null")),
-                              since:$since, until:$until }
+                  variables: {
+                    owner: $owner,
+                    name: $name,
+                    after: ($after | select(. != "null")),
+                    since: $since,
+                    until: $until,
+                    state: $state
+                  }
                 }')
 
               RESP=$(curl -sSL \
@@ -141,6 +150,7 @@ jobs:
                 -d "$QUERY" \
                 "$API_URL")
 
+              # Handle GraphQL errors
               if echo "$RESP" | jq -e '.errors' >/dev/null 2>&1; then
                 echo "🚫 GraphQL error:"
                 echo "$RESP" | jq '.errors'
@@ -157,7 +167,6 @@ jobs:
               ((page++))
             done
 
-            # Flatten per-day results
             jq -s '
               map(.data.repository.issues.nodes)
               | add
@@ -181,7 +190,6 @@ jobs:
           echo "🧩 Combining all daily JSON files..."
           jq -s 'add' cache/issues_*.json > cache/all_issues.json
 
-          # Your dynamic filename logic
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
           issuesJson="cache/report:${DATE_START:+${DATE_START}:}${DATE_END:+${DATE_END}:}${REGION}"
@@ -190,6 +198,7 @@ jobs:
 
           echo "Preview first 3 issues:"
           jq '.[0:3]' "$issuesJson" || true
+
 
 
       - name: Show preview
