@@ -68,95 +68,113 @@ jobs:
             sudo apt-get update && sudo apt-get install -y gh
           fi
 
-      - name: Fetch ALL issues from source repo (no 1000 limit)
+      - name: Fetch ALL issues from source repo (GraphQL — no 1000 limit)
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
           REPO: ${{ github.event.inputs.source_repo || github.repository }}
-          STATE: ${{ 'open' }}
+          STATE: ${{ github.event.inputs.state || 'OPEN' }}
           LABELS_IN: ${{ github.event.inputs.labels || '' }}
-          DATE_START: ${{ github.event.inputs.dateStart || '2010-01-01' }}
+          DATE_START: ${{ github.event.inputs.dateStart || '' }}
           DATE_END: ${{ github.event.inputs.dateEnd || '' }}
           REGION: ${{ github.event.inputs.region || '' }}
         run: |
           set -euo pipefail
           mkdir -p cache
-          API_URL="https://api.github.com/search/issues"
 
-          echo "📦 Repo: $REPO"
-          echo "🗓️  Date range: ${DATE_START} → ${DATE_END:-today}"
+          OWNER=$(echo "$REPO" | cut -d'/' -f1)
+          NAME=$(echo "$REPO" | cut -d'/' -f2)
 
-          # Default DATE_END = today
-          if [ -z "$DATE_END" ]; then
-            DATE_END=$(date +%Y-%m-%d)
-          fi
+          echo "🔍 Fetching issues from $OWNER/$NAME (GraphQL mode)"
+          echo "State: ${STATE}, Labels: ${LABELS_IN}, Region: ${REGION}, Dates: ${DATE_START} → ${DATE_END}"
 
-          # Helper to fetch one time range (YYYY-MM-DD)
-          fetch_chunk() {
-            local start=$1
-            local end=$2
-            local query="repo:${REPO} state:${STATE}"
+          API_URL="https://api.github.com/graphql"
+          afterCursor="null"
+          hasNextPage=true
+          page=1
 
-            [ -n "${LABELS_IN}" ] && query="${query} label:${LABELS_IN}"
-            [ -n "${REGION}" ] && query="${query} label:${REGION}"
-            query="${query} created:${start}..${end}"
+          STATE_UPPER=$(echo "$STATE" | tr '[:lower:]' '[:upper:]')
 
-            echo "🔹 Fetching issues created ${start}..${end}"
-            local page=1
-            local per_page=100
-            while :; do
-              resp=$(curl -sSL \
-                -H "Authorization: Bearer $GH_TOKEN" \
-                -H "Accept: application/vnd.github+json" \
-                "${API_URL}?q=$(jq -rn --arg q "$query" '$q|@uri')&per_page=$per_page&page=$page")
+          > cache/all_pages.jsonl
 
-              count=$(echo "$resp" | jq '.items | length')
-              total=$(echo "$resp" | jq -r '.total_count // 0')
-              echo "  Page $page: $count issues (total approx $total)"
+          while [ "$hasNextPage" = true ]; do
+            echo "📄 Fetching page $page..."
 
-              # Stop if nothing
-              [ "$count" -eq 0 ] && break
+            QUERY=$(jq -cn --arg owner "$OWNER" --arg name "$NAME" --arg after "$afterCursor" --arg state "$STATE_UPPER" '
+              {
+                query: "query($owner:String!, $name:String!, $after:String) {
+                  repository(owner:$owner, name:$name) {
+                    issues(first:100, after:$after, states: [" + $state + "]) {
+                      nodes {
+                        number
+                        title
+                        body
+                        state
+                        url
+                        createdAt
+                        updatedAt
+                        labels(first:10) { nodes { name } }
+                      }
+                      pageInfo { hasNextPage endCursor }
+                    }
+                  }
+                }",
+                variables: { owner: $owner, name: $name, after: ($after | select(. != "null")) }
+              }')
 
-              echo "$resp" >> cache/all_pages.jsonl
-              ((page++))
-              [ "$(( (page-1) * per_page ))" -ge 1000 ] && break  # just in case
-            done
-          }
+            RESP=$(curl -sSL \
+              -H "Authorization: bearer $GH_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "$QUERY" \
+              "$API_URL")
 
-          # Iterate month-by-month
-          start_date=$(date -d "$DATE_START" +%Y-%m-%d)
-          end_date=$(date -d "$DATE_END" +%Y-%m-%d)
+            if echo "$RESP" | jq -e '.errors' >/dev/null 2>&1; then
+              echo "🚫 GraphQL error:"
+              echo "$RESP" | jq '.errors'
+              exit 1
+            fi
 
-          current="$start_date"
-          while [ "$(date -d "$current" +%s)" -le "$(date -d "$end_date" +%s)" ]; do
-            next_month=$(date -d "$current +1 month" +%Y-%m-%d)
-            next_day=$(date -d "$next_month -1 day" +%Y-%m-%d)
-            [ "$(date -d "$next_day" +%s)" -gt "$(date -d "$end_date" +%s)" ] && next_day="$end_date"
-            fetch_chunk "$current" "$next_day"
-            current="$next_month"
+            COUNT=$(echo "$RESP" | jq '.data.repository.issues.nodes | length')
+            echo "→ Page $page: $COUNT issues"
+
+            echo "$RESP" >> cache/all_pages.jsonl
+
+            afterCursor=$(echo "$RESP" | jq -r '.data.repository.issues.pageInfo.endCursor')
+            hasNextPage=$(echo "$RESP" | jq -r '.data.repository.issues.pageInfo.hasNextPage')
+            [ "$hasNextPage" = "true" ] || break
+            ((page++))
           done
 
+          echo "📦 Finished fetching $page pages total."
+
           echo "🧩 Combining all results..."
-          jq -s '
-            map(select(type == "object" and .items != null))
-            | map(.items)
+          raw=$(jq -s '
+            map(.data.repository.issues.nodes)
             | add
-            | map(select(.pull_request | not))
             | map({
                 Number: .number,
                 Title: .title,
                 Body: (.body // ""),
                 State: .state,
-                Url: .html_url,
-                Labels: (.labels | map(.name))
+                Url: .url,
+                CreatedAt: .createdAt,
+                UpdatedAt: .updatedAt,
+                Labels: (.labels.nodes | map(.name))
               })
-          ' cache/all_pages.jsonl > cache/all_issues.json
+          ' cache/all_pages.jsonl)
 
-          echo "✅ All issues combined and saved to cache/all_issues.json"
-          echo "Preview (first 3):"
-          jq '.[0:3]' cache/all_issues.json || true
+          # 🧠 Your dynamic filename logic
+          SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
+          SAFE=${SAFE:-ALL}
+          issuesJson="cache/report:${DATE_START:+${DATE_START}:}${DATE_END:+${DATE_END}:}${REGION}"
+          echo "📝 Writing ${issuesJson}"
 
-          [ -s cache/all_issues.json ] || { echo "❌ No issues found."; exit 1; }
+          printf '%s' "$raw" > "$issuesJson"
+
+          echo "Preview first 3 issues:"
+          jq '.[0:3]' "$issuesJson" || true
+
+          [ -s "$issuesJson" ] || { echo "❌ No issues produced"; exit 1; }
 
       - name: Show preview
         shell: bash
