@@ -168,14 +168,17 @@ jobs:
                     })
                 ')
 
-                all_items+=("$raw")
+                # Only add if raw is not null or empty array
+                if [ "$raw" != "null" ] && [ "$raw" != "[]" ]; then
+                    all_items+=("$raw")
+                fi
                 echo "✅ Collected $(jq length <<<"$raw") issues for $RANGE"
               done
             done
           done
 
           # Combine all ranges into one JSON
-          combined=$(printf '%s\n' "${all_items[@]}" | jq -s 'add')
+          combined=$(printf '%s\n' "${all_items[@]}" | jq -s 'map(select(. != null)) | add // []')
 
           issuesJson="cache/report_combined.json"
           echo "Writing combined issues to ${issuesJson}"
