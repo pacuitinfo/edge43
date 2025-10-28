@@ -39,6 +39,142 @@ if (string.IsNullOrWhiteSpace(owner) || string.IsNullOrWhiteSpace(repo) || strin
     Console.Error.WriteLine("Missing --owner/--repo/--path");
     Environment.Exit(1);
 }
+static byte[] GenerateCashierReportePdf(ServicesReports application, string? dateStart, string? dateEnd)
+    {
+        byte[] appStream = null;
+        var Month = dateStart == null ?  CreateDbDateTime(dateStart, "MMMM d").ToString() :  CreateDbDateTime(dateStart, "MMMM d").ToString() + "-" + CreateDbDateTime(dateEnd, "MMMM d").ToString() + ", " + CreateDbDateTime(dateEnd, "yyyy").ToString();
+        var SpectrumUsersFeeSUF2 = application.Fees.Find(c => c.Name == "SUR - Spectrum User Fee");
+        var PermittoPurchase = application.Fees.Find(c => c.Name == "Purchase Permit Fee");
+         var FilingFee = application.Fees.Find(c => c.Name == "Filing Fee" || c.Name == "FillingFee");
+        var PermittoPossessStorage = application.Fees.Find(c => c.Name == "Possess Permit Fee");
+        var ConstructionPermitFee = application.Fees.Find(c => c.Name == "Construction Permit Fee");
+        var RadioStationLicense = application.Fees.Find(c => c.Name == "License Fee");
+        var InspectionFee = application.Fees.Find(c => c.Name == "Inspection Fee");
+        var FinesPenaltiesSurchargesSURRadioStationLicenseSURSpectrumUsersFeeSUFLists = application.Services.FindAll(c => false ).Select(c => c.Surcharge);
+        var FinesPenaltiesSurchargesSURRadioStationLicenseSURSpectrumUsersFeeSUFValue = 0.0;
+        foreach (var FinesPenaltiesSurchargesSURRadioStationLicenseSURSpectrumUsersFeeSUF in
+                 FinesPenaltiesSurchargesSURRadioStationLicenseSURSpectrumUsersFeeSUFLists)
+        {
+            FinesPenaltiesSurchargesSURRadioStationLicenseSURSpectrumUsersFeeSUFValue +=
+                 FinesPenaltiesSurchargesSURRadioStationLicenseSURSpectrumUsersFeeSUF;
+        }
+        var PermitFeesDealersResellerServiceCenterSellTransferRECImport = application.Fees.Find(c => c.Name == "Permit To Import Fee");
+        var InspectionFee1 = application.Fees.Find(c => c.Name == "Inspection Fee (Per Year)");
+        var FilingFee1 = application.Fees.Find(c => c.Name == "Filing Fee" || c.Name == "FillingFee");
+        var FinesPenaltiesSurcharges = application.Services.FindAll(c => c.Type == "permits" && c.Surcharge != 0 ).Select(c => c.Surcharge);
+        var FinesPenaltiesSurchargesValues = 0.0;
+        foreach (var FinesPenaltiesSurcharge in FinesPenaltiesSurcharges)
+        {
+            FinesPenaltiesSurchargesValues += FinesPenaltiesSurcharge;
+        }
+        var RadioStationLicense1 = application.Fees.Find(c => c.Name == "Fixed Station License Fee");
+        var RadioStationInpection1 = application.Fees.Find(c => c.Name == "Fixed Station Inspection Fee");
+        var RadioStationLicense2 = application.Fees.Find(c => c.Name == "LandBase Station License Fee");
+        var RadioStationInpection2 = application.Fees.Find(c => c.Name == "LandBase Station Inspection Fee");
+        var RadioStationLicense3 = application.Fees.Find(c => c.Name == "PublicTrunked Station License Fee");
+        var RadioStationInpection3 = application.Fees.Find(c => c.Name == "PublicTrunked Station Inspection Fee");
+        var RadioStationLicense4 = application.Fees.Find(c => c.Name == "Terrestrial Communication Station License Fee");
+        var RadioStationInpection4 = application.Fees.Find(c => c.Name == "Terrestrial Communication Station Inspection Fee");
+        var RadioStationLicense5 = application.Fees.Find(c => c.Name == "Repeater Station License Fee");
+        var RadioStationInpection5 = application.Fees.Find(c => c.Name == "Repeater Station Inspection Fee");
+        var RadioStationLicense6 = application.Fees.Find(c => c.Name == "LandMobile Station License Fee");
+        var RadioStationInpection6 = application.Fees.Find(c => c.Name == "LandMobile Station Inspection Fee");
+        var RadioStationLicense7 = application.Fees.Find(c => c.Name == "Portable Station License Fee");
+        var RadioStationInpection7 = application.Fees.Find(c => c.Name == "Portable Station Inspection Fee");
+        var RadioOperatorsCert = application.Fees.Find(c => c.Name == "Certificate Fee");
+        var ApplicationFeeFilingFee = application.Fees.Find(c => c.Name == "Seminar Fee / Application Fee");
+        //var SeminarFee = application.Fees.Find(c => c.Name == "Seminar Fee / Application Fee");
+        var FinesPenaltiesSurchargesSURRadioStationLicenseList = application.Services.FindAll(c => c.Type == "licenses" && c.Surcharge != 0 ).Select(c => c.Surcharge);
+        var FinesPenaltiesSurchargesSURRadioStationLicenseValue = 0.0;
+        foreach (var FinesPenaltiesSurchargesSURRadioStationLicense in FinesPenaltiesSurchargesSURRadioStationLicenseList)
+        {
+            FinesPenaltiesSurchargesSURRadioStationLicenseValue += FinesPenaltiesSurchargesSURRadioStationLicense;
+        }
+        var FinesPenaltiesSurchargesSURRadioStationCertificateList = application.Services.FindAll(c => c.Type == "certificates" && c.Surcharge != 0).Select(c => c.Surcharge);
+        var FinesPenaltiesSurchargesSURRadioStationCertificateValue = 0.0;
+        foreach (var FinesPenaltiesSurchargesSURRadioStationCertificate in FinesPenaltiesSurchargesSURRadioStationCertificateList)
+        {
+            FinesPenaltiesSurchargesSURRadioStationCertificateValue += FinesPenaltiesSurchargesSURRadioStationCertificate;
+        }
+        //var SURRadioOperatorsCert = application.Fees.Find(c => c.Name == "Surcharge");
+       // var RepeaterStationInspectionFee = application.Fees.Find(c => c.Name == "Repeater Station Inspection Fee");
+        var RegistrationFee = application.Fees.Find(c => c.Name == "Registration Fee");
+        var SupervisionRegulationFee = application.Fees.Find(c => c.Name == "Annual Registration Fee");
+        var VerificationFeeAuthenticationFees = application.Fees.Find(c => c.Name == "First Copy");
+        var ExaminationFee = application.Fees.Find(c => c.Name == "Examination Fee");
+        var ClearanceCertificationFee = application.Fees.Find(c => c.Name == "Demo/PropagateFee");
+        var ModificationFee = application.Fees.Find(c => c.Name == "Modification Fee");
+        var MiscellaneousIncome = application.Fees.Find(c => c.Name == "Certificate Of Exemption");
+        var DocumentaryStampTaxDST = application.Fees.Find(c => c.Name == "Documentary Stamp Tax");
+       // var OthersPENALTYFORLATEDELIVERY = application.Fees.Find(c => c.Name == "Surcharge");
+        string TOTAL =  Convert.ToInt32(PermittoPurchase?.Value + FilingFee?.Value + PermittoPossessStorage?.Value +
+                            //RepeaterStationInspectionFee?.Value +
+                            RadioStationInpection1?.Value + RadioStationInpection2?.Value + RadioStationInpection3?.Value + RadioStationInpection4?.Value + RadioStationInpection5?.Value + RadioStationInpection6?.Value + RadioStationInpection7?.Value + 
+                            
+                            ConstructionPermitFee?.Value + RadioStationLicense?.Value + InspectionFee?.Value +
+                            //FinesPenaltiesSurchargesSURRadioStationLicenseSURSpectrumUsersFeeSUFValue +
+                            PermitFeesDealersResellerServiceCenterSellTransferRECImport?.Value +
+                            InspectionFee1?.Value + FilingFee1?.Value + FinesPenaltiesSurchargesValues +
+                            RadioStationLicense1?.Value + RadioStationLicense2?.Value + RadioStationLicense3?.Value + RadioStationLicense4?.Value + RadioStationLicense5?.Value + RadioStationLicense6?.Value + RadioStationLicense7?.Value + 
+                            RadioOperatorsCert?.Value +
+                            ApplicationFeeFilingFee?.Value  +
+                            FinesPenaltiesSurchargesSURRadioStationLicenseValue  +
+                            RegistrationFee?.Value + SupervisionRegulationFee?.Value +
+                            VerificationFeeAuthenticationFees?.Value + ExaminationFee?.Value +
+                            ClearanceCertificationFee?.Value + ModificationFee?.Value + MiscellaneousIncome?.Value +
+                            DocumentaryStampTaxDST?.Value ).ToString();
+        float? grandTotal = application.TotalFee;
+        float parsedTotal = 0;
+        float.TryParse(TOTAL, out parsedTotal);
+
+        var others = (grandTotal ?? 0) - parsedTotal;
+        ReportLicense applicationPdf = new()
+        {
+            month = Month,
+            PermittoPurchase = "Php " + $"{PermittoPurchase?.Value:n2}".ToString(),
+            FilingFee = "Php " + $"{FilingFee?.Value:n2}".ToString(),
+            PermittoPossessStorage = "Php " + $"{PermittoPossessStorage?.Value:n2}".ToString(),
+            ConstructionPermitFee = "Php " + $"{ConstructionPermitFee?.Value:n2}".ToString(),
+            RadioStationLicense = "Php " +
+                                  $"{RadioStationLicense?.Value + RadioStationLicense2?.Value + RadioStationLicense3?.Value + RadioStationLicense4?.Value + RadioStationLicense5?.Value + RadioStationLicense6?.Value + RadioStationLicense7?.Value:n2}"
+                                      .ToString(),
+            InspectionFee = "Php " +
+                            $"{InspectionFee?.Value + RadioStationInpection1?.Value + RadioStationInpection2?.Value + RadioStationInpection3?.Value + RadioStationInpection4?.Value + RadioStationInpection5?.Value + RadioStationInpection6?.Value + RadioStationInpection7?.Value:n2}"
+                                .ToString()   ,
+            SpectrumUsersFeeSUF = "Php " + $"{SpectrumUsersFeeSUF2?.Value:n2}".ToString(),
+            //FinesPenaltiesSurchargesSURRadioStationLicenseSURSpectrumUsersFeeSUF = "Php " + string.Format("{0:n2}", FinesPenaltiesSurchargesSURRadioStationLicenseSURSpectrumUsersFeeSUFValue).ToString(),
+            PermitFeesDealersResellerServiceCenterSellTransferRECImport = "Php " +
+                                                                          $"{PermitFeesDealersResellerServiceCenterSellTransferRECImport?.Value:n2}"
+                                                                              .ToString(),
+            InspectionFee1 = "Php " + $"{InspectionFee1?.Value:n2}".ToString(),
+            FilingFee1 = "Php " + $"{FilingFee1?.Value:n2}".ToString(),
+            FinesPenaltiesSurcharges = "Php " + $"{FinesPenaltiesSurchargesValues:n2}".ToString(),
+            RadioStationLicense1 = "Php " + $"{RadioStationLicense1?.Value:n2}".ToString(),
+            RadioOperatorsCert = "Php " + $"{RadioOperatorsCert?.Value:n2}".ToString(),
+            ApplicationFeeFilingFee = "Php " + $"{ApplicationFeeFilingFee?.Value:n2}".ToString(),
+          //  SeminarFee = "Php " + string.Format("{0:n2}", SeminarFee?.Value).ToString(),
+            FinesPenaltiesSurchargesSURRadioStationLicense = "Php " +
+                                                             $"{FinesPenaltiesSurchargesSURRadioStationLicenseValue:n2}"
+                                                                 .ToString(),
+            SURRadioOperatorsCert = "Php " + $"{FinesPenaltiesSurchargesSURRadioStationCertificateValue:n2}".ToString(),
+            RegistrationFee = "Php " + $"{RegistrationFee?.Value:n2}".ToString(),
+            SupervisionRegulationFee = "Php " + $"{SupervisionRegulationFee?.Value:n2}".ToString(),
+            VerificationFeeAuthenticationFees = "Php " + $"{VerificationFeeAuthenticationFees?.Value:n2}".ToString(),
+            ExaminationFee = "Php " + $"{ExaminationFee?.Value:n2}".ToString(),
+            ClearanceCertificationFee = "Php " + $"{ClearanceCertificationFee?.Value:n2}".ToString(),
+            ModificationFee = "Php " + $"{ModificationFee?.Value:n2}".ToString(),
+            MiscellaneousIncome = "Php " + $"{MiscellaneousIncome?.Value:n2}".ToString(),
+            DocumentaryStampTaxDST = "Php " + $"{DocumentaryStampTaxDST?.Value:n2}".ToString(),
+            OthersPENALTYFORLATEDELIVERY = "Php " + others,
+            TOTAL = "Php "+ grandTotal,
+        };
+
+       
+        appStream = FormsManager.CreateApplicationPdf(applicationPdf, "Assesment-SOA.pdf");
+
+
+        return appStream;
+    }
 static byte[] GenerateReportPdf(ServicesReports application, string? dateStart, string? dateEnd)
     {
         byte[] appStream = null;
