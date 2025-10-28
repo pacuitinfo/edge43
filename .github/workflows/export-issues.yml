@@ -93,7 +93,7 @@ jobs:
           safe_region=${LABELS:-ALL}
           safe_region=$(printf '%s' "$safe_region" | tr -cs 'A-Za-z0-9._-' ':')
           issuesJson="cache/report:${DATE_START:+${DATE_START}:}${DATE_END:+${DATE_END}:}${REGION}"
-          echo "${safe_region}"
+          echo "${issuesJson}"
 
           printf '%s' "$raw" | jq -cs '
             flatten
