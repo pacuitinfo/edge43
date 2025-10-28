@@ -829,11 +829,34 @@ while (await reader.ReadAsync())
     if (app is null) continue;
     if (ds.HasValue || de.HasValue)
     {
-        DateTime appDate = app.CreatedAt;
-        if (ds != null && appDate  < ds)
-                continue;
-        if (de != null && appDate  > de)
+        // Defensive: skip if app.CreatedAt isn't valid
+        if (app.CreatedAt == default)
+        {
+            Console.WriteLine($"⚠️ Skipping issue #{issue.Number} — CreatedAt not set");
             continue;
+        }
+
+        DateTime appDate = app.CreatedAt;
+
+        // Normalize times (in case one is local and one is UTC)
+        appDate = DateTime.SpecifyKind(appDate, DateTimeKind.Utc);
+        if (ds.HasValue) ds = DateTime.SpecifyKind(ds.Value, DateTimeKind.Utc);
+        if (de.HasValue) de = DateTime.SpecifyKind(de.Value, DateTimeKind.Utc);
+
+        // Optional: debug output
+        Console.WriteLine($"📅 Issue #{issue.Number} created {appDate:yyyy-MM-dd HH:mm:ss}");
+
+        // Apply range filters
+        if (ds.HasValue && appDate < ds.Value)
+        {
+            Console.WriteLine($"⏩ Skipping issue #{issue.Number} — before {ds:yyyy-MM-dd}");
+            continue;
+        }
+        if (de.HasValue && appDate > de.Value)
+        {
+            Console.WriteLine($"⏩ Skipping issue #{issue.Number} — after {de:yyyy-MM-dd}");
+            continue;
+        }
     }
 
     applications.Add(app);
