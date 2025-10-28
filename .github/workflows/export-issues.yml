@@ -240,6 +240,8 @@ jobs:
           DATE_END: ${{ github.event.inputs.dateEnd }}
           REGION: ${{ github.event.inputs.region }}
         run: |
+          DATE_START="${{ github.event.inputs.dateStart }}"
+          DATE_START="${DATE_START:-2025-07-01}"
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
           issuesJson="cache/report:${DATE_START:+${DATE_START}:}${DATE_END:+${DATE_END}:}${REGION}"
