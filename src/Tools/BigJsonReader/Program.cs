@@ -1412,8 +1412,52 @@ string issueKey = "cache/" + $"{regionKey}";
 string newPath = Regex.Replace(issueKey, @"T[\d:.]+Z", string.Empty);
 var issueBody = JsonConvert.SerializeObject(servicesReports);
 var result = await GitHubHelper.CreateOrUpdateIssue(newPath, issueBody);
-var generatereportpdf =GenerateReportPdf(servicesReports, dateStart, dateEnd);
+var fileContext =GenerateReportPdf(servicesReports, dateStart, dateEnd);
+ if (fileContext != null)
+            {
+                  string misRegionKey = Regex.Replace(regionKey, @"T[\d:.]+Z", string.Empty);
+                var fileSoaName = $"mis-reports/cache/{misRegionKey}"; 
+                var uploadResult = await GitHubHelper.UploadStream(
+                    name: $"{fileSoaName}.xlsx",
+                    file: fileContext, // ✅ use fileContext here
+                    githubToken: Environment.GetEnvironmentVariable("GH_PAT"),
+                    repoOwner: "pacuitinfo",
+                    repoName: "edge43",
+                    folder: "reports",
+                    branch: "main"
+                );
+                if (uploadResult.Success){
+                    var report = new SoaReportModel
+                    {
+                        Name = $"MIS {misRegionKey}",
+                        Description = "Auto-generated MIS PDF reports",
+                        Status = "completed"
+                    };
+                    report.Urls.Add( new UrlModel(){
+                        Url = uploadResult.Url,
+                        Name = "MIS"
+                    });
+                    report.Touch();
+  var tags = new[] { "mis" };
 
+var envDateStart = Environment.GetEnvironmentVariable("DATE_START");
+if (!string.IsNullOrEmpty(envDateStart))
+    tags = tags.Concat(new[] { envDateStart }).ToArray();
+
+var envDateEnd = Environment.GetEnvironmentVariable("DATE_END");
+if (!string.IsNullOrEmpty(envDateEnd))
+    tags = tags.Concat(new[] { envDateEnd }).ToArray();
+var resultMis = await GitHubHelper.CreateOrUpdateIssue(
+    misRegionKey,
+    JsonConvert.SerializeObject(report),
+   tags
+);
+         Console.WriteLine(  JsonConvert.SerializeObject(resultMis))  ;        
+                }
+                   
+                else
+                    Console.WriteLine($"❌ Upload failed: {uploadResult.Message}");
+            }
  
 // ===================== types (must come AFTER all top-level statements) =====================
 public class UrlModel {
