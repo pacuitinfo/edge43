@@ -830,9 +830,9 @@ while (await reader.ReadAsync())
     if (ds.HasValue || de.HasValue)
     {
         DateTime appDate = app.CreatedAt;
-        if (ds.HasValue && appDate.Value < ds.Value)
+        if (ds != null && appDate  < ds)
                 continue;
-        if (de.HasValue && appDate.Value > de.Value)
+        if (de != null && appDate  > de)
             continue;
     }
 
