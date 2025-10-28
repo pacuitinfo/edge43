@@ -1501,7 +1501,7 @@ foreach (var d in days)
     foreach (var s in statuses)
     {
         var count = (dict != null && dict.TryGetValue(s, out var c)) ? c : 0;
-        seriesMap[s].data.Add(total > 0 ? (double)count  : 0m);
+        seriesMap[s].data.Add(total > 0 ? (double)count  : 0.0);
     }
 }
 
