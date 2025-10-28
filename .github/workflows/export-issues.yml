@@ -132,8 +132,8 @@ jobs:
           for YEAR in $(seq $YEAR_START $YEAR_END); do
             for MONTH in $(seq -w 1 12); do
               # Skip months outside the start/end range
-              if [[ $YEAR -eq $YEAR_START && $MONTH -lt $MONTH_START ]]; then continue; fi
-              if [[ $YEAR -eq $YEAR_END && $MONTH -gt $MONTH_END ]]; then continue; fi
+              if [[ $YEAR -eq $YEAR_START && $((10#$MONTH)) -lt $((10#$MONTH_START)) ]]; then continue; fi
+              if [[ $YEAR -eq $YEAR_END   && $((10#$MONTH)) -gt $((10#$MONTH_END)) ]]; then continue; fi
               
               # Generate day ranges for this month
               DAYS=($(get_days_in_range "$YEAR-$MONTH-01" "$(date -d "$YEAR-$MONTH-01 +1 month -1 day" +%F)"))
@@ -199,7 +199,7 @@ jobs:
 
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
-          issuesJson="cache/report:${DATE_START}:${DATE_END}:${REGION}"
+          issuesJson="cache/report:${DATE_START:+${DATE_START}:}${DATE_END:+${DATE_END}:}${REGION}"
           echo "Writing ${issuesJson}"
 
           printf '%s' "$combined" > "$issuesJson"
