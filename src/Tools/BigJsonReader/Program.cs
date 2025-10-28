@@ -827,8 +827,46 @@ while (await reader.ReadAsync())
     // Parse Body (JSON string) into ApplicationModel
     var (app, innerJo) = ParseApplicationFromBody(issue.Body);
     if (app is null) continue;
+    if (ds.HasValue || de.HasValue)
+    {
+        DateTime? appDate = app.SubmittedDate ?? app.CreatedDate ?? app.UpdatedDate;
+
+        if (appDate.HasValue)
+        {
+            // if ds exists and appDate < ds → skip
+            if (ds.HasValue && appDate.Value < ds.Value)
+                continue;
+
+            // if de exists and appDate > de → skip
+            if (de.HasValue && appDate.Value > de.Value)
+                continue;
+        }
+        else
+        {
+            // if no valid date in application, skip it
+            continue;
+        }
+    }
 
     applications.Add(app);
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
         
 
