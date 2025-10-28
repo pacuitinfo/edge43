@@ -123,9 +123,9 @@ static byte[] GenerateCashierReportePdf(ServicesReports application, string? dat
                             VerificationFeeAuthenticationFees?.Value + ExaminationFee?.Value +
                             ClearanceCertificationFee?.Value + ModificationFee?.Value + MiscellaneousIncome?.Value +
                             DocumentaryStampTaxDST?.Value ).ToString();
-        float? grandTotal = application.TotalFee;
-        float parsedTotal = 0;
-        float.TryParse(TOTAL, out parsedTotal);
+        decimal? grandTotal = application.TotalFee;
+        decimal parsedTotal = 0;
+        decimal.TryParse(TOTAL, out parsedTotal);
 
         var others = (grandTotal ?? 0) - parsedTotal;
         ReportLicense applicationPdf = new()
