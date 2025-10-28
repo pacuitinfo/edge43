@@ -830,22 +830,10 @@ while (await reader.ReadAsync())
     if (ds.HasValue || de.HasValue)
     {
         DateTime appDate = app.CreatedAt;
-
-        if (appDate.HasValue)
-        {
-            // if ds exists and appDate < ds → skip
-            if (ds.HasValue && appDate.Value < ds.Value)
+        if (ds.HasValue && appDate.Value < ds.Value)
                 continue;
-
-            // if de exists and appDate > de → skip
-            if (de.HasValue && appDate.Value > de.Value)
-                continue;
-        }
-        else
-        {
-            // if no valid date in application, skip it
+        if (de.HasValue && appDate.Value > de.Value)
             continue;
-        }
     }
 
     applications.Add(app);
