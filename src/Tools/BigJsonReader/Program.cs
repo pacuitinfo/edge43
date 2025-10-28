@@ -832,7 +832,7 @@ while (await reader.ReadAsync())
         // Defensive: skip if app.CreatedAt isn't valid
         if (app.CreatedAt == default)
         {
-            Console.WriteLine($"⚠️ Skipping issue #{issue.Number} — CreatedAt not set");
+            //Console.WriteLine($"⚠️ Skipping issue #{issue.Number} — CreatedAt not set");
             continue;
         }
 
