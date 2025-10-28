@@ -1564,7 +1564,7 @@ var fileContext2 =GenerateCashierReportePdf(servicesReports, dateStart, dateEnd)
                 );
                  var filecashierName = $"cashier-reports/cache/{soaRegionKey}"; 
                 var uploadResultcashier = await GitHubHelper.UploadStream(
-                    name: $"{filecashierName}.xlsx",
+                    name: $"{filecashierName}.pdf",
                     file: fileContext2, // ✅ use fileContext here
                     githubToken: Environment.GetEnvironmentVariable("GH_PAT"),
                     repoOwner: "pacuitinfo",
