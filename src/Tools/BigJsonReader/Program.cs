@@ -1443,7 +1443,7 @@ var envDateEnd = Environment.GetEnvironmentVariable("DATE_END");
 if (!string.IsNullOrEmpty(envDateEnd))
     tags = tags.Concat(new[] { envDateEnd }).ToArray();
 var resultMis = await GitHubHelper.CreateOrUpdateIssue(
-    misRegionKey,
+    soaRegionKey,
     JsonConvert.SerializeObject(report),
    tags
 );
