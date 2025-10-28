@@ -156,20 +156,41 @@ jobs:
                     -H "Accept: application/vnd.github+json" \
                     "${API_URL}?q=$(jq -rn --arg q "$QUERY" '$q|@uri')&per_page=$per_page&page=$page")
 
+                  # Stop if empty or null
                   [ -z "$resp" ] || [ "$resp" = "null" ] && break
-                  
+
+                  # Handle rate limit
                   if echo "$resp" | jq -e '.message? | contains("API rate limit exceeded")' >/dev/null 2>&1; then
-                    echo "🚫 GitHub API rate limit exceeded — use GH_PAT with higher quota."
-                    
+                    echo "🚫 GitHub API rate limit exceeded — sleeping for $SLEEP_TIME seconds..."
+                    sleep "$SLEEP_TIME"
+                    continue
                   fi
-                  sleep $SLEEP_TIME
+
+                  # Count issues on this page
                   count=$(echo "$resp" | jq -r '.items | length // 0' 2>/dev/null || echo 0)
                   echo "Page $page: $count issues"
-                  [ "$count" -eq 0 ] && break
 
+                  # If this page has fewer than 100 issues → stop pagination (no more pages)
+                  if [[ "$count" -lt 100 ]]; then
+                    echo "✅ Page $page has less than 100 issues → stopping pagination for this range."
+                    day_items+=("$resp")
+                    break
+                  fi
+
+                  # Append and continue
                   day_items+=("$resp")
                   ((page++))
                 done
+
+                # After loop ends, check if total < 100 → skip saving results
+                total_count=$(printf '%s\n' "${day_items[@]}" | jq -s '[.[] | .items | length] | add // 0')
+                if [[ "$total_count" -lt 100 ]]; then
+                  echo "⚠️ Skipping $DAY — only $total_count issues (less than 100 pages worth)"
+                  continue
+                fi
+
+                echo "✅ Collected $total_count issues for $DAY"
+
 
                 # Flatten results for this day
                 raw=$(printf '%s\n' "${day_items[@]}" | jq -s '
