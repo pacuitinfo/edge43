@@ -772,7 +772,8 @@ http.DefaultRequestHeaders.Add("X-GitHub-Api-Version", "2022-11-28");
 Console.Error.WriteLine(owner);
 Console.Error.WriteLine(repo);
 Console.Error.WriteLine(path);
-Console.Error.WriteLine(regionKey);
+Console.Error.WriteLine(ds);
+Console.Error.WriteLine(de);
 // 1) metadata → download_url
 var metaUrl = $"https://api.github.com/repos/{repo}/contents/{EscapeSegments(regionKey)}?ref={Uri.EscapeDataString(@ref)}";
 Console.Error.WriteLine(metaUrl);
