@@ -1413,6 +1413,7 @@ string newPath = Regex.Replace(issueKey, @"T[\d:.]+Z", string.Empty);
 var issueBody = JsonConvert.SerializeObject(servicesReports);
 var result = await GitHubHelper.CreateOrUpdateIssue(newPath, issueBody);
 var fileContext1 =GenerateReportPdf(servicesReports, dateStart, dateEnd);
+
  if (fileContext1 != null)
             {
                   string misRegionKey = Regex.Replace(regionKey, @"T[\d:.]+Z", string.Empty);
@@ -1426,6 +1427,7 @@ var fileContext1 =GenerateReportPdf(servicesReports, dateStart, dateEnd);
                     folder: "reports",
                     branch: "main"
                 );
+                console.log(uploadResult)
                 if (uploadResult.Success){
                     var report = new SoaReportModel
                     {
