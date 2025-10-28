@@ -1412,14 +1412,14 @@ string issueKey = "cache/" + $"{regionKey}";
 string newPath = Regex.Replace(issueKey, @"T[\d:.]+Z", string.Empty);
 var issueBody = JsonConvert.SerializeObject(servicesReports);
 var result = await GitHubHelper.CreateOrUpdateIssue(newPath, issueBody);
-var fileContext =GenerateReportPdf(servicesReports, dateStart, dateEnd);
- if (fileContext != null)
+var fileContext1 =GenerateReportPdf(servicesReports, dateStart, dateEnd);
+ if (fileContext1 != null)
             {
                   string misRegionKey = Regex.Replace(regionKey, @"T[\d:.]+Z", string.Empty);
                 var fileSoaName = $"mis-reports/cache/{misRegionKey}"; 
                 var uploadResult = await GitHubHelper.UploadStream(
-                    name: $"{fileSoaName}.xlsx",
-                    file: fileContext, // ✅ use fileContext here
+                    name: $"{fileSoaName}.pdf",
+                    file: fileContext1, // ✅ use fileContext here
                     githubToken: Environment.GetEnvironmentVariable("GH_PAT"),
                     repoOwner: "pacuitinfo",
                     repoName: "edge43",
