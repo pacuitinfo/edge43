@@ -74,6 +74,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_PAT || secrets.GITHUB_TOKEN }}
           REPO: ${{ github.event.inputs.source_repo || github.repository }}
           STATE: open
+          DATE_START: ${{ github.event.inputs.dateStart }}
+          DATE_END: ${{ github.event.inputs.dateEnd }}
           LABELS_IN: ${{ github.event.inputs.labels || '' }}
           LABELS: ${{ github.event.inputs.labels || '' }}
           REGION: ${{ github.event.inputs.region }}
