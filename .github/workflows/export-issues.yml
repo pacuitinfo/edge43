@@ -90,145 +90,34 @@ jobs:
           echo "DATE_START=$DATE_START"
           echo "DATE_END=$DATE_END"
 
-          # Function: list all days in a range
-          get_days_in_range() {
-            local START="$1"
-            local END="$2"
-            current="$START"
-            while [[ "$current" < "$END" || "$current" == "$END" ]]; do
-              echo "$current"
-              current=$(date -I -d "$current + 1 day")
-            done
-          }
+          ARGS=( "repos/${REPO}/issues" -X GET --paginate -H "Accept: application/vnd.github+json" -f per_page=100 -f state="${STATE}" )
+          if [ -n "${REGION}" ]; then
+            ARGS+=( -f labels="${REGION}" )
+          fi
 
-          # Function: group days into ranges 1-8, 9-16, 17-24, 25-end
-          get_day_ranges() {
-            local YEAR="$1"
-            local MONTH="$2"
-            local DAYS_IN_MONTH
-            DAYS_IN_MONTH=$(date -d "$YEAR-$MONTH-01 +1 month -1 day" +%d)
-
-            local RANGES=()
-            RANGES+=($(seq -w 1 8))
-            RANGES+=($(seq -w 9 16))
-            RANGES+=($(seq -w 17 24))
-            RANGES+=($(seq -w 25 "$DAYS_IN_MONTH"))
-            
-            local RANGE_LABELS=()
-            for i in {0..3}; do
-              RANGE_LABELS+=("${RANGES[@]:$((i*8)):8}")
-            done
-            echo "${RANGE_LABELS[@]}"
-          }
-
-          all_items=()
-
-          # Parse years and months from start/end dates
-          YEAR_START=$(date -d "$DATE_START" +%Y)
-          YEAR_END=$(date -d "$DATE_END" +%Y)
-          MONTH_START=$(date -d "$DATE_START" +%m)
-          MONTH_END=$(date -d "$DATE_END" +%m)
-
-          for YEAR in $(seq $YEAR_START $YEAR_END); do
-            for MONTH in $(seq -w 1 12); do
-              # Skip months outside the start/end range
-              if [[ $YEAR -eq $YEAR_START && $((10#$MONTH)) -lt $((10#$MONTH_START)) ]]; then continue; fi
-              if [[ $YEAR -eq $YEAR_END   && $((10#$MONTH)) -gt $((10#$MONTH_END)) ]]; then continue; fi
-              
-              # Generate day ranges for this month
-              DAYS=($(get_days_in_range "$YEAR-$MONTH-01" "$(date -d "$YEAR-$MONTH-01 +1 month -1 day" +%F)"))
-             
-              for DAY in "${DAYS[@]}"; do
-                echo "🔍 Fetching issues for $DAY"
-
-                QUERY="repo:${REPO} state:${STATE} label:${DAY}"
-                [ -n "$REGION" ] && QUERY="${QUERY} label:${REGION}"
-                [ -n "$LABELS_IN" ] && QUERY="${QUERY} label:${LABELS_IN}"
-
-                API_URL="https://api.github.com/search/issues"
-                per_page=100
-                page=1
-                day_items=()
-
-                while :; do
-                  resp=$(curl -sSL \
-                    -H "Authorization: Bearer $GH_TOKEN" \
-                    -H "Accept: application/vnd.github+json" \
-                    "${API_URL}?q=$(jq -rn --arg q "$QUERY" '$q|@uri')&per_page=$per_page&page=$page")
-
-                  # Stop if empty or null
-                  [ -z "$resp" ] || [ "$resp" = "null" ] && break
-
-                  # Handle rate limit
-                  if echo "$resp" | jq -e '.message? | contains("API rate limit exceeded")' >/dev/null 2>&1; then
-                    echo "🚫 GitHub API rate limit exceeded — sleeping for $SLEEP_TIME seconds..."
-                    sleep "$SLEEP_TIME"
-                    continue
-                  fi
-
-                  # Count issues on this page
-                  count=$(echo "$resp" | jq -r '.items | length // 0' 2>/dev/null || echo 0)
-                  echo "Page $page: $count issues"
-
-                  # If this page has fewer than 100 issues → stop pagination (no more pages)
-                  if [[ "$count" -lt 100 ]]; then
-                    echo "✅ Page $page has less than 100 issues → stopping pagination for this range."
-                    day_items+=("$resp")
-                    break
-                  fi
-
-                  # Append and continue
-                  day_items+=("$resp")
-                  ((page++))
-                done
-
-                # After loop ends, check if total < 100 → skip saving results
-                total_count=$(printf '%s\n' "${day_items[@]}" | jq -s '[.[] | .items | length] | add // 0')
-                if [[ "$total_count" -lt 100 ]]; then
-                  echo "⚠️ Skipping $DAY — only $total_count issues (less than 100 pages worth)"
-                  continue
-                fi
-
-                echo "✅ Collected $total_count issues for $DAY"
-
-
-                # Flatten results for this day
-                raw=$(printf '%s\n' "${day_items[@]}" | jq -s '
-                  map(select(. != null and .items != null) | .items)
-                  | add // []
-                  | map(select(.pull_request | not))
-                  | map({
-                      Number: .number,
-                      Title: .title,
-                      Body: (.body // ""),
-                      State: .state,
-                      Url: .html_url,
-                      Labels: (.labels | map(.name))
-                    })
-                ')
-
-                if [ "$raw" != "null" ] && [ "$raw" != "[]" ]; then
-                    all_items+=("$raw")
-                fi
-                echo "✅ Collected $(jq length <<<"$raw") issues for $DAY"
-              done
-            done
-          done
-
-          # Combine all days into one JSON file
-          combined=$(printf '%s\n' "${all_items[@]}" | jq -s 'add // []')
-
-          SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
-          SAFE=${SAFE:-ALL}
+          raw=$(gh api "${ARGS[@]}")
+          LABELS=$(echo "${LABELS}" | tr ' ,' ':')
+          # Safe filename from labels (or ALL if empty)
+          safe_region=${LABELS:-ALL}
+          safe_region=$(printf '%s' "$safe_region" | tr -cs 'A-Za-z0-9._-' ':')
           issuesJson="cache/report:${DATE_START:+${DATE_START}:}${DATE_END:+${DATE_END}:}${REGION}"
-          echo "Writing ${issuesJson}"
+          echo "${safe_region}"
 
-          printf '%s' "$combined" > "$issuesJson"
+          printf '%s' "$raw" | jq -cs '
+            flatten
+            | map(select(.pull_request | not))
+            | map({
+                Number: .number,
+                Title: .title,
+                Body: (.body // ""),
+                State: .state,
+                Url: .html_url,
+                Labels: (.labels | map(.name))
+              })
+          ' > "$issuesJson"
 
-          echo "Preview first 3 issues:"
+          echo "Preview:"
           jq '.[0:3]' "$issuesJson" || true
-
-          [ -s "$issuesJson" ] || { echo "❌ No issues produced"; exit 1; }
 
 
 
