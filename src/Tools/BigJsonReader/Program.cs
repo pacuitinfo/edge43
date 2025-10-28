@@ -51,7 +51,7 @@ static byte[] GenerateCashierReportePdf(ServicesReports application, string? dat
         var RadioStationLicense = application.Fees.Find(c => c.Name == "License Fee");
         var InspectionFee = application.Fees.Find(c => c.Name == "Inspection Fee");
         var FinesPenaltiesSurchargesSURRadioStationLicenseSURSpectrumUsersFeeSUFLists = application.Services.FindAll(c => false ).Select(c => c.Surcharge);
-        var FinesPenaltiesSurchargesSURRadioStationLicenseSURSpectrumUsersFeeSUFValue = 0;
+        var FinesPenaltiesSurchargesSURRadioStationLicenseSURSpectrumUsersFeeSUFValue = 0m;
         foreach (var FinesPenaltiesSurchargesSURRadioStationLicenseSURSpectrumUsersFeeSUF in
                  FinesPenaltiesSurchargesSURRadioStationLicenseSURSpectrumUsersFeeSUFLists)
         {
