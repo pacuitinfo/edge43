@@ -844,17 +844,17 @@ while (await reader.ReadAsync())
         if (de.HasValue) de = DateTime.SpecifyKind(de.Value, DateTimeKind.Utc);
 
         // Optional: debug output
-        Console.WriteLine($"📅 Issue #{issue.Number} created {appDate:yyyy-MM-dd HH:mm:ss}");
+        //Console.WriteLine($"📅 Issue #{issue.Number} created {appDate:yyyy-MM-dd HH:mm:ss}");
 
         // Apply range filters
         if (ds.HasValue && appDate < ds.Value)
         {
-            Console.WriteLine($"⏩ Skipping issue #{issue.Number} — before {ds:yyyy-MM-dd}");
+          //  Console.WriteLine($"⏩ Skipping issue #{issue.Number} — before {ds:yyyy-MM-dd}");
             continue;
         }
         if (de.HasValue && appDate > de.Value)
         {
-            Console.WriteLine($"⏩ Skipping issue #{issue.Number} — after {de:yyyy-MM-dd}");
+            //Console.WriteLine($"⏩ Skipping issue #{issue.Number} — after {de:yyyy-MM-dd}");
             continue;
         }
     }
