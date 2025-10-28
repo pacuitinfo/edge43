@@ -1280,7 +1280,7 @@ application.ServicesReports = new ServicesReports();
             };
 
             var fileContext = GenerateCashReceiptsRecordExcel(soareports, null);
-            var generatereportpdf = GenerateReportPdf(soareports, dateStart, dateEnd);
+            
             if (fileContext != null)
             {
                   string soaRegionKey = Regex.Replace(regionKey, @"T[\d:.]+Z", string.Empty);
@@ -1412,7 +1412,7 @@ string issueKey = "cache/" + $"{regionKey}";
 string newPath = Regex.Replace(issueKey, @"T[\d:.]+Z", string.Empty);
 var issueBody = JsonConvert.SerializeObject(servicesReports);
 var result = await GitHubHelper.CreateOrUpdateIssue(newPath, issueBody);
-
+var generatereportpdf =GenerateReportPdf(servicesReports, dateStart, dateEnd);
 
  
 // ===================== types (must come AFTER all top-level statements) =====================
