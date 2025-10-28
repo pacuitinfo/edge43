@@ -39,6 +39,64 @@ if (string.IsNullOrWhiteSpace(owner) || string.IsNullOrWhiteSpace(repo) || strin
     Console.Error.WriteLine("Missing --owner/--repo/--path");
     Environment.Exit(1);
 }
+
+
+static byte[] GenerateExcel(ServicesReports report)
+    {
+       var path = Path.Combine(AppContext.BaseDirectory, "ExcelTemplate");
+        byte[] fileData;
+        using (var streamTo = new MemoryStream())
+        {
+            var wb = new XLWorkbook(path + "Finance-Report.xlsx");
+            var ws = wb.Worksheet(1);
+            ws.Cell("D13").Value = report.Fees.Find(c => c.Name == "Documentary Stamp Tax")!.Value++; // document fee
+            ws.Cell("D15").Value = report.Fees.Find(c => c.Name == "Special Permit Fee" || c.Name == "Construction Permit Fee" || c.Name == "Possess Permit Fee" || c.Name ==  "Purchase Permit Fee"  || c.Name == "Sell/Transfer Permit Fee")!.Value++; // Permit Fees
+            ws.Cell("D16").Value = report.Fees.Find(c => c.Name == "Registration Fee" || c.Name == "Annual Registration Fee" )!.Value++; // Registration Fees
+            ws.Cell("D17").Value = report.Fees.Find(c => c.Name == "Certificate Fee" || c.Name == "Certificate Of Exemption" )!.Value++;//Clearance and Certification Fees
+            ws.Cell("D18").Value = report.Fees.Find(c => c.Name == "LandMobile Station License Fee" ||c.Name == "Portable Station License Fee"||c.Name == "License Fee" ||c.Name ==  "Repeater Station License Fee" || c.Name == "Fixed Station License Fee"|| c.Name == "LandBase Station License Fee"|| c.Name ==  "PublicTrunked Station License Fee"|| c.Name ==  "Terrestrial Communication Station License Fee" )!.Value++; //Licensing Fees
+            ws.Cell("D19").Value = ""; //Supervision & Regulation Enforcement Fees
+            ws.Cell("D20").Value = report.Fees.Find(c => c.Name == "Surcharge")!.Value++;; //Spectrum Usage Fees
+            ws.Cell("D21").Value = report.Fees.Find(c => c.Name == "Inspection Fee" || c.Name == "Inspection Fee (Per Year)")!.Value++; //Inspections Fees
+            ws.Cell("D22").Value = ""; //Verification & Aunthentication Fees
+            ws.Cell("D23").Value = ""; //Processing Fees
+            ws.Cell("D24").Value = ""; //Fines and Penalties - Service Income
+            ws.Cell("D25").Value = ""; //Other Service Income
+            ws.Cell("D26").Value = report.Fees.Find(c => c.Name == "Examination Fee")!.Value++; //Examination Fees
+            ws.Cell("D27").Value = report.Fees.Find(c => c.Name == "Seminar Fee / Application Fee")!.Value++; //Seminar Fees
+            ws.Cell("D28").Value = ""; //Other Non-Operating Income
+            ws.Cell("D29").Value = ""; //Miscellaneous Income
+            wb.SaveAs(streamTo);
+            fileData = streamTo.ToArray();
+        }
+
+
+        /*
+        var wb = new XLWorkbook(path + "Finance-Report.xlsx");
+        var ws = wb.Worksheet(1); 
+        ws.Cell("D13").Value = report.Fees.Find(c => c.Name == "Documentary Stamp Tax")!.Value++; // document fee
+        ws.Cell("D15").Value = report.Fees.Find(c => c.Name == "Special Permit Fee" || c.Name == "Construction Permit Fee" || c.Name == "Possess Permit Fee" || c.Name ==  "Purchase Permit Fee"  || c.Name == "Sell/Transfer Permit Fee")!.Value++; // Permit Fees
+        ws.Cell("D16").Value =report.Fees.Find(c => c.Name == "Registration Fee" || c.Name == "Annual Registration Fee" )!.Value++; // Registration Fees
+        ws.Cell("D17").Value = report.Fees.Find(c => c.Name == "Certificate Fee" || c.Name == "Certificate Of Exemption" )!.Value++;//Clearance and Certification Fees
+        ws.Cell("D18").Value = report.Fees.Find(c => c.Name == "LandMobile Station License Fee" ||c.Name == "Portable Station License Fee"||c.Name == "License Fee" ||c.Name ==  "Repeater Station License Fee" || c.Name == "Fixed Station License Fee"|| c.Name == "LandBase Station License Fee"|| c.Name ==  "PublicTrunked Station License Fee"|| c.Name ==  "Terrestrial Communication Station License Fee" )!.Value++; //Licensing Fees
+        ws.Cell("D19").Value = ""; //Supervision & Regulation Enforcement Fees
+        ws.Cell("D20").Value = report.Fees.Find(c => c.Name == "Surcharge")!.Value++;; //Spectrum Usage Fees
+        ws.Cell("D21").Value =  report.Fees.Find(c => c.Name == "Inspection Fee" || c.Name == "Inspection Fee (Per Year)")!.Value++; //Inspections Fees
+        ws.Cell("D22").Value = ""; //Verification & Aunthentication Fees
+        ws.Cell("D23").Value = ""; //Processing Fees
+        ws.Cell("D24").Value = ""; //Fines and Penalties - Service Income
+        ws.Cell("D25").Value = ""; //Other Service Income
+        ws.Cell("D26").Value = report.Fees.Find(c => c.Name == "Examination Fee")!.Value++; //Examination Fees
+        ws.Cell("D27").Value = report.Fees.Find(c => c.Name == "Seminar Fee / Application Fee")!.Value++; //Seminar Fees
+        ws.Cell("D28").Value = ""; //Other Non-Operating Income
+        ws.Cell("D29").Value =""; //Miscellaneous Income
+        
+        wb.SaveAs(path +  "Finance-Report-" + Guid.NewGuid() + ".xlsx");
+        */
+
+        return fileData;
+    }
+
+
 static byte[] GenerateCashierReportePdf(ServicesReports application, string? dateStart, string? dateEnd)
     {
         byte[] appStream = null;
