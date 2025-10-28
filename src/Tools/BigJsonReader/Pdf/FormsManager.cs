@@ -10,7 +10,8 @@ namespace EDGE.Application.Processing.Infra.Pdf
     {
         public static byte[] CreateApplicationPdf<T>(T app, string PdfTemplate = "Service-1-Admission-Slip.pdf") where T : class
         {
-            var pdfPath = $@"{ Directory.GetCurrentDirectory() }/PDFTemplate/{PdfTemplate}";
+             var path = Path.Combine(AppContext.BaseDirectory, "PDFTemplate");
+            var pdfPath = $@"{path}/{PdfTemplate}";
             var template = Path.GetFullPath(pdfPath);
 
             PdfReader pdfReader = new(@template);
