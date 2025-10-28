@@ -1427,7 +1427,7 @@ var fileContext1 =GenerateReportPdf(servicesReports, dateStart, dateEnd);
                     folder: "reports",
                     branch: "main"
                 );
-                console.log(uploadResult)
+                console.log(uploadResult);
                 if (uploadResult.Success){
                     var report = new SoaReportModel
                     {
