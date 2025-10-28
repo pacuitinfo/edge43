@@ -1549,10 +1549,10 @@ string newPath = Regex.Replace(issueKey, @"T[\d:.]+Z", string.Empty);
 var issueBody = JsonConvert.SerializeObject(servicesReports);
 var result = await GitHubHelper.CreateOrUpdateIssue(newPath, issueBody);
 var fileContext1 =GenerateReportPdf(servicesReports, dateStart, dateEnd);
-
+var fileContext2 =GenerateCashierReportePdf(servicesReports, dateStart, dateEnd);
  if (fileContext1 != null)
             {
-                 var fileSoaName = $"mis-reports/cache/{soaRegionKey}"; 
+                var fileSoaName = $"mis-reports/cache/{soaRegionKey}"; 
                 var uploadResult = await GitHubHelper.UploadStream(
                     name: $"{fileSoaName}.pdf",
                     file: fileContext1, // ✅ use fileContext here
@@ -1562,6 +1562,32 @@ var fileContext1 =GenerateReportPdf(servicesReports, dateStart, dateEnd);
                     folder: "reports",
                     branch: "main"
                 );
+                 var filecashierName = $"cashier-reports/cache/{soaRegionKey}"; 
+                var uploadResultcashier = await GitHubHelper.UploadStream(
+                    name: $"{filecashierName}.xlsx",
+                    file: fileContext2, // ✅ use fileContext here
+                    githubToken: Environment.GetEnvironmentVariable("GH_PAT"),
+                    repoOwner: "pacuitinfo",
+                    repoName: "edge43",
+                    folder: "reports",
+                    branch: "main"
+                );
+
+
+                if(uploadResultcashier.Success){
+                     report.Urls.Add( new UrlModel(){
+                        Url = uploadResultcashier.Url,
+                        Name = "Cashier"
+                    });
+                      tags = tags.Concat(new[] { "mis" }).ToArray();
+                    report.Touch();
+                }else{
+                    Console.WriteLine($"❌ Upload failed: {uploadResultcashier.Message}");
+                }
+
+                
+
+
                 if (uploadResult.Success){
                     
                     report.Urls.Add( new UrlModel(){
@@ -1570,24 +1596,31 @@ var fileContext1 =GenerateReportPdf(servicesReports, dateStart, dateEnd);
                     });
                     report.Touch();
 
-tags = tags.Concat(new[] { "mis" }).ToArray();
-var envDateStart = Environment.GetEnvironmentVariable("DATE_START");
-if (!string.IsNullOrEmpty(envDateStart))
-    tags = tags.Concat(new[] { envDateStart }).ToArray();
 
-var envDateEnd = Environment.GetEnvironmentVariable("DATE_END");
-if (!string.IsNullOrEmpty(envDateEnd))
-    tags = tags.Concat(new[] { envDateEnd }).ToArray();
-var resultMis = await GitHubHelper.CreateOrUpdateIssue(
-    soaRegionKey,
-    JsonConvert.SerializeObject(report),
-   tags
-);
          Console.WriteLine(  JsonConvert.SerializeObject(resultMis))  ;        
-                }
-                   
-                else
+                } 
+                else{
                     Console.WriteLine($"❌ Upload failed: {uploadResult.Message}");
+                }
+                tags = tags.Concat(new[] { "mis" }).ToArray();
+                var envDateStart = Environment.GetEnvironmentVariable("DATE_START");
+                if (!string.IsNullOrEmpty(envDateStart))
+                    tags = tags.Concat(new[] { envDateStart }).ToArray();
+
+                var envDateEnd = Environment.GetEnvironmentVariable("DATE_END");
+                if (!string.IsNullOrEmpty(envDateEnd))
+                    tags = tags.Concat(new[] { envDateEnd }).ToArray();
+
+
+
+
+
+
+                var resultMis = await GitHubHelper.CreateOrUpdateIssue(
+                    soaRegionKey,
+                    JsonConvert.SerializeObject(report),
+                tags
+                );
             }
  
 // ===================== types (must come AFTER all top-level statements) =====================
