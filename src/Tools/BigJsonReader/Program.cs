@@ -1999,6 +1999,70 @@ public class PaymentHistoryModel
     public string PermitNumber { get; set; }
     public ServicesReports ServicesReports { get; set; } = new();
 }
+public class ReportLicense
+    {
+        public string PermittoPurchase { get; set; }
+        public string FilingFee { get; set; }
+        public string PermittoPossessStorage { get; set; }
+        public string ConstructionPermitFee { get; set; }
+        public string RadioStationLicense { get; set; }
+        public string InspectionFee { get; set; }
+        public string SpectrumUsersFeeSUF { get; set; }
+        public string FinesPenaltiesSurchargesSURRadioStationLicenseSURSpectrumUsersFeeSUF { get; set; }
+        public string PermitFeesDealersResellerServiceCenterSellTransferRECImport { get; set; }
+        public string InspectionFee1 { get; set; }
+        public string FilingFee1 { get; set; }
+        public string FinesPenaltiesSurcharges { get; set; }
+        public string RadioStationLicense1 { get; set; }
+        public string RadioOperatorsCert { get; set; }
+        public string ApplicationFeeFilingFee { get; set; }
+        public string SeminarFee { get; set; }
+        public string FinesPenaltiesSurchargesSURRadioStationLicense { get; set; }
+        public string SURRadioOperatorsCert { get; set; }
+        public string RegistrationFee { get; set; }
+        public string SupervisionRegulationFee { get; set; }
+        public string VerificationFeeAuthenticationFees { get; set; }
+        public string ExaminationFee { get; set; }
+        public string ClearanceCertificationFee { get; set; }
+        public string ModificationFee { get; set; }
+        public string MiscellaneousIncome { get; set; }
+        public string DocumentaryStampTaxDST { get; set; }
+        public string OthersPENALTYFORLATEDELIVERY { get; set; }
+        public string TOTAL { get; set; }
+        public string month { get; set; }
+        public string Name { get; set; }
+        public string Particular1 { get; set; }
+        public string NoYears1 { get; set; }
+        public string Date { get; set; }
+        public string New { get; set; }
+        public string Ren { get; set; }
+        public string Mod { get; set; }
+        
+        public string PreparedBy { get; set; }
+        public string Today { get; set; }
+        public string ApprovedBy { get; set; }
+        public string Co { get; set; }
+        public string Cv { get; set; }
+        public string Cp { get; set; }
+        public string Ms { get; set; }
+        public string Remarks { get; set; }
+        public string PreparedByPosition { get; set; }
+        public string ApprovedByPosition { get; set; }
+        public string Purpose { get; set; }
+        public string RCNo { get; set; }
+        public string PreparedBySignature { get; set; }
+        public string ApprovedBySignature { get; set; }
+        public string OtherText { get; set; }
+        public string ORNumber { get; set; }
+        public string ORBy { get; set; }
+        public string ORAmount { get; set; }
+        public string ORDST { get; set; }
+        public string ORDate { get; set; }
+        public float? AmountBank { get; set; }
+        public float? DSTAmount { get; set; }
+        public string FilingFee3 { get; set; }
+        public int OtherNoOfUnits { get; set; }
+    }
 public class ApplicationServicesModel 
 {
     public ServicesReports ServicesReports  { get; set; }
