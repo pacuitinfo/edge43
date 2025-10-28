@@ -1278,12 +1278,19 @@ application.ServicesReports = new ServicesReports();
                 Total = totals,
              TotalSum = totalSum
             };
-
+             string soaRegionKey = Regex.Replace(regionKey, @"T[\d:.]+Z", string.Empty);
+var report = new SoaReportModel
+                    {
+                        Name = $"{soaRegionKey}",
+                        Description = "Auto-generated reports",
+                        Status = "completed"
+                    };
+                    var tags = new[] { "soa" };
             var fileContext = GenerateCashReceiptsRecordExcel(soareports, null);
             
             if (fileContext != null)
             {
-                  string soaRegionKey = Regex.Replace(regionKey, @"T[\d:.]+Z", string.Empty);
+                 
                 var fileSoaName = $"soa-reports/cache/{soaRegionKey}"; 
                 var uploadResult = await GitHubHelper.UploadStream(
                     name: $"{fileSoaName}.xlsx",
@@ -1295,34 +1302,27 @@ application.ServicesReports = new ServicesReports();
                     branch: "main"
                 );
                 if (uploadResult.Success){
-                    var report = new SoaReportModel
-                    {
-                        Name = $"SOA {soaRegionKey}",
-                        Description = "Auto-generated Excel reports",
-                        Status = "completed"
-                    };
+                    
                     report.Urls.Add( new UrlModel(){
                         Url = uploadResult.Url,
                         Name = "SOA"
                     });
                     report.Touch();
-  var tags = new[] { "soa" };
 
-var envDateStart = Environment.GetEnvironmentVariable("DATE_START");
-if (!string.IsNullOrEmpty(envDateStart))
-    tags = tags.Concat(new[] { envDateStart }).ToArray();
+// var envDateStart = Environment.GetEnvironmentVariable("DATE_START");
+// if (!string.IsNullOrEmpty(envDateStart))
+//     tags = tags.Concat(new[] { envDateStart }).ToArray();
 
-var envDateEnd = Environment.GetEnvironmentVariable("DATE_END");
-if (!string.IsNullOrEmpty(envDateEnd))
-    tags = tags.Concat(new[] { envDateEnd }).ToArray();
-var resultSoa = await GitHubHelper.CreateOrUpdateIssue(
-    soaRegionKey,
-    JsonConvert.SerializeObject(report),
-   tags
-);
-         Console.WriteLine(  JsonConvert.SerializeObject(resultSoa))  ;        
-                }
-                   
+// var envDateEnd = Environment.GetEnvironmentVariable("DATE_END");
+// if (!string.IsNullOrEmpty(envDateEnd))
+//     tags = tags.Concat(new[] { envDateEnd }).ToArray();
+// var resultSoa = await GitHubHelper.CreateOrUpdateIssue(
+//     soaRegionKey,
+//     JsonConvert.SerializeObject(report),
+//    tags
+// );
+//          Console.WriteLine(  JsonConvert.SerializeObject(resultSoa))  ;        
+                }  
                 else
                     Console.WriteLine($"❌ Upload failed: {uploadResult.Message}");
             }
@@ -1416,8 +1416,7 @@ var fileContext1 =GenerateReportPdf(servicesReports, dateStart, dateEnd);
 
  if (fileContext1 != null)
             {
-                  string misRegionKey = Regex.Replace(regionKey, @"T[\d:.]+Z", string.Empty);
-                var fileSoaName = $"mis-reports/cache/{misRegionKey}"; 
+                 var fileSoaName = $"mis-reports/cache/{misRegionKey}"; 
                 var uploadResult = await GitHubHelper.UploadStream(
                     name: $"{fileSoaName}.pdf",
                     file: fileContext1, // ✅ use fileContext here
@@ -1427,21 +1426,15 @@ var fileContext1 =GenerateReportPdf(servicesReports, dateStart, dateEnd);
                     folder: "reports",
                     branch: "main"
                 );
-                Console.WriteLine(uploadResult);
                 if (uploadResult.Success){
-                    var report = new SoaReportModel
-                    {
-                        Name = $"MIS {misRegionKey}",
-                        Description = "Auto-generated MIS PDF reports",
-                        Status = "completed"
-                    };
+                    
                     report.Urls.Add( new UrlModel(){
                         Url = uploadResult.Url,
                         Name = "MIS"
                     });
                     report.Touch();
-  var tags = new[] { "mis" };
 
+tags = tags.Concat(new[] { "mis" }).ToArray();
 var envDateStart = Environment.GetEnvironmentVariable("DATE_START");
 if (!string.IsNullOrEmpty(envDateStart))
     tags = tags.Concat(new[] { envDateStart }).ToArray();
