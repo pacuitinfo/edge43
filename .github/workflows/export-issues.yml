@@ -36,7 +36,7 @@ on:
       dateEnd:
         description: "Source repo"
         required: false
-        default: "2025-10-02T15:59:59.000Z"
+        default: ""
       region:
         description: "Path to big JSON in source repo"
         required: false
