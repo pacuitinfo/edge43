@@ -1594,10 +1594,7 @@ var fileContext2 =GenerateCashierReportePdf(servicesReports, dateStart, dateEnd)
                         Url = uploadResult.Url,
                         Name = "MIS"
                     });
-                    report.Touch();
-
-
-         Console.WriteLine(  JsonConvert.SerializeObject(resultMis))  ;        
+                    report.Touch();       
                 } 
                 else{
                     Console.WriteLine($"❌ Upload failed: {uploadResult.Message}");
