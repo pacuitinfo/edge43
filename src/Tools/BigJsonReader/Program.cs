@@ -1416,7 +1416,7 @@ var fileContext1 =GenerateReportPdf(servicesReports, dateStart, dateEnd);
 
  if (fileContext1 != null)
             {
-                 var fileSoaName = $"mis-reports/cache/{misRegionKey}"; 
+                 var fileSoaName = $"mis-reports/cache/{soaRegionKey}"; 
                 var uploadResult = await GitHubHelper.UploadStream(
                     name: $"{fileSoaName}.pdf",
                     file: fileContext1, // ✅ use fileContext here
