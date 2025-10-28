@@ -315,6 +315,8 @@ jobs:
           set -euo pipefail
           # If BigJsonReader expects to read from a GitHub repo (NOT local file),
           # it will use the workflow_dispatch inputs below.
+          DATE_START="${{ github.event.inputs.dateStart }}"
+          DATE_START="${DATE_START:-2025-07-01}"
           DATE_PARTS=""
           [ -n "${DATE_START:-}" ] && DATE_PARTS="${DATE_START}"
           [ -n "${DATE_END:-}" ] && DATE_PARTS="${DATE_PARTS:+${DATE_PARTS}:}${DATE_END}"
@@ -346,6 +348,8 @@ jobs:
           REGION: ${{ github.event.inputs.region }}
         run: |
           set -euo pipefail
+          DATE_START="${{ github.event.inputs.dateStart }}"
+          DATE_START="${DATE_START:-2025-07-01}"
           SAFE=$(printf '%s' "${LABELS_IN}" | tr ' ,/' '_' | tr -cd 'A-Za-z0-9._-')
           SAFE=${SAFE:-ALL}
           issuesJson="cache/report:${DATE_START:+${DATE_START}:}${DATE_END:+${DATE_END}:}${REGION}"
