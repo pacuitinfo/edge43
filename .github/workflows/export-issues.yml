@@ -79,7 +79,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p cache
-          SLEEP_TIME=5 
+          SLEEP_TIME=30 
           # Set default dates if inputs are empty
           DATE_START="${{ github.event.inputs.dateStart }}"
           DATE_START="${DATE_START:-2025-07-01}"
