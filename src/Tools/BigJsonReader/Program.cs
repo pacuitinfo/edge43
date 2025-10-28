@@ -39,7 +39,7 @@ if (string.IsNullOrWhiteSpace(owner) || string.IsNullOrWhiteSpace(repo) || strin
     Console.Error.WriteLine("Missing --owner/--repo/--path");
     Environment.Exit(1);
 }
-static byte[] GenerateReportPdf(ServicesReports application, string? dateStart, string? dateEnd)
+static byte[] GenerateReportPdf(Reports application, string? dateStart, string? dateEnd)
     {
         byte[] appStream = null;
         var AmateurRepeaterATRnew = application.Services.Find(c => c.Service == "Amateur Radio Operator Certificate (NEW)");
@@ -1280,7 +1280,7 @@ application.ServicesReports = new ServicesReports();
             };
 
             var fileContext = GenerateCashReceiptsRecordExcel(soareports, null);
-
+            var generatereportpdf = GenerateReportPdf(soareports, dateStart, dateEnd);
             if (fileContext != null)
             {
                   string soaRegionKey = Regex.Replace(regionKey, @"T[\d:.]+Z", string.Empty);
