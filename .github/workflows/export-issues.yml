@@ -79,7 +79,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p cache
-          SLEEP_TIME=60 
+          SLEEP_TIME=5 
           # Set default dates if inputs are empty
           DATE_START="${{ github.event.inputs.dateStart }}"
           DATE_START="${DATE_START:-2025-07-01}"
@@ -160,9 +160,9 @@ jobs:
                   
                   if echo "$resp" | jq -e '.message? | contains("API rate limit exceeded")' >/dev/null 2>&1; then
                     echo "🚫 GitHub API rate limit exceeded — use GH_PAT with higher quota."
-                    sleep $SLEEP_TIME
+                    
                   fi
-
+                  sleep $SLEEP_TIME
                   count=$(echo "$resp" | jq -r '.items | length // 0' 2>/dev/null || echo 0)
                   echo "Page $page: $count issues"
                   [ "$count" -eq 0 ] && break
