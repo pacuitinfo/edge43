@@ -742,7 +742,7 @@ static byte[] GenerateCashierReportExcel(ServicesReports application, string? da
         var RadioStationLicense = application.Fees.Find(c => c.Name == "License Fee");
         var InspectionFee = application.Fees.Find(c => c.Name == "Inspection Fee");
         var FinesPenaltiesSurchargesSURRadioStationLicenseSURSpectrumUsersFeeSUFLists = application.Services.FindAll(c => c.Type == "licenses" && c.Surcharge != 0 ).Select(c => c.Surcharge);
-        var FinesPenaltiesSurchargesSURRadioStationLicenseSURSpectrumUsersFeeSUFValue = 0.0;
+        var FinesPenaltiesSurchargesSURRadioStationLicenseSURSpectrumUsersFeeSUFValue = 0m;
         
         foreach (var FinesPenaltiesSurchargesSURRadioStationLicenseSURSpectrumUsersFeeSUF in
                  FinesPenaltiesSurchargesSURRadioStationLicenseSURSpectrumUsersFeeSUFLists)
@@ -755,7 +755,7 @@ static byte[] GenerateCashierReportExcel(ServicesReports application, string? da
         var InspectionFee1 = application.Fees.Find(c => c.Name == "Inspection Fee (Per Year)");
         var FilingFee1 = application.Fees.Find(c => c.Name == "Filing Fee" || c.Name == "FillingFee");
         var FinesPenaltiesSurcharges = application.Services.FindAll(c => c.Type == "permits" && c.Surcharge != 0 ).Select(c => c.Surcharge);
-        var FinesPenaltiesSurchargesValues = 0.0;
+        var FinesPenaltiesSurchargesValues = 0m;
         foreach (var FinesPenaltiesSurcharge in FinesPenaltiesSurcharges)
         {
             FinesPenaltiesSurchargesValues += FinesPenaltiesSurcharge;
@@ -771,13 +771,13 @@ static byte[] GenerateCashierReportExcel(ServicesReports application, string? da
         var ApplicationFeeFilingFee = application.Fees.Find(c => c.Name == "Seminar Fee / Application Fee");
         var SeminarFee = application.Fees.Find(c => c.Name == "Seminar Fee / Application Fee");
         var FinesPenaltiesSurchargesSURRadioStationLicenseList = application.Services.FindAll(c => c.Type == "licenses" && c.Surcharge != 0 ).Select(c => c.Surcharge);
-        var FinesPenaltiesSurchargesSURRadioStationLicenseValue = 0.0;
+        var FinesPenaltiesSurchargesSURRadioStationLicenseValue = 0m;
         foreach (var FinesPenaltiesSurchargesSURRadioStationLicense in FinesPenaltiesSurchargesSURRadioStationLicenseList)
         {
             FinesPenaltiesSurchargesSURRadioStationLicenseValue += FinesPenaltiesSurchargesSURRadioStationLicense;
         }
         var FinesPenaltiesSurchargesSURRadioStationCertificateList = application.Services.FindAll(c => c.Type == "certificates" && c.Surcharge != 0).Select(c => c.Surcharge);
-        var FinesPenaltiesSurchargesSURRadioStationCertificateValue = 0.0;
+        var FinesPenaltiesSurchargesSURRadioStationCertificateValue = 0m;
         foreach (var FinesPenaltiesSurchargesSURRadioStationCertificate in FinesPenaltiesSurchargesSURRadioStationCertificateList)
         {
             FinesPenaltiesSurchargesSURRadioStationCertificateValue += FinesPenaltiesSurchargesSURRadioStationCertificate;
