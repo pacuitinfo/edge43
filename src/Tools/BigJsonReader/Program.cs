@@ -1609,97 +1609,82 @@ var result = await GitHubHelper.CreateOrUpdateIssue(newPath, issueBody);
 var fileContext1 =GenerateReportPdf(servicesReports, dateStart, dateEnd);
 var fileContext2 =GenerateCashierReportePdf(servicesReports, dateStart, dateEnd);
 var fileContext3 =GenerateExcel(servicesReports);
- if (fileContext1 != null || fileContext2 != null || fileContext3 != null)
-            {
-                var fileSoaName = $"mis-reports/cache/{soaRegionKey}"; 
-                var uploadResult = await GitHubHelper.UploadStream(
-                    name: $"{fileSoaName}.pdf",
-                    file: fileContext1, 
-                    githubToken: Environment.GetEnvironmentVariable("GH_PAT"),
-                    repoOwner: "pacuitinfo",
-                    repoName: "edge43",
-                    folder: "reports",
-                    branch: "main"
-                );
-                var filecashierName = $"cashier-reports/cache/{soaRegionKey}"; 
-                var uploadResultcashier = await GitHubHelper.UploadStream(
-                    name: $"{filecashierName}.pdf",
-                    file: fileContext2, 
-                    githubToken: Environment.GetEnvironmentVariable("GH_PAT"),
-                    repoOwner: "pacuitinfo",
-                    repoName: "edge43",
-                    folder: "reports",
-                    branch: "main"
-                );
-                var fileExcelName = $"excel-reports/cache/{soaRegionKey}"; 
-                var uploadExcelResult = await GitHubHelper.UploadStream(
-                    name: $"{fileExcelName}.pdf",
-                    file: fileContext3, 
-                    githubToken: Environment.GetEnvironmentVariable("GH_PAT"),
-                    repoOwner: "pacuitinfo",
-                    repoName: "edge43",
-                    folder: "reports",
-                    branch: "main"
-                );
+if (fileContext1 != null || fileContext2 != null || fileContext3 != null)
+{
+    var fileSoaName = $"mis-reports/cache/{soaRegionKey}"; 
+    var uploadResult = await GitHubHelper.UploadStream(
+        name: $"{fileSoaName}.pdf",
+        file: fileContext1, 
+        githubToken: Environment.GetEnvironmentVariable("GH_PAT"),
+        repoOwner: "pacuitinfo",
+        repoName: "edge43",
+        folder: "reports",
+        branch: "main"
+    );
+    var filecashierName = $"cashier-reports/cache/{soaRegionKey}"; 
+    var uploadResultcashier = await GitHubHelper.UploadStream(
+        name: $"{filecashierName}.pdf",
+        file: fileContext2, 
+        githubToken: Environment.GetEnvironmentVariable("GH_PAT"),
+        repoOwner: "pacuitinfo",
+        repoName: "edge43",
+        folder: "reports",
+        branch: "main"
+    );
+    var fileExcelName = $"excel-reports/cache/{soaRegionKey}"; 
+    var uploadExcelResult = await GitHubHelper.UploadStream(
+        name: $"{fileExcelName}.pdf",
+        file: fileContext3, 
+        githubToken: Environment.GetEnvironmentVariable("GH_PAT"),
+        repoOwner: "pacuitinfo",
+        repoName: "edge43",
+        folder: "reports",
+        branch: "main"
+    );
+    if(uploadExcelResult.Success){
+            report.Urls.Add( new UrlModel(){
+            Url = uploadExcelResult.Url,
+            Name = "Financial"
+        });
+            tags = tags.Concat(new[] { "cashier" }).ToArray();
+        report.Touch();
+    }else{
+        Console.WriteLine($"❌ Upload failed: {uploadExcelResult.Message}");
+    }
+    if(uploadResultcashier.Success){
+            report.Urls.Add( new UrlModel(){
+            Url = uploadResultcashier.Url,
+            Name = "Cashier"
+        });
+            tags = tags.Concat(new[] { "cashier" }).ToArray();
+        report.Touch();
+    }else{
+        Console.WriteLine($"❌ Upload failed: {uploadResultcashier.Message}");
+    }
+    if (uploadResult.Success){
+        report.Urls.Add( new UrlModel(){
+            Url = uploadResult.Url,
+            Name = "MIS"
+        });
+        report.Touch();       
+    } 
+    else{
+        Console.WriteLine($"❌ Upload failed: {uploadResult.Message}");
+    }
+    tags = tags.Concat(new[] { "mis" }).ToArray();
+    var envDateStart = Environment.GetEnvironmentVariable("DATE_START");
+    if (!string.IsNullOrEmpty(envDateStart))
+        tags = tags.Concat(new[] { envDateStart }).ToArray();
 
-
-                if(uploadExcelResult.Success){
-                     report.Urls.Add( new UrlModel(){
-                        Url = uploadExcelResult.Url,
-                        Name = "financial"
-                    });
-                      tags = tags.Concat(new[] { "cashier" }).ToArray();
-                    report.Touch();
-                }else{
-                    Console.WriteLine($"❌ Upload failed: {uploadExcelResult.Message}");
-                }
-
-
-                if(uploadResultcashier.Success){
-                     report.Urls.Add( new UrlModel(){
-                        Url = uploadResultcashier.Url,
-                        Name = "Cashier"
-                    });
-                      tags = tags.Concat(new[] { "cashier" }).ToArray();
-                    report.Touch();
-                }else{
-                    Console.WriteLine($"❌ Upload failed: {uploadResultcashier.Message}");
-                }
-
-                
-
-
-                if (uploadResult.Success){
-                    
-                    report.Urls.Add( new UrlModel(){
-                        Url = uploadResult.Url,
-                        Name = "MIS"
-                    });
-                    report.Touch();       
-                } 
-                else{
-                    Console.WriteLine($"❌ Upload failed: {uploadResult.Message}");
-                }
-                tags = tags.Concat(new[] { "mis" }).ToArray();
-                var envDateStart = Environment.GetEnvironmentVariable("DATE_START");
-                if (!string.IsNullOrEmpty(envDateStart))
-                    tags = tags.Concat(new[] { envDateStart }).ToArray();
-
-                var envDateEnd = Environment.GetEnvironmentVariable("DATE_END");
-                if (!string.IsNullOrEmpty(envDateEnd))
-                    tags = tags.Concat(new[] { envDateEnd }).ToArray();
-
-
-
-
-
-
-                var resultMis = await GitHubHelper.CreateOrUpdateIssue(
-                    soaRegionKey,
-                    JsonConvert.SerializeObject(report),
-                tags
-                );
-            }
+    var envDateEnd = Environment.GetEnvironmentVariable("DATE_END");
+    if (!string.IsNullOrEmpty(envDateEnd))
+        tags = tags.Concat(new[] { envDateEnd }).ToArray();
+    var resultMis = await GitHubHelper.CreateOrUpdateIssue(
+        soaRegionKey,
+        JsonConvert.SerializeObject(report),
+        tags
+    );
+}
  
 // ===================== types (must come AFTER all top-level statements) =====================
 public class UrlModel {
