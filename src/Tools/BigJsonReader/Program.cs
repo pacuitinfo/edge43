@@ -1740,8 +1740,20 @@ var result = await GitHubHelper.CreateOrUpdateIssue(newPath, issueBody);
 var fileContext1 =GenerateReportPdf(servicesReports, dateStart, dateEnd);
 var fileContext2 =GenerateCashierReportePdf(servicesReports, dateStart, dateEnd);
 var fileContext3 =GenerateExcel(servicesReports);
+var fileContext4 =GenerateCashierReportExcel(servicesReports, dateStart, dateEnd);
+
 if (fileContext1 != null || fileContext2 != null || fileContext3 != null)
 {
+    var fileSoaReportName = $"soa--reports/cache/{soaRegionKey}"; 
+    var uploadResultSoaReport = await GitHubHelper.UploadStream(
+        name: $"{fileSoaReportName}.xlsx",
+        file: fileContext4, 
+        githubToken: Environment.GetEnvironmentVariable("GH_PAT"),
+        repoOwner: "pacuitinfo",
+        repoName: "edge43",
+        folder: "reports",
+        branch: "main"
+    );
     var fileSoaName = $"mis-reports/cache/{soaRegionKey}"; 
     var uploadResult = await GitHubHelper.UploadStream(
         name: $"{fileSoaName}.pdf",
@@ -1772,9 +1784,24 @@ if (fileContext1 != null || fileContext2 != null || fileContext3 != null)
         folder: "reports",
         branch: "main"
     );
+    if(uploadResultSoaReport.Success){
+    report.Urls.Add( new UrlModel(){
+        Url = uploadResultSoaReport.Url,
+        Type = "PDF",
+        Name = "Cashier Pdf Report "
+    });
+    tags = tags.Concat(new[] { "cashier-pdf-report" }).ToArray();
+    report.Touch();
+    }else{
+        Console.WriteLine($"❌ Upload failed: {uploadExcelResult.Message}");
+    }
+
+
+
     if(uploadExcelResult.Success){
         report.Urls.Add( new UrlModel(){
         Url = uploadExcelResult.Url,
+        Type = "XLSX",
         Name = "Financial"
     });
     tags = tags.Concat(new[] { "cashier" }).ToArray();
@@ -1784,6 +1811,7 @@ if (fileContext1 != null || fileContext2 != null || fileContext3 != null)
     }
     if(uploadResultcashier.Success){
         report.Urls.Add( new UrlModel(){
+        Type = "PDF",
         Url = uploadResultcashier.Url,
         Name = "Cashier"
     });
@@ -1794,6 +1822,7 @@ if (fileContext1 != null || fileContext2 != null || fileContext3 != null)
     }
     if (uploadResult.Success){
         report.Urls.Add( new UrlModel(){
+            Type = "PDF",
             Url = uploadResult.Url,
             Name = "MIS"
         });
