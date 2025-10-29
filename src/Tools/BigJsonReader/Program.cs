@@ -1608,28 +1608,51 @@ var issueBody = JsonConvert.SerializeObject(servicesReports);
 var result = await GitHubHelper.CreateOrUpdateIssue(newPath, issueBody);
 var fileContext1 =GenerateReportPdf(servicesReports, dateStart, dateEnd);
 var fileContext2 =GenerateCashierReportePdf(servicesReports, dateStart, dateEnd);
- if (fileContext1 != null)
+var fileContext3 =GenerateExcel(servicesReports);
+ if (fileContext1 != null || fileContext2 != null || fileContext3 != null)
             {
                 var fileSoaName = $"mis-reports/cache/{soaRegionKey}"; 
                 var uploadResult = await GitHubHelper.UploadStream(
                     name: $"{fileSoaName}.pdf",
-                    file: fileContext1, // ✅ use fileContext here
+                    file: fileContext1, 
                     githubToken: Environment.GetEnvironmentVariable("GH_PAT"),
                     repoOwner: "pacuitinfo",
                     repoName: "edge43",
                     folder: "reports",
                     branch: "main"
                 );
-                 var filecashierName = $"cashier-reports/cache/{soaRegionKey}"; 
+                var filecashierName = $"cashier-reports/cache/{soaRegionKey}"; 
                 var uploadResultcashier = await GitHubHelper.UploadStream(
                     name: $"{filecashierName}.pdf",
-                    file: fileContext2, // ✅ use fileContext here
+                    file: fileContext2, 
                     githubToken: Environment.GetEnvironmentVariable("GH_PAT"),
                     repoOwner: "pacuitinfo",
                     repoName: "edge43",
                     folder: "reports",
                     branch: "main"
                 );
+                var fileExcelName = $"excel-reports/cache/{soaRegionKey}"; 
+                var uploadExcelResult = await GitHubHelper.UploadStream(
+                    name: $"{fileExcelName}.pdf",
+                    file: fileContext3, 
+                    githubToken: Environment.GetEnvironmentVariable("GH_PAT"),
+                    repoOwner: "pacuitinfo",
+                    repoName: "edge43",
+                    folder: "reports",
+                    branch: "main"
+                );
+
+
+                if(uploadExcelResult.Success){
+                     report.Urls.Add( new UrlModel(){
+                        Url = uploadExcelResult.Url,
+                        Name = "financial"
+                    });
+                      tags = tags.Concat(new[] { "cashier" }).ToArray();
+                    report.Touch();
+                }else{
+                    Console.WriteLine($"❌ Upload failed: {uploadExcelResult.Message}");
+                }
 
 
                 if(uploadResultcashier.Success){
@@ -1637,7 +1660,7 @@ var fileContext2 =GenerateCashierReportePdf(servicesReports, dateStart, dateEnd)
                         Url = uploadResultcashier.Url,
                         Name = "Cashier"
                     });
-                      tags = tags.Concat(new[] { "mis" }).ToArray();
+                      tags = tags.Concat(new[] { "cashier" }).ToArray();
                     report.Touch();
                 }else{
                     Console.WriteLine($"❌ Upload failed: {uploadResultcashier.Message}");
