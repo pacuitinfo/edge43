@@ -1742,9 +1742,9 @@ var fileContext2 =GenerateCashierReportePdf(servicesReports, dateStart, dateEnd)
 var fileContext3 =GenerateExcel(servicesReports);
 var fileContext4 =GenerateCashierReportExcel(servicesReports, dateStart, dateEnd);
 
-if (fileContext1 != null || fileContext2 != null || fileContext3 != null)
+if (fileContext1 != null || fileContext2 != null || fileContext3 != null || fileContext4 != null)
 {
-    var fileSoaReportName = $"soa--reports/cache/{soaRegionKey}"; 
+    var fileSoaReportName = $"cashier-pdf-reports/cache/{soaRegionKey}"; 
     var uploadResultSoaReport = await GitHubHelper.UploadStream(
         name: $"{fileSoaReportName}.xlsx",
         file: fileContext4, 
