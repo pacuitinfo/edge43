@@ -810,11 +810,11 @@ static byte[] GenerateCashierReportExcel(ServicesReports application, string? da
                                     ClearanceCertificationFee?.Value + ModificationFee?.Value +
                                     MiscellaneousIncome?.Value +
                                     DocumentaryStampTaxDST?.Value);
-        var path = @"ExcelTemplate/";
+         var path = Path.Combine(AppContext.BaseDirectory, "ExcelTemplate");
         byte[] fileData;
         using (var streamTo = new MemoryStream())
         {
-            var wb = new XLWorkbook(path + "SOA-Report.xlsx");
+            var wb = new XLWorkbook(path + "/SOA-Report.xlsx");
             var ws = wb.Worksheet(1);
             var noYears = application.NoOfYear == 1 ? "Year" : "Years";
             ws.Cell("N6").Value = Month;
