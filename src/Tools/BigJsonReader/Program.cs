@@ -1633,7 +1633,7 @@ if (fileContext1 != null || fileContext2 != null || fileContext3 != null)
     );
     var fileExcelName = $"excel-reports/cache/{soaRegionKey}"; 
     var uploadExcelResult = await GitHubHelper.UploadStream(
-        name: $"{fileExcelName}.pdf",
+        name: $"{fileExcelName}.xlsx",
         file: fileContext3, 
         githubToken: Environment.GetEnvironmentVariable("GH_PAT"),
         repoOwner: "pacuitinfo",
