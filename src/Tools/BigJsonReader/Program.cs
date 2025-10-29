@@ -1473,13 +1473,13 @@ application.ServicesReports = new ServicesReports();
              TotalSum = totalSum
             };
              string soaRegionKey = Regex.Replace(regionKey, @"T[\d:.]+Z", string.Empty);
-var report = new SoaReportModel
-                    {
-                        Name = $"{soaRegionKey}",
-                        Description = "Auto-generated reports",
-                        Status = "completed"
-                    };
-                    var tags = new[] { "soa" };
+            var report = new SoaReportModel
+            {
+                Name = $"{soaRegionKey}",
+                Description = "Auto-generated reports",
+                Status = "completed"
+            };
+            var tags = new[] { region,  "soa" };
             var fileContext = GenerateCashReceiptsRecordExcel(soareports, null);
             
             if (fileContext != null)
@@ -1642,21 +1642,21 @@ if (fileContext1 != null || fileContext2 != null || fileContext3 != null)
         branch: "main"
     );
     if(uploadExcelResult.Success){
-            report.Urls.Add( new UrlModel(){
-            Url = uploadExcelResult.Url,
-            Name = "Financial"
-        });
-            tags = tags.Concat(new[] { "cashier" }).ToArray();
-        report.Touch();
+        report.Urls.Add( new UrlModel(){
+        Url = uploadExcelResult.Url,
+        Name = "Financial"
+    });
+    tags = tags.Concat(new[] { "cashier" }).ToArray();
+    report.Touch();
     }else{
         Console.WriteLine($"❌ Upload failed: {uploadExcelResult.Message}");
     }
     if(uploadResultcashier.Success){
-            report.Urls.Add( new UrlModel(){
-            Url = uploadResultcashier.Url,
-            Name = "Cashier"
-        });
-            tags = tags.Concat(new[] { "cashier" }).ToArray();
+        report.Urls.Add( new UrlModel(){
+        Url = uploadResultcashier.Url,
+        Name = "Cashier"
+    });
+        tags = tags.Concat(new[] { "cashier" }).ToArray();
         report.Touch();
     }else{
         Console.WriteLine($"❌ Upload failed: {uploadResultcashier.Message}");
