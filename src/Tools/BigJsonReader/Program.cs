@@ -47,7 +47,7 @@ static byte[] GenerateExcel(ServicesReports report)
         byte[] fileData;
         using (var streamTo = new MemoryStream())
         {
-            var wb = new XLWorkbook(path + "Finance-Report.xlsx");
+            var wb = new XLWorkbook(path + "/Finance-Report.xlsx");
             var ws = wb.Worksheet(1);
             ws.Cell("D13").Value = report.Fees.Find(c => c.Name == "Documentary Stamp Tax")!.Value++; // document fee
             ws.Cell("D15").Value = report.Fees.Find(c => c.Name == "Special Permit Fee" || c.Name == "Construction Permit Fee" || c.Name == "Possess Permit Fee" || c.Name ==  "Purchase Permit Fee"  || c.Name == "Sell/Transfer Permit Fee")!.Value++; // Permit Fees
