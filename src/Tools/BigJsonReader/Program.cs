@@ -1849,6 +1849,7 @@ if (fileContext1 != null || fileContext2 != null || fileContext3 != null)
 // ===================== types (must come AFTER all top-level statements) =====================
 public class UrlModel {
     public string Url { get; set; } = "";
+    public string Type { get; set; } = "";
     public string Name { get; set; }
 }
 public class SoaReportModel
