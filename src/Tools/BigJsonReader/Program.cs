@@ -5524,7 +5524,7 @@ public static class GitHubHelper
                         Message = $"Issue update failed: {msg}. {errs}"
                     };
                 }
-                catch (JsonException)
+                 catch (Newtonsoft.Json.JsonReaderException ex)
                 {
                     return new GitHubIssueResult
                     {
@@ -5558,7 +5558,10 @@ public static class GitHubHelper
             if (sanitizedLabels.Length > 0)
                 payload["labels"] = sanitizedLabels;
 
-            var createResp = await client.PostAsync(createUrl, new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")).ConfigureAwait(false);
+            var createResp = await client.PostAsync(
+    createUrl,
+    new StringContent(System.Text.Json.JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")
+).ConfigureAwait(false);
             var createContent = await createResp.Content.ReadAsStringAsync().ConfigureAwait(false);
 
             if (!createResp.IsSuccessStatusCode)
@@ -5576,7 +5579,7 @@ public static class GitHubHelper
                         Message = $"Issue create failed: {msg}. {errs}"
                     };
                 }
-                catch (Newtonsoft.Json.JsonReaderException ex)
+                 catch (Newtonsoft.Json.JsonReaderException ex)
                 {
                     return new GitHubIssueResult { Success = false, Created = false, Message = $"Issue create failed: {(int)createResp.StatusCode} {createResp.ReasonPhrase}: {createContent}" };
                 }
