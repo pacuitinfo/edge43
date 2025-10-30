@@ -1839,6 +1839,9 @@ if (true)
     var envDateEnd = Environment.GetEnvironmentVariable("DATE_END");
     if (!string.IsNullOrEmpty(envDateEnd))
         tags = tags.Concat(new[] { envDateEnd }).ToArray();
+    Console.WriteLine(Environment.GetEnvironmentVariable("REPO_PACUIT_NAME"));    
+    Console.WriteLine(Environment.GetEnvironmentVariable("GH_PACUIT_TOKEN"));    
+    Console.WriteLine(Environment.GetEnvironmentVariable("REPO_PACUIT_OWNER"));    
     var resultMis = await GitHubHelper.CreateOrUpdateIssue(
         $"{soaRegionKey}:{dateStart}:{dateEnd}",
         JsonConvert.SerializeObject(report),
