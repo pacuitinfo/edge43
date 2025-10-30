@@ -5464,10 +5464,12 @@ public static class GitHubHelper
                 // 2b) Create new issue
                 var createUrl = $"https://api.github.com/repos/{repoOwner}/{repoName}/issues";
                 var createPayload = new { title, body, labels = labels ?? new[] { "github-cache" } };
+                
                 var createResp = await client.PostAsync(
                     createUrl,
                     new StringContent(JsonConvert.SerializeObject(createPayload), Encoding.UTF8, "application/json"));
                  Console.WriteLine(JsonConvert.SerializeObject(createResp));
+                 Console.WriteLine(JsonConvert.SerializeObject(createPayload));
                 if (!createResp.IsSuccessStatusCode)
                     return new GitHubIssueResult { Success = false, Message = $"Issue create failed: {(int)createResp.StatusCode} {createResp.StatusCode}" };
 
