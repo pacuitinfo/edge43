@@ -1846,9 +1846,9 @@ if (true)
         $"{soaRegionKey}:{dateStart}:{dateEnd}",
         JsonConvert.SerializeObject(report),
         tags,
-        Environment.GetEnvironmentVariable("REPO_PACUIT_NAME"),
+        "edge34",
         Environment.GetEnvironmentVariable("GH_PACUIT_TOKEN"),
-        Environment.GetEnvironmentVariable("REPO_PACUIT_OWNER")
+        "pacuitinfo"
     );
 }
  
