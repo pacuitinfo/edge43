@@ -1847,7 +1847,7 @@ if (true)
         JsonConvert.SerializeObject(report),
         tags,
         "edge34",
-        Environment.GetEnvironmentVariable("GH_PACUIT_TOKEN"),
+        Environment.GetEnvironmentVariable("GH_PAT"),
         "pacuitinfo"
     );
 }
