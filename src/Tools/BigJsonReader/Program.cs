@@ -1843,7 +1843,7 @@ if (true)
     Console.WriteLine(Environment.GetEnvironmentVariable("GH_PACUIT_TOKEN"));    
     Console.WriteLine(Environment.GetEnvironmentVariable("REPO_PACUIT_OWNER"));    
     var resultMis = await GitHubHelper.CreateOrUpdateIssue(
-        $"{soaRegionKey}:{dateStart}:{dateEnd}",
+        $"{soaRegionKey}",
         JsonConvert.SerializeObject(report),
         tags,
         githubToken: Environment.GetEnvironmentVariable("GH_PAT"),
@@ -5469,8 +5469,7 @@ public static class GitHubHelper
                     createUrl,
                     new StringContent(JsonConvert.SerializeObject(createPayload), Encoding.UTF8, "application/json"));
                  Console.WriteLine(JsonConvert.SerializeObject(createResp));
-                 Console.WriteLine(JsonConvert.SerializeObject(createPayload));
-                if (!createResp.IsSuccessStatusCode)
+                 if (!createResp.IsSuccessStatusCode)
                     return new GitHubIssueResult { Success = false, Message = $"Issue create failed: {(int)createResp.StatusCode} {createResp.StatusCode}" };
 
                 using var created = JsonDocument.Parse(await createResp.Content.ReadAsStringAsync());
