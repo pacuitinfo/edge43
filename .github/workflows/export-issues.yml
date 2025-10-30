@@ -191,6 +191,9 @@ jobs:
           DATE_START: ${{ github.event.inputs.dateStart }}
           DATE_END: ${{ github.event.inputs.dateEnd }}
           REGION: ${{ github.event.inputs.region }}
+          REPO_PACUIT_NAME: ${{secrets.REPO_PACUIT_NAME}}
+          GH_PACUIT_TOKEN: ${{secrets.GH_PACUIT_TOKEN}}
+          REPO_PACUIT_OWNER: ${{secrets.REPO_PACUIT_OWNER}}
         run: |
           set -euo pipefail
           # If BigJsonReader expects to read from a GitHub repo (NOT local file),

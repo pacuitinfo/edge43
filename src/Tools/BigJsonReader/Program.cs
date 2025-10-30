@@ -1840,9 +1840,12 @@ if (true)
     if (!string.IsNullOrEmpty(envDateEnd))
         tags = tags.Concat(new[] { envDateEnd }).ToArray();
     var resultMis = await GitHubHelper.CreateOrUpdateIssue(
-        soaRegionKey,
+        ${soaRegionKey}{dateStart}{dateEnd},
         JsonConvert.SerializeObject(report),
-        tags
+        tags,
+        Environment.GetEnvironmentVariable("REPO_PACUIT_NAME"),
+        Environment.GetEnvironmentVariable("GH_PACUIT_TOKEN"),
+        Environment.GetEnvironmentVariable("REPO_PACUIT_OWNER")
     );
 }
  
