@@ -209,6 +209,7 @@ jobs:
             --repo  "${{ github.repository  }}" \
             --dateStart  "${DATE_START}" \
             --dateEnd  "${DATE_END}" \
+            --regionValue  "${REGION}" \
             --path  "${{ github.repository_owner  }}" \
             --regionKey "report:${DATE_START:+${DATE_START}:}${DATE_END:+${DATE_END}:}${REGION}" \
             --ref   "${{ 'main'   }}" \

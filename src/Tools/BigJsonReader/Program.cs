@@ -29,6 +29,7 @@ string @ref      = Arg("ref", "main");
 string dateStart = Arg("dateStart", "");
 string dateEnd   = Arg("dateEnd", "");
 string regionKey   = Arg("regionKey", "");
+string regionValue   = Arg("regionValue", "");
 string outPath   = Arg("out", "");
 string region    = Arg("region", "");      // OPTIONAL: filter by GitHub label and annotate chart labels
 string? token    = Environment.GetEnvironmentVariable("GH_PAT")
@@ -1624,7 +1625,7 @@ application.ServicesReports = new ServicesReports();
                 Description = "Auto-generated reports",
                 Status = "completed"
             };
-            var tags = new[] { region,  "soa" };
+            var tags = new[] { regionValue,  "soa" };
             var fileContext = GenerateCashReceiptsRecordExcel(soareports, null);
             
             if (fileContext != null)
