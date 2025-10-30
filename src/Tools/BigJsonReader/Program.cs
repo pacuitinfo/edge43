@@ -5495,7 +5495,7 @@ public static class GitHubHelper
             {
                 ["body"] = body ?? string.Empty
             };
-            var updatePayload = new { body };
+            var createPayload = new { body };
             var patchReq = new HttpRequestMessage(new HttpMethod("PATCH"), updateUrl)
             {
                 Content = new StringContent(
