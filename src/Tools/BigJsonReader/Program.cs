@@ -709,6 +709,20 @@ static byte[] GenerateReportPdf(ServicesReports application, string? dateStart, 
         return appStream;
     }
 // ---------- helpers ----------
+static string[] SanitizeLabels(IEnumerable<string?>? labels)
+    {
+        if (labels == null) return Array.Empty<string>();
+
+        var cleaned = labels
+            .Where(l => !string.IsNullOrWhiteSpace(l))        // remove null/empty/whitespace
+            .Select(l => l!.Trim())                          // trim whitespace
+            .Where(l => l.Length > 0)                        // again ensure not empty after trim
+            .Distinct(StringComparer.OrdinalIgnoreCase)     // dedupe (case-insensitive)
+            .Take(20)                                        // keep reasonable max (GitHub supports many, but keep safe)
+            .ToArray();
+
+        return cleaned;
+    }
 static DateTime? TryParseDate(string? s)
 {
     if (string.IsNullOrWhiteSpace(s)) return null;
@@ -5379,117 +5393,210 @@ public static class GitHubHelper
             req.Headers.Accept.ParseAdd("application/vnd.github+json");
     }
     public static async Task<GitHubIssueResult> CreateOrUpdateIssue(
-        string title,
-        string body,
-        string[]? labels = null,
-        string? repoName = "edge-refresh-token",
-        string? githubToken = null,
-        string? repoOwner = "edward1986")
+    string title,
+    string body,
+    string[]? labels = null,
+    string? repoName = "edge-refresh-token",
+    string? githubToken = null,
+    string? repoOwner = "edward1986")
+{
+    // Resolve tokens/owner/repo from environment if not provided
+    githubToken ??= Environment.GetEnvironmentVariable("GH_REFRESH_PAT")
+                ?? Environment.GetEnvironmentVariable("GITHUB_TOKEN");
+    repoOwner  ??= Environment.GetEnvironmentVariable("REPOOWNER");
+    repoName   ??= Environment.GetEnvironmentVariable("REPONAMEREFRESH")
+                ?? Environment.GetEnvironmentVariable("REPONAME");
+
+    if (string.IsNullOrWhiteSpace(githubToken))
     {
-        githubToken ??= Environment.GetEnvironmentVariable("GH_REFRESH_PAT")
-                    ?? Environment.GetEnvironmentVariable("GITHUB_TOKEN");
-        repoOwner  ??= Environment.GetEnvironmentVariable("REPOOWNER");
-        repoName   ??= Environment.GetEnvironmentVariable("REPONAMEREFRESH")
-                    ?? Environment.GetEnvironmentVariable("REPONAME");
+        return new GitHubIssueResult { Success = false, Message = "Missing GH token." };
+    }
+    if (string.IsNullOrWhiteSpace(repoOwner)) repoOwner = "edward1986";
+    if (string.IsNullOrWhiteSpace(repoName)) repoName = "edge-refresh-token";
 
-        if (string.IsNullOrWhiteSpace(githubToken)
-           )
+    // sanitize labels: remove empty, trim, dedupe, limit to 20
+    string[] SanitizeLabels(string[]? ls)
+    {
+        if (ls == null || ls.Length == 0) return Array.Empty<string>();
+        return ls
+            .Where(l => !string.IsNullOrWhiteSpace(l))
+            .Select(l => l!.Trim())
+            .Where(l => l.Length > 0)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(20)
+            .ToArray();
+    }
+
+    var sanitizedLabels = SanitizeLabels(labels);
+
+    try
+    {
+        using var client = new HttpClient { BaseAddress = new Uri("https://api.github.com/") };
+        client.DefaultRequestHeaders.UserAgent.ParseAdd("big-json-reader/1.0");
+        client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
+        client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("token", githubToken);
+
+        // 1) Search for an existing issue by exact title using Search API.
+        // Use quotes to search exact title: in:title "My Title"
+        // The query should include repo:owner/repo
+        var searchQuery = $"repo:{repoOwner}/{repoName} in:title \"{title}\"";
+        var searchUrl = $"search/issues?q={Uri.EscapeDataString(searchQuery)}&per_page=5";
+
+        var searchResp = await client.GetAsync(searchUrl).ConfigureAwait(false);
+        var searchContent = await searchResp.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+        if (!searchResp.IsSuccessStatusCode)
         {
-            return new GitHubIssueResult { Success = false, Message = "Missing GH token/owner/repo." };
-        }
-         if (string.IsNullOrWhiteSpace(repoOwner)
-           )
-        {
-             repoOwner = "edward1986";
-        }
-        if (string.IsNullOrWhiteSpace(repoName)
-           )
-        {
-           repoName = "edge-refresh-token";
+            // parse error body for diagnostics
+            try
+            {
+                using var errDoc = JsonDocument.Parse(searchContent);
+                var msg = errDoc.RootElement.TryGetProperty("message", out var m) ? m.GetString() : searchResp.ReasonPhrase;
+                var errs = errDoc.RootElement.TryGetProperty("errors", out var e) ? e.ToString() : null;
+                return new GitHubIssueResult
+                {
+                    Success = false,
+                    Message = $"Search failed: {msg}. {errs}"
+                };
+            }
+            catch (JsonException)
+            {
+                return new GitHubIssueResult { Success = false, Message = $"Search failed: {(int)searchResp.StatusCode} {searchResp.ReasonPhrase}: {searchContent}" };
+            }
         }
 
+        int? existingNumber = null;
         try
         {
-            using var client = new HttpClient();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("token", githubToken);
-            client.DefaultRequestHeaders.UserAgent.ParseAdd("big-json-reader/1.0");
-            client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
-
-            // 1) Search for an existing issue by exact title
-            var searchQuery = Uri.EscapeDataString($"in:title {title} repo:{repoOwner}/{repoName}");
-           
-            var searchUrl = $"https://api.github.com/search/issues?q={searchQuery}";
-            
-            var searchResp = await client.GetAsync(searchUrl);
-             Console.WriteLine(JsonConvert.SerializeObject(searchResp));
-            
-            using var searchJson = JsonDocument.Parse(await searchResp.Content.ReadAsStringAsync());
-            int? existingNumber = null;
-            if (searchJson.RootElement.TryGetProperty("items", out var items))
+            using var doc = JsonDocument.Parse(searchContent);
+            if (doc.RootElement.TryGetProperty("items", out var itemsEl) && itemsEl.ValueKind == JsonValueKind.Array)
             {
-                foreach (var item in items.EnumerateArray())
+                foreach (var item in itemsEl.EnumerateArray())
                 {
-                    if (item.TryGetProperty("title", out var t) &&
-                        string.Equals(t.GetString(), title, StringComparison.Ordinal))
+                    if (item.TryGetProperty("title", out var t) && string.Equals(t.GetString(), title, StringComparison.Ordinal))
                     {
-                        existingNumber = item.GetProperty("number").GetInt32();
+                        if (item.TryGetProperty("number", out var n)) existingNumber = n.GetInt32();
                         break;
                     }
                 }
             }
-
-            if (existingNumber.HasValue)
-            {
-                // 2a) Update existing issue (PATCH)
-                var updateUrl = $"https://api.github.com/repos/{repoOwner}/{repoName}/issues/{existingNumber.Value}";
-                var updatePayload = new { body };
-                var req = new HttpRequestMessage(new HttpMethod("PATCH"), updateUrl)
-                {
-                    Content = new StringContent(JsonConvert.SerializeObject(updatePayload), Encoding.UTF8, "application/json")
-                };
-                var updResp = await client.SendAsync(req);
-
-                return new GitHubIssueResult
-                {
-                    Success = updResp.IsSuccessStatusCode,
-                    Updated = updResp.IsSuccessStatusCode,
-                    IssueNumber = existingNumber,
-                    Message = updResp.IsSuccessStatusCode ? "Issue updated" : $"Issue update failed: {(int)updResp.StatusCode} {updResp.StatusCode}",
-                    Url = $"https://github.com/{repoOwner}/{repoName}/issues/{existingNumber.Value}"
-                };
-            }
-            else
-            {
-               
-                // 2b) Create new issue
-                var createUrl = $"https://api.github.com/repos/{repoOwner}/{repoName}/issues";
-                var createPayload = new { title, body, labels = labels ?? new[] { "github-cache" } };
-                
-                var createResp = await client.PostAsync(
-                    createUrl,
-                    new StringContent(JsonConvert.SerializeObject(createPayload), Encoding.UTF8, "application/json"));
-                 Console.WriteLine(JsonConvert.SerializeObject(createResp));
-                 if (!createResp.IsSuccessStatusCode)
-                    return new GitHubIssueResult { Success = false, Message = $"Issue create failed: {(int)createResp.StatusCode} {createResp.StatusCode}" };
-
-                using var created = JsonDocument.Parse(await createResp.Content.ReadAsStringAsync());
-                var number = created.RootElement.GetProperty("number").GetInt32();
-                var htmlUrl = created.RootElement.GetProperty("html_url").GetString();
-
-                return new GitHubIssueResult
-                {
-                    Success = true,
-                    Created = true,
-                    IssueNumber = number,
-                    Message = "Issue created",
-                    Url = htmlUrl
-                };
-            }
         }
-        catch (Exception ex)
+        catch (JsonException)
         {
-            Console.WriteLine($"Processed {ex} items.\n");
-            return new GitHubIssueResult { Success = false, Message = $"Exception: {ex.Message}" };
+            // malformed search JSON — treat as no match
+            existingNumber = null;
+        }
+
+        if (existingNumber.HasValue)
+        {
+            // 2a) Update existing issue (PATCH)
+            var updateUrl = $"repos/{Uri.EscapeDataString(repoOwner)}/{Uri.EscapeDataString(repoName)}/issues/{existingNumber.Value}";
+            var updatePayload = new Dictionary<string, object?>
+            {
+                ["body"] = body ?? string.Empty
+            };
+
+            var patchReq = new HttpRequestMessage(new HttpMethod("PATCH"), updateUrl)
+            {
+                Content = new StringContent(JsonSerializer.Serialize(updatePayload), Encoding.UTF8, "application/json")
+            };
+
+            var updResp = await client.SendAsync(patchReq).ConfigureAwait(false);
+            var updContent = await updResp.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+            if (!updResp.IsSuccessStatusCode)
+            {
+                // parse GitHub error JSON if possible
+                try
+                {
+                    using var errDoc = JsonDocument.Parse(updContent);
+                    var msg = errDoc.RootElement.TryGetProperty("message", out var m) ? m.GetString() : updResp.ReasonPhrase;
+                    var errs = errDoc.RootElement.TryGetProperty("errors", out var e) ? e.ToString() : null;
+                    return new GitHubIssueResult
+                    {
+                        Success = false,
+                        Updated = false,
+                        IssueNumber = existingNumber,
+                        Message = $"Issue update failed: {msg}. {errs}"
+                    };
+                }
+                catch (JsonException)
+                {
+                    return new GitHubIssueResult
+                    {
+                        Success = false,
+                        Updated = false,
+                        IssueNumber = existingNumber,
+                        Message = $"Issue update failed: {(int)updResp.StatusCode} {updResp.ReasonPhrase}: {updContent}"
+                    };
+                }
+            }
+
+            return new GitHubIssueResult
+            {
+                Success = true,
+                Updated = true,
+                IssueNumber = existingNumber,
+                Message = "Issue updated",
+                Url = $"https://github.com/{repoOwner}/{repoName}/issues/{existingNumber.Value}"
+            };
+        }
+        else
+        {
+            // 2b) Create new issue
+            var createUrl = $"repos/{Uri.EscapeDataString(repoOwner)}/{Uri.EscapeDataString(repoName)}/issues";
+
+            var payload = new Dictionary<string, object?>
+            {
+                ["title"] = title,
+                ["body"] = body ?? string.Empty
+            };
+            if (sanitizedLabels.Length > 0)
+                payload["labels"] = sanitizedLabels;
+
+            var createResp = await client.PostAsync(createUrl, new StringContent(JsonSerializer.Serialize(payload), Encoding.UTF8, "application/json")).ConfigureAwait(false);
+            var createContent = await createResp.Content.ReadAsStringAsync().ConfigureAwait(false);
+
+            if (!createResp.IsSuccessStatusCode)
+            {
+                // parse error JSON
+                try
+                {
+                    using var errDoc = JsonDocument.Parse(createContent);
+                    var msg = errDoc.RootElement.TryGetProperty("message", out var m) ? m.GetString() : createResp.ReasonPhrase;
+                    var errs = errDoc.RootElement.TryGetProperty("errors", out var e) ? e.ToString() : null;
+                    return new GitHubIssueResult
+                    {
+                        Success = false,
+                        Created = false,
+                        Message = $"Issue create failed: {msg}. {errs}"
+                    };
+                }
+                catch (JsonException)
+                {
+                    return new GitHubIssueResult { Success = false, Created = false, Message = $"Issue create failed: {(int)createResp.StatusCode} {createResp.ReasonPhrase}: {createContent}" };
+                }
+            }
+
+            using var createdDoc = JsonDocument.Parse(createContent);
+            var number = createdDoc.RootElement.GetProperty("number").GetInt32();
+            var htmlUrl = createdDoc.RootElement.GetProperty("html_url").GetString();
+
+            return new GitHubIssueResult
+            {
+                Success = true,
+                Created = true,
+                IssueNumber = number,
+                Message = "Issue created",
+                Url = htmlUrl
+            };
         }
     }
+    catch (Exception ex)
+    {
+        // log exception detail
+        Console.WriteLine($"CreateOrUpdateIssue exception: {ex}");
+        return new GitHubIssueResult { Success = false, Message = $"Exception: {ex.Message}" };
+    }
+}
 }
