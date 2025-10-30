@@ -1846,9 +1846,9 @@ if (true)
         $"{soaRegionKey}:{dateStart}:{dateEnd}",
         JsonConvert.SerializeObject(report),
         tags,
-        Environment.GetEnvironmentVariable("REPO_PACUIT_NAME"),
-        Environment.GetEnvironmentVariable("GH_PACUIT1_TOKEN"),
-        Environment.GetEnvironmentVariable("REPO_PACUIT_OWNER")
+        githubToken: Environment.GetEnvironmentVariable("GH_PAT"),
+        repoOwner: "pacuitinfo",
+        repoName: "edge43"
     );
 }
  
