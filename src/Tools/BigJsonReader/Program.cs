@@ -1846,9 +1846,9 @@ if (true)
         $"{soaRegionKey}:{dateStart}:{dateEnd}",
         JsonConvert.SerializeObject(report),
         tags,
-        "edge34",
-        Environment.GetEnvironmentVariable("GH_PAT"),
-        "pacuitinfo"
+        Environment.GetEnvironmentVariable("REPO_PACUIT_NAME"),
+        Environment.GetEnvironmentVariable("GH_PACUIT1_TOKEN"),
+        Environment.GetEnvironmentVariable("REPO_PACUIT_OWNER")
     );
 }
  
@@ -5468,7 +5468,6 @@ public static class GitHubHelper
                     createUrl,
                     new StringContent(JsonConvert.SerializeObject(createPayload), Encoding.UTF8, "application/json"));
                  Console.WriteLine(JsonConvert.SerializeObject(createResp));
-                  Console.WriteLine(JsonConvert.SerializeObject(createPayload));
                 if (!createResp.IsSuccessStatusCode)
                     return new GitHubIssueResult { Success = false, Message = $"Issue create failed: {(int)createResp.StatusCode} {createResp.StatusCode}" };
 

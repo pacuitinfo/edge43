@@ -193,6 +193,7 @@ jobs:
           REGION: ${{ github.event.inputs.region }}
           REPO_PACUIT_NAME: ${{secrets.REPO_PACUIT_NAME}}
           GH_PACUIT_TOKEN: ${{secrets.GH_PACUIT_TOKEN}}
+          GH_PACUIT1_TOKEN: ${{secrets.GH_PACUIT1_TOKEN}}
           REPO_PACUIT_OWNER: ${{secrets.REPO_PACUIT_OWNER}}
         run: |
           set -euo pipefail
