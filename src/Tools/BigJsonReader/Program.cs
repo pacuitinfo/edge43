@@ -5459,7 +5459,7 @@ public static class GitHubHelper
                     Message = $"Search failed: {msg}. {errs}"
                 };
             }
-            catch (Newtonsoft.Json.JsonSerializer ex)
+            catch (Newtonsoft.Json.JsonReaderException ex)
             {
                 return new GitHubIssueResult { Success = false, Message = $"Search failed: {(int)searchResp.StatusCode} {searchResp.ReasonPhrase}: {searchContent}" };
             }
@@ -5481,7 +5481,7 @@ public static class GitHubHelper
                 }
             }
         }
-        catch (Newtonsoft.Json.JsonSerializer ex)
+        catch (Newtonsoft.Json.JsonReaderException ex)
         {
             // malformed search JSON — treat as no match
             existingNumber = null;
@@ -5576,7 +5576,7 @@ public static class GitHubHelper
                         Message = $"Issue create failed: {msg}. {errs}"
                     };
                 }
-                catch (Newtonsoft.Json.JsonSerializer ex)
+                catch (Newtonsoft.Json.JsonReaderException ex)
                 {
                     return new GitHubIssueResult { Success = false, Created = false, Message = $"Issue create failed: {(int)createResp.StatusCode} {createResp.ReasonPhrase}: {createContent}" };
                 }
@@ -5596,7 +5596,7 @@ public static class GitHubHelper
             };
         }
     }
-    catch (Newtonsoft.Json.JsonSerializer ex)
+    catch (Newtonsoft.Json.JsonReaderException ex)
     {
         // log exception detail
         Console.WriteLine($"CreateOrUpdateIssue exception: {ex}");
