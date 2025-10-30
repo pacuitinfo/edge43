@@ -5468,6 +5468,7 @@ public static class GitHubHelper
                     createUrl,
                     new StringContent(JsonConvert.SerializeObject(createPayload), Encoding.UTF8, "application/json"));
                  Console.WriteLine(JsonConvert.SerializeObject(createResp));
+                  Console.WriteLine(JsonConvert.SerializeObject(createPayload));
                 if (!createResp.IsSuccessStatusCode)
                     return new GitHubIssueResult { Success = false, Message = $"Issue create failed: {(int)createResp.StatusCode} {createResp.StatusCode}" };
 
