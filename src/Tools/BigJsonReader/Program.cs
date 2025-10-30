@@ -5459,7 +5459,7 @@ public static class GitHubHelper
                     Message = $"Search failed: {msg}. {errs}"
                 };
             }
-            catch (System.Text.Json.JsonException ex)
+            catch (Newtonsoft.Json.JsonSerializer ex)
             {
                 return new GitHubIssueResult { Success = false, Message = $"Search failed: {(int)searchResp.StatusCode} {searchResp.ReasonPhrase}: {searchContent}" };
             }
@@ -5481,7 +5481,7 @@ public static class GitHubHelper
                 }
             }
         }
-        catch (System.Text.Json.JsonException ex)
+        catch (Newtonsoft.Json.JsonSerializer ex)
         {
             // malformed search JSON — treat as no match
             existingNumber = null;
@@ -5498,7 +5498,11 @@ public static class GitHubHelper
 
             var patchReq = new HttpRequestMessage(new HttpMethod("PATCH"), updateUrl)
             {
-                Content = new StringContent(JsonSerializer.Serialize(updatePayload), Encoding.UTF8, "application/json")
+                Content = new StringContent(
+                    JsonConvert.SerializeObject(createPayload),
+                    Encoding.UTF8,
+                    MediaTypeHeaderValue.Parse("application/json")
+                )
             };
 
             var updResp = await client.SendAsync(patchReq).ConfigureAwait(false);
@@ -5572,7 +5576,7 @@ public static class GitHubHelper
                         Message = $"Issue create failed: {msg}. {errs}"
                     };
                 }
-                catch (System.Text.Json.JsonException ex)
+                catch (Newtonsoft.Json.JsonSerializer ex)
                 {
                     return new GitHubIssueResult { Success = false, Created = false, Message = $"Issue create failed: {(int)createResp.StatusCode} {createResp.ReasonPhrase}: {createContent}" };
                 }
@@ -5592,7 +5596,7 @@ public static class GitHubHelper
             };
         }
     }
-    catch (System.Text.Json.JsonException ex)
+    catch (Newtonsoft.Json.JsonSerializer ex)
     {
         // log exception detail
         Console.WriteLine($"CreateOrUpdateIssue exception: {ex}");
