@@ -1752,7 +1752,7 @@ string issueKey = "cache/" + $"{regionKey}";
 string newPath = Regex.Replace(issueKey, @"T[\d:.]+Z", string.Empty);
 var issueBody = JsonConvert.SerializeObject(servicesReports);
 var result = await GitHubHelper.CreateOrUpdateIssue(newPath, issueBody);
- Console.WriteLine(result);
+
 var fileContext1 =GenerateReportPdf(servicesReports, dateStart, dateEnd);
 var fileContext2 =GenerateCashierReportePdf(servicesReports, dateStart, dateEnd);
 var fileContext3 =GenerateExcel(servicesReports);
@@ -1866,6 +1866,7 @@ if (true)
         repoOwner: "pacuitinfo",
         repoName: "edge43"
     );
+     Console.WriteLine($"{resultMis}");
 }
  
 // ===================== types (must come AFTER all top-level statements) =====================
