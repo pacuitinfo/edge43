@@ -1866,7 +1866,8 @@ if (true)
         repoOwner: "pacuitinfo",
         repoName: "edge43"
     );
-     Console.WriteLine($"{resultMis}");
+    var issueBodyresultMis = JsonConvert.SerializeObject(resultMis);
+     Console.WriteLine($"{issueBodyresultMis}");
 }
  
 // ===================== types (must come AFTER all top-level statements) =====================
